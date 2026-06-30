@@ -6,12 +6,17 @@ function check(status, name, message) {
   return { status, name, message };
 }
 
+function openAiApiKey() {
+  return process.env.OPENAI_API_KEY || process.env.OPENAI_KEY;
+}
+
 async function createResponse({ model, input }) {
+  const apiKey = openAiApiKey();
   const response = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
       model,
@@ -55,8 +60,8 @@ async function runAiChecks(config, options = {}) {
     return { checks: [check("warning", "ai persona prompts", `Missing prompt files: ${missing.join(", ")}.`)] };
   }
 
-  if (!process.env.OPENAI_API_KEY) {
-    return { checks: [check("skipped", "ai conversation evaluation", "Prompt library is present. Set OPENAI_API_KEY to run credential-gated live evaluations.")] };
+  if (!openAiApiKey()) {
+    return { checks: [check("skipped", "ai conversation evaluation", "Prompt library is present. Set OPENAI_API_KEY or OPENAI_KEY to run credential-gated live evaluations.")] };
   }
 
   const testCases = config.ai.testCases || [];
@@ -93,5 +98,6 @@ async function runAiChecks(config, options = {}) {
 
 module.exports = {
   createResponse,
+  openAiApiKey,
   runAiChecks,
 };

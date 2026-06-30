@@ -15,6 +15,11 @@ function check(status, name, message) {
   return { status, name, message };
 }
 
+function suiteHas(config, suiteName, capability) {
+  const suite = config.suites[suiteName] || [];
+  return suite.includes(capability) || suite.includes("release");
+}
+
 async function runProductSuite(productKey, suiteName = "smoke", options = {}) {
   const manifest = loadProductManifest(productKey);
   const config = resolveProductConfig(manifest, options.environment || "local");
@@ -29,29 +34,54 @@ async function runProductSuite(productKey, suiteName = "smoke", options = {}) {
     } else {
       checks.push(check("passed", "suite selection", `Loaded ${suiteName} suite for ${config.name}.`));
     }
+    if (devServer?.checks?.length) checks.push(...devServer.checks);
 
-    browserResult = await runBrowserSmoke(config, options);
+    browserResult = await runBrowserSmoke(config, {
+      ...options,
+      collectAccessibility: suiteHas(config, suiteName, "accessibility"),
+    });
     checks.push(...browserResult.checks);
-    const visualResult = runVisualRegression(config, browserResult.screenshots, options);
-    checks.push(...visualResult.checks);
+    if (suiteHas(config, suiteName, "visual")) {
+      const visualResult = runVisualRegression(config, browserResult.screenshots, options);
+      checks.push(...visualResult.checks);
+    }
 
-    const apiResult = await runApiChecks(config, options);
-    const firebaseResult = await runFirebaseChecks(config, options);
-    const performanceResult = await runPerformanceChecks(browserResult, config, options);
-    const accessibilityResult = browserResult.accessibilityResult?.checks?.length
-      ? browserResult.accessibilityResult
-      : await runAccessibilityChecks(config, options);
-    const securityResult = await runSecurityChecks(browserResult, config, options);
-    const aiResult = await runAiChecks(config, options);
-    const mobileResult = runMobileChecks(config, options);
+    if (suiteHas(config, suiteName, "api")) {
+      const apiResult = await runApiChecks(config, options);
+      checks.push(...apiResult.checks);
+    }
 
-    checks.push(...apiResult.checks);
-    checks.push(...firebaseResult.checks);
-    checks.push(...performanceResult.checks);
-    checks.push(...accessibilityResult.checks);
-    checks.push(...securityResult.checks);
-    checks.push(...aiResult.checks);
-    checks.push(...mobileResult.checks);
+    if (suiteHas(config, suiteName, "firebase")) {
+      const firebaseResult = await runFirebaseChecks(config, options);
+      checks.push(...firebaseResult.checks);
+    }
+
+    if (suiteHas(config, suiteName, "performance")) {
+      const performanceResult = await runPerformanceChecks(browserResult, config, options);
+      checks.push(...performanceResult.checks);
+    }
+
+    if (suiteHas(config, suiteName, "accessibility")) {
+      const accessibilityResult = browserResult.accessibilityResult?.checks?.length
+        ? browserResult.accessibilityResult
+        : await runAccessibilityChecks(config, options);
+      checks.push(...accessibilityResult.checks);
+    }
+
+    if (suiteHas(config, suiteName, "security")) {
+      const securityResult = await runSecurityChecks(browserResult, config, options);
+      checks.push(...securityResult.checks);
+    }
+
+    if (suiteHas(config, suiteName, "ai")) {
+      const aiResult = await runAiChecks(config, options);
+      checks.push(...aiResult.checks);
+    }
+
+    if (suiteHas(config, suiteName, "mobile")) {
+      const mobileResult = runMobileChecks(config, options);
+      checks.push(...mobileResult.checks);
+    }
   } finally {
     await stopDevServer(devServer);
   }
@@ -69,6 +99,7 @@ async function runProductSuite(productKey, suiteName = "smoke", options = {}) {
       consoleErrors: browserResult.consoleErrors || [],
       networkFailures: browserResult.networkFailures || [],
       accessibilityViolations: browserResult.accessibilityResult?.violations || [],
+      devServerLogs: devServer?.logs || [],
     },
   };
 }
@@ -103,4 +134,5 @@ module.exports = {
   resolveProductConfig,
   runAllProducts,
   runProductSuite,
+  suiteHas,
 };

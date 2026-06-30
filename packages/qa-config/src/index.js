@@ -1,2 +1,4 @@
-module.exports = require("./manifest");
-
+module.exports = {
+  ...require("./manifest"),
+  ...require("./env-status"),
+};

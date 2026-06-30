@@ -16,6 +16,7 @@
     "qa:all:dry": "node packages/qa-core/src/cli.js --all --suite smoke --dry-run",
     "qa:dashboard:data": "node packages/qa-reporting/src/build-dashboard-data.js",
     "qa:bug-report": "node packages/qa-openai/src/generate-bug-report.js",
+    "qa:env": "node packages/qa-config/src/print-env-status.js",
     "qa:report": "node packages/qa-reporting/src/open-latest-report.js",
     "test": "node packages/qa-core/src/cli.js --product radiusiq --suite smoke --dry-run"
   },

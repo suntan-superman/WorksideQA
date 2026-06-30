@@ -4,21 +4,28 @@
   "type": "react-vite",
   "status": "active",
   "baseUrl": {
-    "local": "http://localhost:5173",
+    "local": "http://127.0.0.1:5173",
     "staging": "https://radiusiq-staging.netlify.app",
     "production": "https://radiusiq.ai"
   },
   "devServer": {
     "enabled": true,
-    "workingDirectory": "C:/Users/sjroy/Source/RadiusIQ",
-    "command": "npm run dev",
+    "workingDirectory": "C:/Users/sjroy/Source/RadiusIQ/apps/web",
+    "command": "npm run dev -- --host 127.0.0.1 --port 5173",
     "port": 5173,
-    "healthUrl": "http://localhost:5173"
+    "healthUrl": "http://127.0.0.1:5173",
+    "healthTimeoutMs": 60000
   },
   "auth": {
-    "strategy": "email-password",
+    "strategy": "demo-email-code",
+    "loginPath": "/login",
     "demoUserEnvKey": "RADIUSIQ_DEMO_EMAIL",
-    "demoPasswordEnvKey": "RADIUSIQ_DEMO_PASSWORD"
+    "demoPasswordEnvKey": "RADIUSIQ_DEMO_PASSWORD",
+    "selectors": {
+      "mode": "button:has-text(\"Demo email\")",
+      "email": "input[autocomplete=\"email\"], input[inputmode=\"email\"]",
+      "submit": "button:has-text(\"Send code\")"
+    }
   },
   "firebase": {
     "enabled": true,

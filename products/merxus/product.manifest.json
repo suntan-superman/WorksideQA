@@ -4,21 +4,28 @@
   "type": "react-vite",
   "status": "active",
   "baseUrl": {
-    "local": "http://localhost:5174",
+    "local": "http://127.0.0.1:5174",
     "staging": "https://merxus-staging.netlify.app",
     "production": "https://merxus.com"
   },
   "devServer": {
     "enabled": true,
-    "workingDirectory": "C:/Users/sjroy/Source/Merxus",
-    "command": "npm run dev",
+    "workingDirectory": "C:/Users/sjroy/Source/Merxus/web",
+    "command": "npm run dev -- --host 127.0.0.1 --port 5174",
     "port": 5174,
-    "healthUrl": "http://localhost:5174"
+    "healthUrl": "http://127.0.0.1:5174",
+    "healthTimeoutMs": 60000
   },
   "auth": {
     "strategy": "email-password",
+    "loginPath": "/login",
     "demoUserEnvKey": "MERXUS_DEMO_EMAIL",
-    "demoPasswordEnvKey": "MERXUS_DEMO_PASSWORD"
+    "demoPasswordEnvKey": "MERXUS_DEMO_PASSWORD",
+    "selectors": {
+      "email": "#email",
+      "password": "#password",
+      "submit": "button[type=\"submit\"]:has-text(\"Sign in\")"
+    }
   },
   "firebase": {
     "enabled": true,
