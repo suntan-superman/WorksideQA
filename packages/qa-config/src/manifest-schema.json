@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "WorksideQA Product Manifest",
+  "type": "object",
+  "required": ["key", "name", "type", "status", "baseUrl", "suites"],
+  "properties": {
+    "key": { "type": "string" },
+    "name": { "type": "string" },
+    "type": { "type": "string" },
+    "status": { "type": "string", "enum": ["active", "planned", "paused", "archived"] },
+    "baseUrl": {
+      "type": "object",
+      "required": ["local"],
+      "additionalProperties": { "type": "string" }
+    },
+    "devServer": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "workingDirectory": { "type": "string" },
+        "command": { "type": "string" },
+        "port": { "type": "number" },
+        "healthUrl": { "type": "string" }
+      }
+    },
+    "auth": { "type": "object" },
+    "firebase": { "type": "object" },
+    "api": { "type": "object" },
+    "suites": { "type": "object" },
+    "personas": { "type": "array", "items": { "type": "string" } },
+    "tags": { "type": "array", "items": { "type": "string" } }
+  }
+}
+

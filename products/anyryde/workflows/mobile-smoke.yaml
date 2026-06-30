@@ -1,0 +1,5 @@
+appId: com.workside.anyryde
+---
+- launchApp
+- assertVisible: "AnyRyde"
+

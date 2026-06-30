@@ -1,0 +1,52 @@
+{
+  "key": "example-product",
+  "name": "Example Product",
+  "type": "react-vite",
+  "status": "active",
+  "baseUrl": {
+    "local": "http://localhost:5173",
+    "staging": "https://example-staging.netlify.app",
+    "production": "https://example.com"
+  },
+  "devServer": {
+    "enabled": true,
+    "workingDirectory": "C:/Users/sjroy/Source/ExampleProduct",
+    "command": "npm run dev",
+    "port": 5173,
+    "healthUrl": "http://localhost:5173"
+  },
+  "auth": {
+    "strategy": "email-password",
+    "demoUserEnvKey": "EXAMPLE_DEMO_EMAIL",
+    "demoPasswordEnvKey": "EXAMPLE_DEMO_PASSWORD"
+  },
+  "firebase": {
+    "enabled": false,
+    "projectId": ""
+  },
+  "api": {
+    "enabled": false,
+    "healthChecks": []
+  },
+  "performance": {
+    "enabled": true,
+    "maxNetworkFailures": 0
+  },
+  "accessibility": {
+    "enabled": true
+  },
+  "ai": {
+    "enabled": false
+  },
+  "mobile": {
+    "enabled": false
+  },
+  "suites": {
+    "smoke": ["load", "login", "dashboard", "basic-navigation"],
+    "regression": ["smoke"],
+    "release": ["smoke", "api", "firebase", "accessibility", "performance"]
+  },
+  "personas": [],
+  "tags": ["web"]
+}
+

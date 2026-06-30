@@ -1,0 +1,75 @@
+{
+  "key": "route-logistics",
+  "name": "Route Logistics",
+  "type": "react-vite",
+  "status": "active",
+  "baseUrl": {
+    "local": "http://localhost:5177",
+    "staging": "https://route-logistics-staging.netlify.app",
+    "production": "https://route.workside.software"
+  },
+  "devServer": {
+    "enabled": true,
+    "workingDirectory": "C:/Users/sjroy/Source/routeLogistics",
+    "command": "npm run dev",
+    "port": 5177,
+    "healthUrl": "http://localhost:5177"
+  },
+  "auth": {
+    "strategy": "email-password",
+    "demoUserEnvKey": "ROUTE_LOGISTICS_DEMO_EMAIL",
+    "demoPasswordEnvKey": "ROUTE_LOGISTICS_DEMO_PASSWORD"
+  },
+  "firebase": {
+    "enabled": true,
+    "projectId": "route-logistics-prod"
+  },
+  "api": {
+    "enabled": true,
+    "healthChecks": [
+      {
+        "name": "cloud-run-health",
+        "urlEnvKey": "ROUTE_LOGISTICS_API_HEALTH_URL",
+        "expectedStatus": 200,
+        "required": false
+      }
+    ]
+  },
+  "performance": {
+    "enabled": true,
+    "maxNetworkFailures": 0
+  },
+  "accessibility": {
+    "enabled": true,
+    "tags": ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]
+  },
+  "visualRegression": {
+    "enabled": true,
+    "threshold": 0.01,
+    "maxMismatchRatio": 0.0025
+  },
+  "ai": {
+    "enabled": false
+  },
+  "mobile": {
+    "enabled": true,
+    "flows": [
+      {
+        "name": "mobile-smoke",
+        "path": "products/route-logistics/workflows/mobile-smoke.yaml",
+        "runByDefault": false
+      }
+    ],
+    "pushNotifications": {
+      "enabled": true,
+      "testTokenEnvKey": "ROUTE_LOGISTICS_PUSH_TEST_TOKEN"
+    }
+  },
+  "suites": {
+    "smoke": ["load", "login", "route-list", "basic-navigation"],
+    "regression": ["login", "route-list", "driver-map", "dispatch-status"],
+    "release": ["smoke", "api", "firebase", "accessibility", "performance", "mobile"]
+  },
+  "personas": ["dispatcher", "driver"],
+  "tags": ["web", "mobile", "firebase", "logistics"]
+}

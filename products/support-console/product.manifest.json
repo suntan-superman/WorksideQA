@@ -1,0 +1,64 @@
+{
+  "key": "support-console",
+  "name": "Workside Support Console",
+  "type": "react-vite",
+  "status": "active",
+  "baseUrl": {
+    "local": "http://localhost:5176",
+    "staging": "https://workside-support-console-staging.netlify.app",
+    "production": "https://support.workside.software"
+  },
+  "devServer": {
+    "enabled": true,
+    "workingDirectory": "C:/Users/sjroy/Source/WorksideSupportConsole",
+    "command": "npm run dev",
+    "port": 5176,
+    "healthUrl": "http://localhost:5176"
+  },
+  "auth": {
+    "strategy": "email-password",
+    "demoUserEnvKey": "SUPPORT_CONSOLE_DEMO_EMAIL",
+    "demoPasswordEnvKey": "SUPPORT_CONSOLE_DEMO_PASSWORD"
+  },
+  "firebase": {
+    "enabled": true,
+    "projectId": "workside-support-prod"
+  },
+  "api": {
+    "enabled": true,
+    "healthChecks": [
+      {
+        "name": "cloud-run-health",
+        "urlEnvKey": "SUPPORT_CONSOLE_API_HEALTH_URL",
+        "expectedStatus": 200,
+        "required": false
+      }
+    ]
+  },
+  "performance": {
+    "enabled": true,
+    "maxNetworkFailures": 0
+  },
+  "accessibility": {
+    "enabled": true,
+    "tags": ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]
+  },
+  "visualRegression": {
+    "enabled": true,
+    "threshold": 0.01,
+    "maxMismatchRatio": 0.0025
+  },
+  "ai": {
+    "enabled": false
+  },
+  "mobile": {
+    "enabled": false
+  },
+  "suites": {
+    "smoke": ["load", "login", "ticket-list", "basic-navigation"],
+    "regression": ["login", "ticket-list", "ticket-detail", "owner-routing"],
+    "release": ["smoke", "api", "firebase", "accessibility", "performance"]
+  },
+  "personas": ["support-agent"],
+  "tags": ["web", "firebase", "support"]
+}

@@ -1,0 +1,5 @@
+appId: com.workside.sageset
+---
+- launchApp
+- assertVisible: "SageSet"
+

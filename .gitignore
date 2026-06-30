@@ -1,0 +1,14 @@
+node_modules/
+.env
+.env.*
+!.env.example
+reports/html/
+reports/json/
+reports/junit/
+reports/history/
+reports/bug-reports/
+screenshots/current/
+screenshots/diff/
+playwright-report/
+test-results/
+*.log

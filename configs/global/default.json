@@ -1,0 +1,8 @@
+{
+  "environment": "local",
+  "headless": true,
+  "reportFormats": ["html", "json", "junit"],
+  "historyEnabled": true,
+  "destructiveOperations": false
+}
+

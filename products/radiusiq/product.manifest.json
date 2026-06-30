@@ -1,0 +1,64 @@
+{
+  "key": "radiusiq",
+  "name": "RadiusIQ",
+  "type": "react-vite",
+  "status": "active",
+  "baseUrl": {
+    "local": "http://localhost:5173",
+    "staging": "https://radiusiq-staging.netlify.app",
+    "production": "https://radiusiq.ai"
+  },
+  "devServer": {
+    "enabled": true,
+    "workingDirectory": "C:/Users/sjroy/Source/RadiusIQ",
+    "command": "npm run dev",
+    "port": 5173,
+    "healthUrl": "http://localhost:5173"
+  },
+  "auth": {
+    "strategy": "email-password",
+    "demoUserEnvKey": "RADIUSIQ_DEMO_EMAIL",
+    "demoPasswordEnvKey": "RADIUSIQ_DEMO_PASSWORD"
+  },
+  "firebase": {
+    "enabled": true,
+    "projectId": "radiusiq-prod"
+  },
+  "api": {
+    "enabled": true,
+    "healthChecks": [
+      {
+        "name": "cloud-run-health",
+        "urlEnvKey": "RADIUSIQ_API_HEALTH_URL",
+        "expectedStatus": 200,
+        "required": false
+      }
+    ]
+  },
+  "performance": {
+    "enabled": true,
+    "maxNetworkFailures": 0
+  },
+  "accessibility": {
+    "enabled": true,
+    "tags": ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]
+  },
+  "visualRegression": {
+    "enabled": true,
+    "threshold": 0.01,
+    "maxMismatchRatio": 0.0025
+  },
+  "ai": {
+    "enabled": false
+  },
+  "mobile": {
+    "enabled": false
+  },
+  "suites": {
+    "smoke": ["load", "login", "dashboard", "basic-navigation"],
+    "regression": ["login", "dashboard", "competitor-scan", "alerts"],
+    "release": ["smoke", "api", "firebase", "accessibility", "performance"]
+  },
+  "personas": ["restaurant-owner", "marketing-manager", "franchise-owner"],
+  "tags": ["web", "firebase", "cloud-run", "ai"]
+}

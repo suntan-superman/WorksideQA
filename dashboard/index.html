@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WorksideQA Dashboard</title>
+  <script src="data/history.js"></script>
+  <style>
+    :root { --ink:#182230; --muted:#667085; --line:#d0d5dd; --bg:#f7f8fa; --panel:#fff; --accent:#0f766e; --fail:#b42318; }
+    body { margin:0; font-family:Arial, sans-serif; background:var(--bg); color:var(--ink); }
+    header, main { max-width:1180px; margin:0 auto; padding:24px; }
+    h1 { margin:0 0 6px; font-size:30px; letter-spacing:0; }
+    p { margin:0; color:var(--muted); }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin-top:22px; }
+    .card { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:16px; }
+    .label { color:var(--muted); font-size:13px; }
+    .value { display:block; margin-top:8px; font-size:28px; font-weight:700; }
+    table { width:100%; margin-top:18px; border-collapse:collapse; background:#fff; border:1px solid var(--line); }
+    th, td { padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; }
+    th { color:var(--muted); font-size:12px; text-transform:uppercase; background:#fbfcfd; }
+    .pass { color:var(--accent); font-weight:700; }
+    .fail { color:var(--fail); font-weight:700; }
+    .chart { width:100%; height:240px; margin-top:18px; background:#fff; border:1px solid var(--line); border-radius:8px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>WorksideQA</h1>
+    <p>Local dashboard shell for historical runs, release readiness, screenshots, performance, accessibility, and AI review results.</p>
+  </header>
+  <main>
+    <section class="grid">
+      <div class="card"><span class="label">Latest status</span><span class="value" id="latest-status">No data</span></div>
+      <div class="card"><span class="label">Release readiness</span><span class="value" id="readiness">0%</span></div>
+      <div class="card"><span class="label">Passed checks</span><span class="value" id="passed">0</span></div>
+      <div class="card"><span class="label">Failed checks</span><span class="value" id="failed">0</span></div>
+    </section>
+    <canvas class="chart" id="readiness-chart" width="1080" height="240"></canvas>
+    <table>
+      <thead><tr><th>Started</th><th>Status</th><th>Suite</th><th>Environment</th><th>Readiness</th><th>Checks</th></tr></thead>
+      <tbody id="runs">
+        <tr><td colspan="6">No history indexed yet. Run `npm run qa:all:dry` to generate local data.</td></tr>
+      </tbody>
+    </table>
+    <table>
+      <thead><tr><th>Area</th><th>Current coverage</th><th>Next step</th></tr></thead>
+      <tbody>
+        <tr><td>Browser</td><td>Playwright smoke runner</td><td>Add product-specific route assertions</td></tr>
+        <tr><td>API</td><td>Manifest-driven health checks</td><td>Register Cloud Run health endpoints</td></tr>
+        <tr><td>Firebase</td><td>Non-destructive readiness checks</td><td>Add service-account read-only adapter</td></tr>
+        <tr><td>Mobile</td><td>Maestro availability detection</td><td>Add Expo flow files</td></tr>
+        <tr><td>AI</td><td>Prompt library and persona checks</td><td>Add credential-gated evaluations</td></tr>
+      </tbody>
+    </table>
+  </main>
+  <script>
+    const data = window.WORKSIDEQA_HISTORY || { runs: [], latest: null };
+    const latest = data.latest;
+    if (latest) {
+      document.getElementById("latest-status").textContent = latest.status;
+      document.getElementById("latest-status").className = latest.status === "PASS" ? "value pass" : "value fail";
+      document.getElementById("readiness").textContent = `${latest.releaseReadiness}%`;
+      document.getElementById("passed").textContent = latest.counts.passed;
+      document.getElementById("failed").textContent = latest.counts.failed;
+      document.getElementById("runs").innerHTML = data.runs.slice(0, 25).map((run) => `
+        <tr>
+          <td>${run.startedAt}</td>
+          <td class="${run.status === "PASS" ? "pass" : "fail"}">${run.status}</td>
+          <td>${run.suite}</td>
+          <td>${run.environment}</td>
+          <td>${run.releaseReadiness}%</td>
+          <td>${run.counts.passed} passed, ${run.counts.failed} failed, ${run.counts.skipped} skipped</td>
+        </tr>
+      `).join("");
+
+      const canvas = document.getElementById("readiness-chart");
+      const context = canvas.getContext("2d");
+      const runs = data.runs.slice(0, 25).reverse();
+      const pad = 28;
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      context.strokeStyle = "#d0d5dd";
+      context.lineWidth = 1;
+      for (let value = 0; value <= 100; value += 25) {
+        const y = canvas.height - pad - ((canvas.height - pad * 2) * value) / 100;
+        context.beginPath();
+        context.moveTo(pad, y);
+        context.lineTo(canvas.width - pad, y);
+        context.stroke();
+      }
+      context.strokeStyle = "#0f766e";
+      context.lineWidth = 3;
+      context.beginPath();
+      runs.forEach((run, index) => {
+        const x = pad + ((canvas.width - pad * 2) * index) / Math.max(1, runs.length - 1);
+        const y = canvas.height - pad - ((canvas.height - pad * 2) * run.releaseReadiness) / 100;
+        if (index === 0) context.moveTo(x, y);
+        else context.lineTo(x, y);
+      });
+      context.stroke();
+      runs.forEach((run, index) => {
+        const x = pad + ((canvas.width - pad * 2) * index) / Math.max(1, runs.length - 1);
+        const y = canvas.height - pad - ((canvas.height - pad * 2) * run.releaseReadiness) / 100;
+        context.fillStyle = run.status === "PASS" ? "#0f766e" : "#b42318";
+        context.beginPath();
+        context.arc(x, y, 4, 0, Math.PI * 2);
+        context.fill();
+      });
+    }
+  </script>
+</body>
+</html>

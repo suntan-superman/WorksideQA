@@ -1,0 +1,78 @@
+{
+  "key": "merxus",
+  "name": "Merxus",
+  "type": "react-vite",
+  "status": "active",
+  "baseUrl": {
+    "local": "http://localhost:5174",
+    "staging": "https://merxus-staging.netlify.app",
+    "production": "https://merxus.com"
+  },
+  "devServer": {
+    "enabled": true,
+    "workingDirectory": "C:/Users/sjroy/Source/Merxus",
+    "command": "npm run dev",
+    "port": 5174,
+    "healthUrl": "http://localhost:5174"
+  },
+  "auth": {
+    "strategy": "email-password",
+    "demoUserEnvKey": "MERXUS_DEMO_EMAIL",
+    "demoPasswordEnvKey": "MERXUS_DEMO_PASSWORD"
+  },
+  "firebase": {
+    "enabled": true,
+    "projectId": "merxus-prod"
+  },
+  "api": {
+    "enabled": true,
+    "healthChecks": [
+      {
+        "name": "cloud-run-health",
+        "urlEnvKey": "MERXUS_API_HEALTH_URL",
+        "expectedStatus": 200,
+        "required": false
+      }
+    ]
+  },
+  "performance": {
+    "enabled": true,
+    "maxNetworkFailures": 0
+  },
+  "accessibility": {
+    "enabled": true,
+    "tags": ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]
+  },
+  "visualRegression": {
+    "enabled": true,
+    "threshold": 0.01,
+    "maxMismatchRatio": 0.0025
+  },
+  "ai": {
+    "enabled": true,
+    "testCases": [
+      {
+        "name": "restaurant-hours",
+        "persona": "restaurant-owner",
+        "scenario": "Customer asks for restaurant hours.",
+        "expectedIntent": "answer-hours-or-escalate-to-configured-business-data"
+      },
+      {
+        "name": "speak-to-human",
+        "persona": "frustrated-user",
+        "scenario": "Customer asks to speak to a human.",
+        "expectedIntent": "handoff-request"
+      }
+    ]
+  },
+  "mobile": {
+    "enabled": false
+  },
+  "suites": {
+    "smoke": ["load", "login", "dashboard", "basic-navigation"],
+    "regression": ["login", "dashboard", "call-handling", "transcripts"],
+    "release": ["smoke", "api", "firebase", "accessibility", "performance", "ai"]
+  },
+  "personas": ["restaurant-owner", "frustrated-user"],
+  "tags": ["web", "firebase", "cloud-run", "ai", "twilio"]
+}

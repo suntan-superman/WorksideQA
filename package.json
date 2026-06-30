@@ -1,0 +1,31 @@
+{
+  "name": "worksideqa",
+  "version": "1.0.0",
+  "description": "Shared QA automation platform for Workside Software products.",
+  "main": "packages/qa-core/src/index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "qa": "node packages/qa-core/src/cli.js",
+    "qa:radiusiq": "node packages/qa-core/src/cli.js --product radiusiq --suite smoke",
+    "qa:merxus": "node packages/qa-core/src/cli.js --product merxus --suite smoke",
+    "qa:sageset": "node packages/qa-core/src/cli.js --product sageset --suite smoke",
+    "qa:all": "node packages/qa-core/src/cli.js --all --suite smoke",
+    "qa:radiusiq:dry": "node packages/qa-core/src/cli.js --product radiusiq --suite smoke --dry-run",
+    "qa:all:dry": "node packages/qa-core/src/cli.js --all --suite smoke --dry-run",
+    "qa:dashboard:data": "node packages/qa-reporting/src/build-dashboard-data.js",
+    "qa:bug-report": "node packages/qa-openai/src/generate-bug-report.js",
+    "qa:report": "node packages/qa-reporting/src/open-latest-report.js",
+    "test": "node packages/qa-core/src/cli.js --product radiusiq --suite smoke --dry-run"
+  },
+  "keywords": [],
+  "author": "Workside Software LLC",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
+    "@playwright/test": "^1.61.1",
+    "pngjs": "^7.0.0"
+  }
+}

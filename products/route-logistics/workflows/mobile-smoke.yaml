@@ -1,0 +1,5 @@
+appId: com.workside.routelogistics
+---
+- launchApp
+- assertVisible: "Route"
+
