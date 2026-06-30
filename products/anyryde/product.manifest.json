@@ -13,7 +13,8 @@
     "workingDirectory": "C:/Users/sjroy/Source/rydeIQ/rydeIQWeb",
     "command": "npm run start",
     "port": 3000,
-    "healthUrl": "http://127.0.0.1:3000"
+    "healthUrl": "http://127.0.0.1:3000",
+    "healthTimeoutMs": 90000
   },
   "auth": {
     "strategy": "email-password",

@@ -1,6 +1,6 @@
 window.WORKSIDEQA_DASHBOARD = {
   "platformVersion": "0.1.0-alpha",
-  "generatedAt": "2026-06-30T04:50:56.230Z",
+  "generatedAt": "2026-06-30T15:51:03.132Z",
   "overallReadiness": 100,
   "products": [
     {
@@ -10,15 +10,15 @@ window.WORKSIDEQA_DASHBOARD = {
       "latestStatus": "PASS",
       "latestReadiness": 100,
       "statusReason": "Clean smoke run: 8 checks passed.",
-      "latestRunStartedAt": "2026-06-30T04:01:10.730Z",
-      "lastCleanRunStartedAt": "2026-06-30T04:01:10.730Z",
+      "latestRunStartedAt": "2026-06-30T15:47:50.487Z",
+      "lastCleanRunStartedAt": "2026-06-30T15:47:50.487Z",
       "failedChecks": 0,
       "warningChecks": 0,
       "skippedChecks": 0,
       "reportLinks": {
-        "html": "../reports/html/2026-06-30T04-02-37-765Z.html",
-        "json": "../reports/json/2026-06-30T04-02-37-765Z.json",
-        "junit": "../reports/junit/2026-06-30T04-02-37-765Z.xml"
+        "html": "../reports/html/2026-06-30T15-50-55-193Z.html",
+        "json": "../reports/json/2026-06-30T15-50-55-193Z.json",
+        "junit": "../reports/junit/2026-06-30T15-50-55-193Z.xml"
       },
       "categoryScores": {
         "browser": {
@@ -118,6 +118,506 @@ window.WORKSIDEQA_DASHBOARD = {
         ]
       },
       "recentRuns": [
+        {
+          "productKey": "anyryde",
+          "productName": "AnyRyde",
+          "suite": "smoke",
+          "environment": "local",
+          "startedAt": "2026-06-30T15:47:50.487Z",
+          "durationMs": 95735,
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 8,
+            "passed": 8,
+            "failed": 0,
+            "warnings": 0,
+            "skipped": 0
+          },
+          "checks": [
+            {
+              "status": "passed",
+              "name": "suite selection",
+              "message": "Loaded smoke suite for AnyRyde."
+            },
+            {
+              "status": "passed",
+              "name": "dev server",
+              "message": "Healthy at http://127.0.0.1:3000"
+            },
+            {
+              "status": "passed",
+              "name": "open app",
+              "message": "http://127.0.0.1:3000 returned 200."
+            },
+            {
+              "status": "passed",
+              "name": "page title",
+              "message": "React App"
+            },
+            {
+              "status": "passed",
+              "name": "screenshot",
+              "message": "Captured initial page screenshot."
+            },
+            {
+              "status": "passed",
+              "name": "login",
+              "message": "Demo credentials submitted."
+            },
+            {
+              "status": "passed",
+              "name": "console errors",
+              "message": "No serious console errors captured."
+            },
+            {
+              "status": "passed",
+              "name": "network failures",
+              "message": "No failed network requests captured."
+            }
+          ],
+          "reportLinks": {
+            "html": "../reports/html/2026-06-30T15-50-55-193Z.html",
+            "json": "../reports/json/2026-06-30T15-50-55-193Z.json",
+            "junit": "../reports/junit/2026-06-30T15-50-55-193Z.xml"
+          },
+          "screenshots": [
+            "../screenshots/current/anyryde/anyryde-home.png"
+          ],
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 8,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          }
+        },
+        {
+          "productKey": "anyryde",
+          "productName": "AnyRyde",
+          "suite": "smoke",
+          "environment": "local",
+          "startedAt": "2026-06-30T13:42:09.510Z",
+          "durationMs": 8773,
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 8,
+            "passed": 8,
+            "failed": 0,
+            "warnings": 0,
+            "skipped": 0
+          },
+          "checks": [
+            {
+              "status": "passed",
+              "name": "suite selection",
+              "message": "Loaded smoke suite for AnyRyde."
+            },
+            {
+              "status": "passed",
+              "name": "dev server",
+              "message": "Healthy at http://127.0.0.1:3000"
+            },
+            {
+              "status": "passed",
+              "name": "open app",
+              "message": "http://127.0.0.1:3000 returned 200."
+            },
+            {
+              "status": "passed",
+              "name": "page title",
+              "message": "React App"
+            },
+            {
+              "status": "passed",
+              "name": "screenshot",
+              "message": "Captured initial page screenshot."
+            },
+            {
+              "status": "passed",
+              "name": "login",
+              "message": "Demo credentials submitted."
+            },
+            {
+              "status": "passed",
+              "name": "console errors",
+              "message": "No serious console errors captured."
+            },
+            {
+              "status": "passed",
+              "name": "network failures",
+              "message": "No failed network requests captured."
+            }
+          ],
+          "reportLinks": {
+            "html": "../reports/html/2026-06-30T13-42-53-496Z.html",
+            "json": "../reports/json/2026-06-30T13-42-53-496Z.json",
+            "junit": "../reports/junit/2026-06-30T13-42-53-496Z.xml"
+          },
+          "screenshots": [
+            "../screenshots/current/anyryde/anyryde-home.png"
+          ],
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 8,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          }
+        },
+        {
+          "productKey": "anyryde",
+          "productName": "AnyRyde",
+          "suite": "smoke",
+          "environment": "local",
+          "startedAt": "2026-06-30T13:38:52.676Z",
+          "durationMs": 66078,
+          "status": "FAIL",
+          "readiness": 0,
+          "counts": {
+            "total": 8,
+            "passed": 7,
+            "failed": 1,
+            "warnings": 0,
+            "skipped": 0
+          },
+          "checks": [
+            {
+              "status": "passed",
+              "name": "suite selection",
+              "message": "Loaded smoke suite for AnyRyde."
+            },
+            {
+              "status": "failed",
+              "name": "dev server",
+              "message": "Did not become healthy at http://127.0.0.1:3000."
+            },
+            {
+              "status": "passed",
+              "name": "open app",
+              "message": "http://127.0.0.1:3000 returned 200."
+            },
+            {
+              "status": "passed",
+              "name": "page title",
+              "message": "React App"
+            },
+            {
+              "status": "passed",
+              "name": "screenshot",
+              "message": "Captured initial page screenshot."
+            },
+            {
+              "status": "passed",
+              "name": "login",
+              "message": "Demo credentials submitted."
+            },
+            {
+              "status": "passed",
+              "name": "console errors",
+              "message": "No serious console errors captured."
+            },
+            {
+              "status": "passed",
+              "name": "network failures",
+              "message": "No failed network requests captured."
+            }
+          ],
+          "reportLinks": {
+            "html": "../reports/html/2026-06-30T13-41-32-052Z.html",
+            "json": "../reports/json/2026-06-30T13-41-32-052Z.json",
+            "junit": "../reports/junit/2026-06-30T13-41-32-052Z.xml"
+          },
+          "screenshots": [
+            "../screenshots/current/anyryde/anyryde-home.png"
+          ],
+          "categoryScores": {
+            "browser": {
+              "status": "failed",
+              "score": 0,
+              "passed": 7,
+              "failed": 1,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          }
+        },
+        {
+          "productKey": "anyryde",
+          "productName": "AnyRyde",
+          "suite": "smoke",
+          "environment": "local",
+          "startedAt": "2026-06-30T13:38:32.774Z",
+          "durationMs": 1,
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "warnings": 0,
+            "skipped": 0
+          },
+          "checks": [
+            {
+              "status": "passed",
+              "name": "suite selection",
+              "message": "Loaded smoke suite for AnyRyde."
+            },
+            {
+              "status": "passed",
+              "name": "browser dry run",
+              "message": "Would open http://127.0.0.1:3000."
+            }
+          ],
+          "reportLinks": {
+            "html": "../reports/html/2026-06-30T13-38-32-818Z.html",
+            "json": "../reports/json/2026-06-30T13-38-32-818Z.json",
+            "junit": "../reports/junit/2026-06-30T13-38-32-818Z.xml"
+          },
+          "screenshots": [],
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 2,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          }
+        },
         {
           "productKey": "anyryde",
           "productName": "AnyRyde",
@@ -639,270 +1139,6 @@ window.WORKSIDEQA_DASHBOARD = {
           },
           "screenshots": [],
           "categoryScores": {}
-        },
-        {
-          "productKey": "anyryde",
-          "productName": "AnyRyde",
-          "suite": "smoke",
-          "environment": "local",
-          "startedAt": "2026-06-30T02:23:06.393Z",
-          "durationMs": 1,
-          "status": "PASS",
-          "readiness": 100,
-          "counts": {
-            "total": 2,
-            "passed": 2,
-            "failed": 0,
-            "warnings": 0,
-            "skipped": 0
-          },
-          "checks": [
-            {
-              "status": "passed",
-              "name": "suite selection",
-              "message": "Loaded smoke suite for AnyRyde."
-            },
-            {
-              "status": "passed",
-              "name": "browser dry run",
-              "message": "Would open http://localhost:5178."
-            }
-          ],
-          "reportLinks": {
-            "html": "../reports/html/2026-06-30T02-23-06-399Z.html",
-            "json": "../reports/json/2026-06-30T02-23-06-399Z.json",
-            "junit": "../reports/junit/2026-06-30T02-23-06-399Z.xml"
-          },
-          "screenshots": [],
-          "categoryScores": {}
-        },
-        {
-          "productKey": "anyryde",
-          "productName": "AnyRyde",
-          "suite": "smoke",
-          "environment": "local",
-          "startedAt": "2026-06-30T01:38:00.913Z",
-          "durationMs": 1,
-          "status": "PASS",
-          "readiness": 100,
-          "counts": {
-            "total": 10,
-            "passed": 10,
-            "failed": 0,
-            "warnings": 0,
-            "skipped": 0
-          },
-          "checks": [
-            {
-              "status": "passed",
-              "name": "suite selection",
-              "message": "Loaded smoke suite for AnyRyde."
-            },
-            {
-              "status": "passed",
-              "name": "browser dry run",
-              "message": "Would open http://localhost:5178."
-            },
-            {
-              "status": "passed",
-              "name": "visual regression dry run",
-              "message": "Would compare screenshots against PNG baselines."
-            },
-            {
-              "status": "passed",
-              "name": "api dry run",
-              "message": "Would evaluate 1 API health check(s)."
-            },
-            {
-              "status": "passed",
-              "name": "firebase dry run",
-              "message": "Would run configured read-only Firebase checks."
-            },
-            {
-              "status": "passed",
-              "name": "network reliability budget",
-              "message": "0 failed requests within budget 0."
-            },
-            {
-              "status": "passed",
-              "name": "accessibility dry run",
-              "message": "Would run Axe accessibility checks."
-            },
-            {
-              "status": "passed",
-              "name": "security dry run",
-              "message": "Would scan captured client-side signals for obvious secret exposure."
-            },
-            {
-              "status": "passed",
-              "name": "ai dry run",
-              "message": "Would evaluate 2 persona prompt(s)."
-            },
-            {
-              "status": "passed",
-              "name": "mobile dry run",
-              "message": "Would inspect Maestro availability, 1 flow(s), and push notification readiness."
-            }
-          ],
-          "reportLinks": {
-            "html": "../reports/html/2026-06-30T01-38-00-917Z.html",
-            "json": "../reports/json/2026-06-30T01-38-00-917Z.json",
-            "junit": "../reports/junit/2026-06-30T01-38-00-917Z.xml"
-          },
-          "screenshots": [],
-          "categoryScores": {}
-        },
-        {
-          "productKey": "anyryde",
-          "productName": "AnyRyde",
-          "suite": "smoke",
-          "environment": "local",
-          "startedAt": "2026-06-30T01:30:27.666Z",
-          "durationMs": 1,
-          "status": "PASS",
-          "readiness": 100,
-          "counts": {
-            "total": 10,
-            "passed": 10,
-            "failed": 0,
-            "warnings": 0,
-            "skipped": 0
-          },
-          "checks": [
-            {
-              "status": "passed",
-              "name": "suite selection",
-              "message": "Loaded smoke suite for AnyRyde."
-            },
-            {
-              "status": "passed",
-              "name": "browser dry run",
-              "message": "Would open http://localhost:5178."
-            },
-            {
-              "status": "passed",
-              "name": "visual regression dry run",
-              "message": "Would compare screenshots against PNG baselines."
-            },
-            {
-              "status": "passed",
-              "name": "api dry run",
-              "message": "Would evaluate 1 API health check(s)."
-            },
-            {
-              "status": "passed",
-              "name": "firebase dry run",
-              "message": "Would run configured read-only Firebase checks."
-            },
-            {
-              "status": "passed",
-              "name": "network reliability budget",
-              "message": "0 failed requests within budget 0."
-            },
-            {
-              "status": "passed",
-              "name": "accessibility dry run",
-              "message": "Would run Axe accessibility checks."
-            },
-            {
-              "status": "passed",
-              "name": "security dry run",
-              "message": "Would scan captured client-side signals for obvious secret exposure."
-            },
-            {
-              "status": "passed",
-              "name": "ai dry run",
-              "message": "Would evaluate 2 persona prompt(s)."
-            },
-            {
-              "status": "passed",
-              "name": "mobile dry run",
-              "message": "Would inspect Maestro availability, 1 flow(s), and push notification readiness."
-            }
-          ],
-          "reportLinks": {
-            "html": "../reports/html/2026-06-30T01-30-27-672Z.html",
-            "json": "../reports/json/2026-06-30T01-30-27-672Z.json",
-            "junit": "../reports/junit/2026-06-30T01-30-27-672Z.xml"
-          },
-          "screenshots": [],
-          "categoryScores": {}
-        },
-        {
-          "productKey": "anyryde",
-          "productName": "AnyRyde",
-          "suite": "smoke",
-          "environment": "local",
-          "startedAt": "2026-06-30T01:29:41.491Z",
-          "durationMs": 1,
-          "status": "PASS",
-          "readiness": 100,
-          "counts": {
-            "total": 10,
-            "passed": 10,
-            "failed": 0,
-            "warnings": 0,
-            "skipped": 0
-          },
-          "checks": [
-            {
-              "status": "passed",
-              "name": "suite selection",
-              "message": "Loaded smoke suite for AnyRyde."
-            },
-            {
-              "status": "passed",
-              "name": "browser dry run",
-              "message": "Would open http://localhost:5178."
-            },
-            {
-              "status": "passed",
-              "name": "visual regression dry run",
-              "message": "Would compare screenshots against PNG baselines."
-            },
-            {
-              "status": "passed",
-              "name": "api dry run",
-              "message": "Would evaluate 1 API health check(s)."
-            },
-            {
-              "status": "passed",
-              "name": "firebase dry run",
-              "message": "Would run configured read-only Firebase checks."
-            },
-            {
-              "status": "passed",
-              "name": "network reliability budget",
-              "message": "0 failed requests within budget 0."
-            },
-            {
-              "status": "passed",
-              "name": "accessibility dry run",
-              "message": "Would run Axe accessibility checks."
-            },
-            {
-              "status": "passed",
-              "name": "security dry run",
-              "message": "Would scan captured client-side signals for obvious secret exposure."
-            },
-            {
-              "status": "passed",
-              "name": "ai dry run",
-              "message": "Would evaluate 2 persona prompt(s)."
-            },
-            {
-              "status": "passed",
-              "name": "mobile dry run",
-              "message": "Would inspect Maestro availability, 1 flow(s), and push notification readiness."
-            }
-          ],
-          "reportLinks": {
-            "html": "../reports/html/2026-06-30T01-29-41-497Z.html",
-            "json": "../reports/json/2026-06-30T01-29-41-497Z.json",
-            "junit": "../reports/junit/2026-06-30T01-29-41-497Z.xml"
-          },
-          "screenshots": [],
-          "categoryScores": {}
         }
       ]
     },
@@ -913,15 +1149,15 @@ window.WORKSIDEQA_DASHBOARD = {
       "latestStatus": "PASS",
       "latestReadiness": 100,
       "statusReason": "Clean smoke run: 8 checks passed.",
-      "latestRunStartedAt": "2026-06-30T04:01:10.730Z",
-      "lastCleanRunStartedAt": "2026-06-30T04:01:10.730Z",
+      "latestRunStartedAt": "2026-06-30T15:47:50.487Z",
+      "lastCleanRunStartedAt": "2026-06-30T15:47:50.487Z",
       "failedChecks": 0,
       "warningChecks": 0,
       "skippedChecks": 0,
       "reportLinks": {
-        "html": "../reports/html/2026-06-30T04-02-37-765Z.html",
-        "json": "../reports/json/2026-06-30T04-02-37-765Z.json",
-        "junit": "../reports/junit/2026-06-30T04-02-37-765Z.xml"
+        "html": "../reports/html/2026-06-30T15-50-55-193Z.html",
+        "json": "../reports/json/2026-06-30T15-50-55-193Z.json",
+        "junit": "../reports/junit/2026-06-30T15-50-55-193Z.xml"
       },
       "categoryScores": {
         "browser": {
@@ -1021,6 +1257,506 @@ window.WORKSIDEQA_DASHBOARD = {
         ]
       },
       "recentRuns": [
+        {
+          "productKey": "merxus",
+          "productName": "Merxus",
+          "suite": "smoke",
+          "environment": "local",
+          "startedAt": "2026-06-30T15:47:50.487Z",
+          "durationMs": 27911,
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 8,
+            "passed": 8,
+            "failed": 0,
+            "warnings": 0,
+            "skipped": 0
+          },
+          "checks": [
+            {
+              "status": "passed",
+              "name": "suite selection",
+              "message": "Loaded smoke suite for Merxus."
+            },
+            {
+              "status": "passed",
+              "name": "dev server",
+              "message": "Healthy at http://127.0.0.1:5174"
+            },
+            {
+              "status": "passed",
+              "name": "open app",
+              "message": "http://127.0.0.1:5174 returned 200."
+            },
+            {
+              "status": "passed",
+              "name": "page title",
+              "message": "Merxus - AI Assistant for Restaurants"
+            },
+            {
+              "status": "passed",
+              "name": "screenshot",
+              "message": "Captured initial page screenshot."
+            },
+            {
+              "status": "passed",
+              "name": "login",
+              "message": "Demo credentials submitted."
+            },
+            {
+              "status": "passed",
+              "name": "console errors",
+              "message": "No serious console errors captured."
+            },
+            {
+              "status": "passed",
+              "name": "network failures",
+              "message": "No failed network requests captured."
+            }
+          ],
+          "reportLinks": {
+            "html": "../reports/html/2026-06-30T15-50-55-193Z.html",
+            "json": "../reports/json/2026-06-30T15-50-55-193Z.json",
+            "junit": "../reports/junit/2026-06-30T15-50-55-193Z.xml"
+          },
+          "screenshots": [
+            "../screenshots/current/merxus/merxus-home.png"
+          ],
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 8,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          }
+        },
+        {
+          "productKey": "merxus",
+          "productName": "Merxus",
+          "suite": "smoke",
+          "environment": "local",
+          "startedAt": "2026-06-30T13:42:09.510Z",
+          "durationMs": 11550,
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 8,
+            "passed": 8,
+            "failed": 0,
+            "warnings": 0,
+            "skipped": 0
+          },
+          "checks": [
+            {
+              "status": "passed",
+              "name": "suite selection",
+              "message": "Loaded smoke suite for Merxus."
+            },
+            {
+              "status": "passed",
+              "name": "dev server",
+              "message": "Healthy at http://127.0.0.1:5174"
+            },
+            {
+              "status": "passed",
+              "name": "open app",
+              "message": "http://127.0.0.1:5174 returned 200."
+            },
+            {
+              "status": "passed",
+              "name": "page title",
+              "message": "Merxus - AI Assistant for Restaurants"
+            },
+            {
+              "status": "passed",
+              "name": "screenshot",
+              "message": "Captured initial page screenshot."
+            },
+            {
+              "status": "passed",
+              "name": "login",
+              "message": "Demo credentials submitted."
+            },
+            {
+              "status": "passed",
+              "name": "console errors",
+              "message": "No serious console errors captured."
+            },
+            {
+              "status": "passed",
+              "name": "network failures",
+              "message": "No failed network requests captured."
+            }
+          ],
+          "reportLinks": {
+            "html": "../reports/html/2026-06-30T13-42-53-496Z.html",
+            "json": "../reports/json/2026-06-30T13-42-53-496Z.json",
+            "junit": "../reports/junit/2026-06-30T13-42-53-496Z.xml"
+          },
+          "screenshots": [
+            "../screenshots/current/merxus/merxus-home.png"
+          ],
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 8,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          }
+        },
+        {
+          "productKey": "merxus",
+          "productName": "Merxus",
+          "suite": "smoke",
+          "environment": "local",
+          "startedAt": "2026-06-30T13:38:52.676Z",
+          "durationMs": 22570,
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 8,
+            "passed": 8,
+            "failed": 0,
+            "warnings": 0,
+            "skipped": 0
+          },
+          "checks": [
+            {
+              "status": "passed",
+              "name": "suite selection",
+              "message": "Loaded smoke suite for Merxus."
+            },
+            {
+              "status": "passed",
+              "name": "dev server",
+              "message": "Healthy at http://127.0.0.1:5174"
+            },
+            {
+              "status": "passed",
+              "name": "open app",
+              "message": "http://127.0.0.1:5174 returned 200."
+            },
+            {
+              "status": "passed",
+              "name": "page title",
+              "message": "Merxus - AI Assistant for Restaurants"
+            },
+            {
+              "status": "passed",
+              "name": "screenshot",
+              "message": "Captured initial page screenshot."
+            },
+            {
+              "status": "passed",
+              "name": "login",
+              "message": "Demo credentials submitted."
+            },
+            {
+              "status": "passed",
+              "name": "console errors",
+              "message": "No serious console errors captured."
+            },
+            {
+              "status": "passed",
+              "name": "network failures",
+              "message": "No failed network requests captured."
+            }
+          ],
+          "reportLinks": {
+            "html": "../reports/html/2026-06-30T13-41-32-052Z.html",
+            "json": "../reports/json/2026-06-30T13-41-32-052Z.json",
+            "junit": "../reports/junit/2026-06-30T13-41-32-052Z.xml"
+          },
+          "screenshots": [
+            "../screenshots/current/merxus/merxus-home.png"
+          ],
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 8,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          }
+        },
+        {
+          "productKey": "merxus",
+          "productName": "Merxus",
+          "suite": "smoke",
+          "environment": "local",
+          "startedAt": "2026-06-30T13:38:32.774Z",
+          "durationMs": 1,
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "warnings": 0,
+            "skipped": 0
+          },
+          "checks": [
+            {
+              "status": "passed",
+              "name": "suite selection",
+              "message": "Loaded smoke suite for Merxus."
+            },
+            {
+              "status": "passed",
+              "name": "browser dry run",
+              "message": "Would open http://127.0.0.1:5174."
+            }
+          ],
+          "reportLinks": {
+            "html": "../reports/html/2026-06-30T13-38-32-818Z.html",
+            "json": "../reports/json/2026-06-30T13-38-32-818Z.json",
+            "junit": "../reports/junit/2026-06-30T13-38-32-818Z.xml"
+          },
+          "screenshots": [],
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 2,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          }
+        },
         {
           "productKey": "merxus",
           "productName": "Merxus",
@@ -1558,219 +2294,6 @@ window.WORKSIDEQA_DASHBOARD = {
             "../screenshots/current/merxus/merxus-home.png"
           ],
           "categoryScores": {}
-        },
-        {
-          "productKey": "merxus",
-          "productName": "Merxus",
-          "suite": "smoke",
-          "environment": "local",
-          "startedAt": "2026-06-30T02:38:09.154Z",
-          "durationMs": 11568,
-          "status": "PASS",
-          "readiness": 100,
-          "counts": {
-            "total": 8,
-            "passed": 8,
-            "failed": 0,
-            "warnings": 0,
-            "skipped": 0
-          },
-          "checks": [
-            {
-              "status": "passed",
-              "name": "suite selection",
-              "message": "Loaded smoke suite for Merxus."
-            },
-            {
-              "status": "passed",
-              "name": "dev server",
-              "message": "Healthy at http://127.0.0.1:5174"
-            },
-            {
-              "status": "passed",
-              "name": "open app",
-              "message": "http://127.0.0.1:5174 returned 200."
-            },
-            {
-              "status": "passed",
-              "name": "page title",
-              "message": "Merxus - AI Assistant for Restaurants"
-            },
-            {
-              "status": "passed",
-              "name": "screenshot",
-              "message": "Captured initial page screenshot."
-            },
-            {
-              "status": "passed",
-              "name": "login",
-              "message": "Demo credentials submitted."
-            },
-            {
-              "status": "passed",
-              "name": "console errors",
-              "message": "No serious console errors captured."
-            },
-            {
-              "status": "passed",
-              "name": "network failures",
-              "message": "No failed network requests captured."
-            }
-          ],
-          "reportLinks": {
-            "html": "../reports/html/2026-06-30T02-38-20-723Z.html",
-            "json": "../reports/json/2026-06-30T02-38-20-723Z.json",
-            "junit": "../reports/junit/2026-06-30T02-38-20-723Z.xml"
-          },
-          "screenshots": [
-            "../screenshots/current/merxus/merxus-home.png"
-          ],
-          "categoryScores": {}
-        },
-        {
-          "productKey": "merxus",
-          "productName": "Merxus",
-          "suite": "smoke",
-          "environment": "local",
-          "startedAt": "2026-06-30T02:36:58.014Z",
-          "durationMs": 27760,
-          "status": "FAIL",
-          "readiness": 88,
-          "counts": {
-            "total": 8,
-            "passed": 7,
-            "failed": 1,
-            "warnings": 0,
-            "skipped": 0
-          },
-          "checks": [
-            {
-              "status": "passed",
-              "name": "suite selection",
-              "message": "Loaded smoke suite for Merxus."
-            },
-            {
-              "status": "passed",
-              "name": "dev server",
-              "message": "Healthy at http://127.0.0.1:5174"
-            },
-            {
-              "status": "passed",
-              "name": "open app",
-              "message": "http://127.0.0.1:5174 returned 200."
-            },
-            {
-              "status": "passed",
-              "name": "page title",
-              "message": "Merxus - AI Assistant for Restaurants"
-            },
-            {
-              "status": "passed",
-              "name": "screenshot",
-              "message": "Captured initial page screenshot."
-            },
-            {
-              "status": "failed",
-              "name": "login",
-              "message": "Could not complete generic login flow: locator.fill: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"], input[name=\"email\"], input[autocomplete=\"email\"]').first()\u001b[22m\n"
-            },
-            {
-              "status": "passed",
-              "name": "console errors",
-              "message": "No serious console errors captured."
-            },
-            {
-              "status": "passed",
-              "name": "network failures",
-              "message": "No failed network requests captured."
-            }
-          ],
-          "reportLinks": {
-            "html": "../reports/html/2026-06-30T02-37-25-775Z.html",
-            "json": "../reports/json/2026-06-30T02-37-25-775Z.json",
-            "junit": "../reports/junit/2026-06-30T02-37-25-775Z.xml"
-          },
-          "screenshots": [
-            "../screenshots/current/merxus/merxus-home.png"
-          ],
-          "categoryScores": {}
-        },
-        {
-          "productKey": "merxus",
-          "productName": "Merxus",
-          "suite": "smoke",
-          "environment": "local",
-          "startedAt": "2026-06-30T02:33:53.740Z",
-          "durationMs": 50028,
-          "status": "FAIL",
-          "readiness": 33,
-          "counts": {
-            "total": 3,
-            "passed": 1,
-            "failed": 2,
-            "warnings": 0,
-            "skipped": 0
-          },
-          "checks": [
-            {
-              "status": "passed",
-              "name": "suite selection",
-              "message": "Loaded smoke suite for Merxus."
-            },
-            {
-              "status": "failed",
-              "name": "dev server",
-              "message": "Did not become healthy at http://localhost:5174; process exited with code 1."
-            },
-            {
-              "status": "failed",
-              "name": "browser smoke",
-              "message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5174/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5174/\", waiting until \"domcontentloaded\"\u001b[22m\n"
-            }
-          ],
-          "reportLinks": {
-            "html": "../reports/html/2026-06-30T02-34-43-770Z.html",
-            "json": "../reports/json/2026-06-30T02-34-43-770Z.json",
-            "junit": "../reports/junit/2026-06-30T02-34-43-770Z.xml"
-          },
-          "screenshots": [],
-          "categoryScores": {}
-        },
-        {
-          "productKey": "merxus",
-          "productName": "Merxus",
-          "suite": "smoke",
-          "environment": "local",
-          "startedAt": "2026-06-30T02:23:06.393Z",
-          "durationMs": 1,
-          "status": "PASS",
-          "readiness": 100,
-          "counts": {
-            "total": 2,
-            "passed": 2,
-            "failed": 0,
-            "warnings": 0,
-            "skipped": 0
-          },
-          "checks": [
-            {
-              "status": "passed",
-              "name": "suite selection",
-              "message": "Loaded smoke suite for Merxus."
-            },
-            {
-              "status": "passed",
-              "name": "browser dry run",
-              "message": "Would open http://localhost:5174."
-            }
-          ],
-          "reportLinks": {
-            "html": "../reports/html/2026-06-30T02-23-06-399Z.html",
-            "json": "../reports/json/2026-06-30T02-23-06-399Z.json",
-            "junit": "../reports/junit/2026-06-30T02-23-06-399Z.xml"
-          },
-          "screenshots": [],
-          "categoryScores": {}
         }
       ]
     },
@@ -1781,15 +2304,15 @@ window.WORKSIDEQA_DASHBOARD = {
       "latestStatus": "PASS",
       "latestReadiness": 100,
       "statusReason": "Clean smoke run: 8 checks passed.",
-      "latestRunStartedAt": "2026-06-30T04:01:10.730Z",
-      "lastCleanRunStartedAt": "2026-06-30T04:01:10.730Z",
+      "latestRunStartedAt": "2026-06-30T15:47:50.487Z",
+      "lastCleanRunStartedAt": "2026-06-30T15:47:50.487Z",
       "failedChecks": 0,
       "warningChecks": 0,
       "skippedChecks": 0,
       "reportLinks": {
-        "html": "../reports/html/2026-06-30T04-02-37-765Z.html",
-        "json": "../reports/json/2026-06-30T04-02-37-765Z.json",
-        "junit": "../reports/junit/2026-06-30T04-02-37-765Z.xml"
+        "html": "../reports/html/2026-06-30T15-50-55-193Z.html",
+        "json": "../reports/json/2026-06-30T15-50-55-193Z.json",
+        "junit": "../reports/junit/2026-06-30T15-50-55-193Z.xml"
       },
       "categoryScores": {
         "browser": {
@@ -1889,6 +2412,506 @@ window.WORKSIDEQA_DASHBOARD = {
         ]
       },
       "recentRuns": [
+        {
+          "productKey": "radiusiq",
+          "productName": "RadiusIQ",
+          "suite": "smoke",
+          "environment": "local",
+          "startedAt": "2026-06-30T15:47:50.487Z",
+          "durationMs": 11593,
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 8,
+            "passed": 8,
+            "failed": 0,
+            "warnings": 0,
+            "skipped": 0
+          },
+          "checks": [
+            {
+              "status": "passed",
+              "name": "suite selection",
+              "message": "Loaded smoke suite for RadiusIQ."
+            },
+            {
+              "status": "passed",
+              "name": "dev server",
+              "message": "Healthy at http://127.0.0.1:5173"
+            },
+            {
+              "status": "passed",
+              "name": "open app",
+              "message": "http://127.0.0.1:5173 returned 200."
+            },
+            {
+              "status": "passed",
+              "name": "page title",
+              "message": "RadiusIQ"
+            },
+            {
+              "status": "passed",
+              "name": "screenshot",
+              "message": "Captured initial page screenshot."
+            },
+            {
+              "status": "passed",
+              "name": "login",
+              "message": "Demo email login request submitted."
+            },
+            {
+              "status": "passed",
+              "name": "console errors",
+              "message": "No serious console errors captured."
+            },
+            {
+              "status": "passed",
+              "name": "network failures",
+              "message": "No failed network requests captured."
+            }
+          ],
+          "reportLinks": {
+            "html": "../reports/html/2026-06-30T15-50-55-193Z.html",
+            "json": "../reports/json/2026-06-30T15-50-55-193Z.json",
+            "junit": "../reports/junit/2026-06-30T15-50-55-193Z.xml"
+          },
+          "screenshots": [
+            "../screenshots/current/radiusiq/radiusiq-home.png"
+          ],
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 8,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          }
+        },
+        {
+          "productKey": "radiusiq",
+          "productName": "RadiusIQ",
+          "suite": "smoke",
+          "environment": "local",
+          "startedAt": "2026-06-30T13:42:09.510Z",
+          "durationMs": 6395,
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 8,
+            "passed": 8,
+            "failed": 0,
+            "warnings": 0,
+            "skipped": 0
+          },
+          "checks": [
+            {
+              "status": "passed",
+              "name": "suite selection",
+              "message": "Loaded smoke suite for RadiusIQ."
+            },
+            {
+              "status": "passed",
+              "name": "dev server",
+              "message": "Healthy at http://127.0.0.1:5173"
+            },
+            {
+              "status": "passed",
+              "name": "open app",
+              "message": "http://127.0.0.1:5173 returned 200."
+            },
+            {
+              "status": "passed",
+              "name": "page title",
+              "message": "RadiusIQ"
+            },
+            {
+              "status": "passed",
+              "name": "screenshot",
+              "message": "Captured initial page screenshot."
+            },
+            {
+              "status": "passed",
+              "name": "login",
+              "message": "Demo email login request submitted."
+            },
+            {
+              "status": "passed",
+              "name": "console errors",
+              "message": "No serious console errors captured."
+            },
+            {
+              "status": "passed",
+              "name": "network failures",
+              "message": "No failed network requests captured."
+            }
+          ],
+          "reportLinks": {
+            "html": "../reports/html/2026-06-30T13-42-53-496Z.html",
+            "json": "../reports/json/2026-06-30T13-42-53-496Z.json",
+            "junit": "../reports/junit/2026-06-30T13-42-53-496Z.xml"
+          },
+          "screenshots": [
+            "../screenshots/current/radiusiq/radiusiq-home.png"
+          ],
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 8,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          }
+        },
+        {
+          "productKey": "radiusiq",
+          "productName": "RadiusIQ",
+          "suite": "smoke",
+          "environment": "local",
+          "startedAt": "2026-06-30T13:38:52.676Z",
+          "durationMs": 12204,
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 8,
+            "passed": 8,
+            "failed": 0,
+            "warnings": 0,
+            "skipped": 0
+          },
+          "checks": [
+            {
+              "status": "passed",
+              "name": "suite selection",
+              "message": "Loaded smoke suite for RadiusIQ."
+            },
+            {
+              "status": "passed",
+              "name": "dev server",
+              "message": "Healthy at http://127.0.0.1:5173"
+            },
+            {
+              "status": "passed",
+              "name": "open app",
+              "message": "http://127.0.0.1:5173 returned 200."
+            },
+            {
+              "status": "passed",
+              "name": "page title",
+              "message": "RadiusIQ"
+            },
+            {
+              "status": "passed",
+              "name": "screenshot",
+              "message": "Captured initial page screenshot."
+            },
+            {
+              "status": "passed",
+              "name": "login",
+              "message": "Demo email login request submitted."
+            },
+            {
+              "status": "passed",
+              "name": "console errors",
+              "message": "No serious console errors captured."
+            },
+            {
+              "status": "passed",
+              "name": "network failures",
+              "message": "No failed network requests captured."
+            }
+          ],
+          "reportLinks": {
+            "html": "../reports/html/2026-06-30T13-41-32-052Z.html",
+            "json": "../reports/json/2026-06-30T13-41-32-052Z.json",
+            "junit": "../reports/junit/2026-06-30T13-41-32-052Z.xml"
+          },
+          "screenshots": [
+            "../screenshots/current/radiusiq/radiusiq-home.png"
+          ],
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 8,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          }
+        },
+        {
+          "productKey": "radiusiq",
+          "productName": "RadiusIQ",
+          "suite": "smoke",
+          "environment": "local",
+          "startedAt": "2026-06-30T13:38:32.774Z",
+          "durationMs": 0,
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "warnings": 0,
+            "skipped": 0
+          },
+          "checks": [
+            {
+              "status": "passed",
+              "name": "suite selection",
+              "message": "Loaded smoke suite for RadiusIQ."
+            },
+            {
+              "status": "passed",
+              "name": "browser dry run",
+              "message": "Would open http://127.0.0.1:5173."
+            }
+          ],
+          "reportLinks": {
+            "html": "../reports/html/2026-06-30T13-38-32-818Z.html",
+            "json": "../reports/json/2026-06-30T13-38-32-818Z.json",
+            "junit": "../reports/junit/2026-06-30T13-38-32-818Z.xml"
+          },
+          "screenshots": [],
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 2,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          }
+        },
         {
           "productKey": "radiusiq",
           "productName": "RadiusIQ",
@@ -2426,278 +3449,6 @@ window.WORKSIDEQA_DASHBOARD = {
             "../screenshots/current/radiusiq/radiusiq-home.png"
           ],
           "categoryScores": {}
-        },
-        {
-          "productKey": "radiusiq",
-          "productName": "RadiusIQ",
-          "suite": "smoke",
-          "environment": "local",
-          "startedAt": "2026-06-30T02:33:30.327Z",
-          "durationMs": 6335,
-          "status": "PASS",
-          "readiness": 100,
-          "counts": {
-            "total": 8,
-            "passed": 8,
-            "failed": 0,
-            "warnings": 0,
-            "skipped": 0
-          },
-          "checks": [
-            {
-              "status": "passed",
-              "name": "suite selection",
-              "message": "Loaded smoke suite for RadiusIQ."
-            },
-            {
-              "status": "passed",
-              "name": "dev server",
-              "message": "Healthy at http://127.0.0.1:5173"
-            },
-            {
-              "status": "passed",
-              "name": "open app",
-              "message": "http://127.0.0.1:5173 returned 200."
-            },
-            {
-              "status": "passed",
-              "name": "page title",
-              "message": "RadiusIQ"
-            },
-            {
-              "status": "passed",
-              "name": "screenshot",
-              "message": "Captured initial page screenshot."
-            },
-            {
-              "status": "passed",
-              "name": "login",
-              "message": "Demo email login request submitted."
-            },
-            {
-              "status": "passed",
-              "name": "console errors",
-              "message": "No serious console errors captured."
-            },
-            {
-              "status": "passed",
-              "name": "network failures",
-              "message": "No failed network requests captured."
-            }
-          ],
-          "reportLinks": {
-            "html": "../reports/html/2026-06-30T02-33-36-663Z.html",
-            "json": "../reports/json/2026-06-30T02-33-36-663Z.json",
-            "junit": "../reports/junit/2026-06-30T02-33-36-663Z.xml"
-          },
-          "screenshots": [
-            "../screenshots/current/radiusiq/radiusiq-home.png"
-          ],
-          "categoryScores": {}
-        },
-        {
-          "productKey": "radiusiq",
-          "productName": "RadiusIQ",
-          "suite": "smoke",
-          "environment": "local",
-          "startedAt": "2026-06-30T02:33:02.213Z",
-          "durationMs": 6640,
-          "status": "PASS",
-          "readiness": 100,
-          "counts": {
-            "total": 8,
-            "passed": 8,
-            "failed": 0,
-            "warnings": 0,
-            "skipped": 0
-          },
-          "checks": [
-            {
-              "status": "passed",
-              "name": "suite selection",
-              "message": "Loaded smoke suite for RadiusIQ."
-            },
-            {
-              "status": "passed",
-              "name": "dev server",
-              "message": "Healthy at http://127.0.0.1:5173"
-            },
-            {
-              "status": "passed",
-              "name": "open app",
-              "message": "http://127.0.0.1:5173 returned 200."
-            },
-            {
-              "status": "passed",
-              "name": "page title",
-              "message": "RadiusIQ"
-            },
-            {
-              "status": "passed",
-              "name": "screenshot",
-              "message": "Captured initial page screenshot."
-            },
-            {
-              "status": "passed",
-              "name": "login",
-              "message": "Demo email login request submitted."
-            },
-            {
-              "status": "passed",
-              "name": "console errors",
-              "message": "No serious console errors captured."
-            },
-            {
-              "status": "passed",
-              "name": "network failures",
-              "message": "No failed network requests captured."
-            }
-          ],
-          "reportLinks": {
-            "html": "../reports/html/2026-06-30T02-33-08-854Z.html",
-            "json": "../reports/json/2026-06-30T02-33-08-854Z.json",
-            "junit": "../reports/junit/2026-06-30T02-33-08-854Z.xml"
-          },
-          "screenshots": [
-            "../screenshots/current/radiusiq/radiusiq-home.png"
-          ],
-          "categoryScores": {}
-        },
-        {
-          "productKey": "radiusiq",
-          "productName": "RadiusIQ",
-          "suite": "smoke",
-          "environment": "local",
-          "startedAt": "2026-06-30T02:24:50.033Z",
-          "durationMs": 6881,
-          "status": "PASS",
-          "readiness": 96,
-          "counts": {
-            "total": 8,
-            "passed": 7,
-            "failed": 0,
-            "warnings": 1,
-            "skipped": 0
-          },
-          "checks": [
-            {
-              "status": "passed",
-              "name": "suite selection",
-              "message": "Loaded smoke suite for RadiusIQ."
-            },
-            {
-              "status": "passed",
-              "name": "dev server",
-              "message": "Healthy at http://127.0.0.1:5173"
-            },
-            {
-              "status": "passed",
-              "name": "open app",
-              "message": "http://127.0.0.1:5173 returned 200."
-            },
-            {
-              "status": "warning",
-              "name": "page title",
-              "message": "No document title found."
-            },
-            {
-              "status": "passed",
-              "name": "screenshot",
-              "message": "Captured initial page screenshot."
-            },
-            {
-              "status": "passed",
-              "name": "login",
-              "message": "Demo email login request submitted."
-            },
-            {
-              "status": "passed",
-              "name": "console errors",
-              "message": "No serious console errors captured."
-            },
-            {
-              "status": "passed",
-              "name": "network failures",
-              "message": "No failed network requests captured."
-            }
-          ],
-          "reportLinks": {
-            "html": "../reports/html/2026-06-30T02-24-56-916Z.html",
-            "json": "../reports/json/2026-06-30T02-24-56-916Z.json",
-            "junit": "../reports/junit/2026-06-30T02-24-56-916Z.xml"
-          },
-          "screenshots": [
-            "../screenshots/current/radiusiq/radiusiq-home.png"
-          ],
-          "categoryScores": {}
-        },
-        {
-          "productKey": "radiusiq",
-          "productName": "RadiusIQ",
-          "suite": "smoke",
-          "environment": "local",
-          "startedAt": "2026-06-30T02:23:18.997Z",
-          "durationMs": 16117,
-          "status": "FAIL",
-          "readiness": 83,
-          "counts": {
-            "total": 8,
-            "passed": 6,
-            "failed": 1,
-            "warnings": 1,
-            "skipped": 0
-          },
-          "checks": [
-            {
-              "status": "passed",
-              "name": "suite selection",
-              "message": "Loaded smoke suite for RadiusIQ."
-            },
-            {
-              "status": "passed",
-              "name": "dev server",
-              "message": "Healthy at http://127.0.0.1:5173"
-            },
-            {
-              "status": "passed",
-              "name": "open app",
-              "message": "http://127.0.0.1:5173 returned 200."
-            },
-            {
-              "status": "warning",
-              "name": "page title",
-              "message": "No document title found."
-            },
-            {
-              "status": "passed",
-              "name": "screenshot",
-              "message": "Captured initial page screenshot."
-            },
-            {
-              "status": "failed",
-              "name": "login",
-              "message": "Could not complete generic login flow: locator.fill: Timeout 6000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"], input[name=\"email\"], input[autocomplete=\"email\"]').first()\u001b[22m\n"
-            },
-            {
-              "status": "passed",
-              "name": "console errors",
-              "message": "No serious console errors captured."
-            },
-            {
-              "status": "passed",
-              "name": "network failures",
-              "message": "No failed network requests captured."
-            }
-          ],
-          "reportLinks": {
-            "html": "../reports/html/2026-06-30T02-23-35-115Z.html",
-            "json": "../reports/json/2026-06-30T02-23-35-115Z.json",
-            "junit": "../reports/junit/2026-06-30T02-23-35-115Z.xml"
-          },
-          "screenshots": [
-            "../screenshots/current/radiusiq/radiusiq-home.png"
-          ],
-          "categoryScores": {}
         }
       ]
     },
@@ -2708,15 +3459,15 @@ window.WORKSIDEQA_DASHBOARD = {
       "latestStatus": "PASS",
       "latestReadiness": 100,
       "statusReason": "Clean smoke run: 8 checks passed.",
-      "latestRunStartedAt": "2026-06-30T04:01:10.730Z",
-      "lastCleanRunStartedAt": "2026-06-30T04:01:10.730Z",
+      "latestRunStartedAt": "2026-06-30T15:47:50.487Z",
+      "lastCleanRunStartedAt": "2026-06-30T15:47:50.487Z",
       "failedChecks": 0,
       "warningChecks": 0,
       "skippedChecks": 0,
       "reportLinks": {
-        "html": "../reports/html/2026-06-30T04-02-37-765Z.html",
-        "json": "../reports/json/2026-06-30T04-02-37-765Z.json",
-        "junit": "../reports/junit/2026-06-30T04-02-37-765Z.xml"
+        "html": "../reports/html/2026-06-30T15-50-55-193Z.html",
+        "json": "../reports/json/2026-06-30T15-50-55-193Z.json",
+        "junit": "../reports/junit/2026-06-30T15-50-55-193Z.xml"
       },
       "categoryScores": {
         "browser": {
@@ -2816,6 +3567,506 @@ window.WORKSIDEQA_DASHBOARD = {
         ]
       },
       "recentRuns": [
+        {
+          "productKey": "route-logistics",
+          "productName": "Route Logistics",
+          "suite": "smoke",
+          "environment": "local",
+          "startedAt": "2026-06-30T15:47:50.487Z",
+          "durationMs": 22123,
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 8,
+            "passed": 8,
+            "failed": 0,
+            "warnings": 0,
+            "skipped": 0
+          },
+          "checks": [
+            {
+              "status": "passed",
+              "name": "suite selection",
+              "message": "Loaded smoke suite for Route Logistics."
+            },
+            {
+              "status": "passed",
+              "name": "dev server",
+              "message": "Healthy at http://127.0.0.1:5177"
+            },
+            {
+              "status": "passed",
+              "name": "open app",
+              "message": "http://127.0.0.1:5177 returned 200."
+            },
+            {
+              "status": "passed",
+              "name": "page title",
+              "message": "Route Logistics"
+            },
+            {
+              "status": "passed",
+              "name": "screenshot",
+              "message": "Captured initial page screenshot."
+            },
+            {
+              "status": "passed",
+              "name": "login",
+              "message": "Demo credentials submitted."
+            },
+            {
+              "status": "passed",
+              "name": "console errors",
+              "message": "No serious console errors captured."
+            },
+            {
+              "status": "passed",
+              "name": "network failures",
+              "message": "No failed network requests captured."
+            }
+          ],
+          "reportLinks": {
+            "html": "../reports/html/2026-06-30T15-50-55-193Z.html",
+            "json": "../reports/json/2026-06-30T15-50-55-193Z.json",
+            "junit": "../reports/junit/2026-06-30T15-50-55-193Z.xml"
+          },
+          "screenshots": [
+            "../screenshots/current/route-logistics/route-logistics-home.png"
+          ],
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 8,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          }
+        },
+        {
+          "productKey": "route-logistics",
+          "productName": "Route Logistics",
+          "suite": "smoke",
+          "environment": "local",
+          "startedAt": "2026-06-30T13:42:09.510Z",
+          "durationMs": 5985,
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 8,
+            "passed": 8,
+            "failed": 0,
+            "warnings": 0,
+            "skipped": 0
+          },
+          "checks": [
+            {
+              "status": "passed",
+              "name": "suite selection",
+              "message": "Loaded smoke suite for Route Logistics."
+            },
+            {
+              "status": "passed",
+              "name": "dev server",
+              "message": "Healthy at http://127.0.0.1:5177"
+            },
+            {
+              "status": "passed",
+              "name": "open app",
+              "message": "http://127.0.0.1:5177 returned 200."
+            },
+            {
+              "status": "passed",
+              "name": "page title",
+              "message": "Route Logistics"
+            },
+            {
+              "status": "passed",
+              "name": "screenshot",
+              "message": "Captured initial page screenshot."
+            },
+            {
+              "status": "passed",
+              "name": "login",
+              "message": "Demo credentials submitted."
+            },
+            {
+              "status": "passed",
+              "name": "console errors",
+              "message": "No serious console errors captured."
+            },
+            {
+              "status": "passed",
+              "name": "network failures",
+              "message": "No failed network requests captured."
+            }
+          ],
+          "reportLinks": {
+            "html": "../reports/html/2026-06-30T13-42-53-496Z.html",
+            "json": "../reports/json/2026-06-30T13-42-53-496Z.json",
+            "junit": "../reports/junit/2026-06-30T13-42-53-496Z.xml"
+          },
+          "screenshots": [
+            "../screenshots/current/route-logistics/route-logistics-home.png"
+          ],
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 8,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          }
+        },
+        {
+          "productKey": "route-logistics",
+          "productName": "Route Logistics",
+          "suite": "smoke",
+          "environment": "local",
+          "startedAt": "2026-06-30T13:38:52.676Z",
+          "durationMs": 21634,
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 8,
+            "passed": 8,
+            "failed": 0,
+            "warnings": 0,
+            "skipped": 0
+          },
+          "checks": [
+            {
+              "status": "passed",
+              "name": "suite selection",
+              "message": "Loaded smoke suite for Route Logistics."
+            },
+            {
+              "status": "passed",
+              "name": "dev server",
+              "message": "Healthy at http://127.0.0.1:5177"
+            },
+            {
+              "status": "passed",
+              "name": "open app",
+              "message": "http://127.0.0.1:5177 returned 200."
+            },
+            {
+              "status": "passed",
+              "name": "page title",
+              "message": "Route Logistics"
+            },
+            {
+              "status": "passed",
+              "name": "screenshot",
+              "message": "Captured initial page screenshot."
+            },
+            {
+              "status": "passed",
+              "name": "login",
+              "message": "Demo credentials submitted."
+            },
+            {
+              "status": "passed",
+              "name": "console errors",
+              "message": "No serious console errors captured."
+            },
+            {
+              "status": "passed",
+              "name": "network failures",
+              "message": "No failed network requests captured."
+            }
+          ],
+          "reportLinks": {
+            "html": "../reports/html/2026-06-30T13-41-32-052Z.html",
+            "json": "../reports/json/2026-06-30T13-41-32-052Z.json",
+            "junit": "../reports/junit/2026-06-30T13-41-32-052Z.xml"
+          },
+          "screenshots": [
+            "../screenshots/current/route-logistics/route-logistics-home.png"
+          ],
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 8,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          }
+        },
+        {
+          "productKey": "route-logistics",
+          "productName": "Route Logistics",
+          "suite": "smoke",
+          "environment": "local",
+          "startedAt": "2026-06-30T13:38:32.774Z",
+          "durationMs": 0,
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "warnings": 0,
+            "skipped": 0
+          },
+          "checks": [
+            {
+              "status": "passed",
+              "name": "suite selection",
+              "message": "Loaded smoke suite for Route Logistics."
+            },
+            {
+              "status": "passed",
+              "name": "browser dry run",
+              "message": "Would open http://127.0.0.1:5177."
+            }
+          ],
+          "reportLinks": {
+            "html": "../reports/html/2026-06-30T13-38-32-818Z.html",
+            "json": "../reports/json/2026-06-30T13-38-32-818Z.json",
+            "junit": "../reports/junit/2026-06-30T13-38-32-818Z.xml"
+          },
+          "screenshots": [],
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 2,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          }
+        },
         {
           "productKey": "route-logistics",
           "productName": "Route Logistics",
@@ -3240,310 +4491,6 @@ window.WORKSIDEQA_DASHBOARD = {
           },
           "screenshots": [],
           "categoryScores": {}
-        },
-        {
-          "productKey": "route-logistics",
-          "productName": "Route Logistics",
-          "suite": "smoke",
-          "environment": "local",
-          "startedAt": "2026-06-30T01:38:00.913Z",
-          "durationMs": 0,
-          "status": "PASS",
-          "readiness": 100,
-          "counts": {
-            "total": 10,
-            "passed": 10,
-            "failed": 0,
-            "warnings": 0,
-            "skipped": 0
-          },
-          "checks": [
-            {
-              "status": "passed",
-              "name": "suite selection",
-              "message": "Loaded smoke suite for Route Logistics."
-            },
-            {
-              "status": "passed",
-              "name": "browser dry run",
-              "message": "Would open http://localhost:5177."
-            },
-            {
-              "status": "passed",
-              "name": "visual regression dry run",
-              "message": "Would compare screenshots against PNG baselines."
-            },
-            {
-              "status": "passed",
-              "name": "api dry run",
-              "message": "Would evaluate 1 API health check(s)."
-            },
-            {
-              "status": "passed",
-              "name": "firebase dry run",
-              "message": "Would run configured read-only Firebase checks."
-            },
-            {
-              "status": "passed",
-              "name": "network reliability budget",
-              "message": "0 failed requests within budget 0."
-            },
-            {
-              "status": "passed",
-              "name": "accessibility dry run",
-              "message": "Would run Axe accessibility checks."
-            },
-            {
-              "status": "passed",
-              "name": "security dry run",
-              "message": "Would scan captured client-side signals for obvious secret exposure."
-            },
-            {
-              "status": "passed",
-              "name": "ai dry run",
-              "message": "Would evaluate 2 persona prompt(s)."
-            },
-            {
-              "status": "passed",
-              "name": "mobile dry run",
-              "message": "Would inspect Maestro availability, 1 flow(s), and push notification readiness."
-            }
-          ],
-          "reportLinks": {
-            "html": "../reports/html/2026-06-30T01-38-00-917Z.html",
-            "json": "../reports/json/2026-06-30T01-38-00-917Z.json",
-            "junit": "../reports/junit/2026-06-30T01-38-00-917Z.xml"
-          },
-          "screenshots": [],
-          "categoryScores": {}
-        },
-        {
-          "productKey": "route-logistics",
-          "productName": "Route Logistics",
-          "suite": "smoke",
-          "environment": "local",
-          "startedAt": "2026-06-30T01:30:27.666Z",
-          "durationMs": 0,
-          "status": "PASS",
-          "readiness": 100,
-          "counts": {
-            "total": 10,
-            "passed": 10,
-            "failed": 0,
-            "warnings": 0,
-            "skipped": 0
-          },
-          "checks": [
-            {
-              "status": "passed",
-              "name": "suite selection",
-              "message": "Loaded smoke suite for Route Logistics."
-            },
-            {
-              "status": "passed",
-              "name": "browser dry run",
-              "message": "Would open http://localhost:5177."
-            },
-            {
-              "status": "passed",
-              "name": "visual regression dry run",
-              "message": "Would compare screenshots against PNG baselines."
-            },
-            {
-              "status": "passed",
-              "name": "api dry run",
-              "message": "Would evaluate 1 API health check(s)."
-            },
-            {
-              "status": "passed",
-              "name": "firebase dry run",
-              "message": "Would run configured read-only Firebase checks."
-            },
-            {
-              "status": "passed",
-              "name": "network reliability budget",
-              "message": "0 failed requests within budget 0."
-            },
-            {
-              "status": "passed",
-              "name": "accessibility dry run",
-              "message": "Would run Axe accessibility checks."
-            },
-            {
-              "status": "passed",
-              "name": "security dry run",
-              "message": "Would scan captured client-side signals for obvious secret exposure."
-            },
-            {
-              "status": "passed",
-              "name": "ai dry run",
-              "message": "Would evaluate 2 persona prompt(s)."
-            },
-            {
-              "status": "passed",
-              "name": "mobile dry run",
-              "message": "Would inspect Maestro availability, 1 flow(s), and push notification readiness."
-            }
-          ],
-          "reportLinks": {
-            "html": "../reports/html/2026-06-30T01-30-27-672Z.html",
-            "json": "../reports/json/2026-06-30T01-30-27-672Z.json",
-            "junit": "../reports/junit/2026-06-30T01-30-27-672Z.xml"
-          },
-          "screenshots": [],
-          "categoryScores": {}
-        },
-        {
-          "productKey": "route-logistics",
-          "productName": "Route Logistics",
-          "suite": "smoke",
-          "environment": "local",
-          "startedAt": "2026-06-30T01:29:41.491Z",
-          "durationMs": 0,
-          "status": "PASS",
-          "readiness": 100,
-          "counts": {
-            "total": 10,
-            "passed": 10,
-            "failed": 0,
-            "warnings": 0,
-            "skipped": 0
-          },
-          "checks": [
-            {
-              "status": "passed",
-              "name": "suite selection",
-              "message": "Loaded smoke suite for Route Logistics."
-            },
-            {
-              "status": "passed",
-              "name": "browser dry run",
-              "message": "Would open http://localhost:5177."
-            },
-            {
-              "status": "passed",
-              "name": "visual regression dry run",
-              "message": "Would compare screenshots against PNG baselines."
-            },
-            {
-              "status": "passed",
-              "name": "api dry run",
-              "message": "Would evaluate 1 API health check(s)."
-            },
-            {
-              "status": "passed",
-              "name": "firebase dry run",
-              "message": "Would run configured read-only Firebase checks."
-            },
-            {
-              "status": "passed",
-              "name": "network reliability budget",
-              "message": "0 failed requests within budget 0."
-            },
-            {
-              "status": "passed",
-              "name": "accessibility dry run",
-              "message": "Would run Axe accessibility checks."
-            },
-            {
-              "status": "passed",
-              "name": "security dry run",
-              "message": "Would scan captured client-side signals for obvious secret exposure."
-            },
-            {
-              "status": "passed",
-              "name": "ai dry run",
-              "message": "Would evaluate 2 persona prompt(s)."
-            },
-            {
-              "status": "passed",
-              "name": "mobile dry run",
-              "message": "Would inspect Maestro availability, 1 flow(s), and push notification readiness."
-            }
-          ],
-          "reportLinks": {
-            "html": "../reports/html/2026-06-30T01-29-41-497Z.html",
-            "json": "../reports/json/2026-06-30T01-29-41-497Z.json",
-            "junit": "../reports/junit/2026-06-30T01-29-41-497Z.xml"
-          },
-          "screenshots": [],
-          "categoryScores": {}
-        },
-        {
-          "productKey": "route-logistics",
-          "productName": "Route Logistics",
-          "suite": "smoke",
-          "environment": "local",
-          "startedAt": "2026-06-30T01:28:35.191Z",
-          "durationMs": 0,
-          "status": "PASS",
-          "readiness": 100,
-          "counts": {
-            "total": 10,
-            "passed": 10,
-            "failed": 0,
-            "warnings": 0,
-            "skipped": 0
-          },
-          "checks": [
-            {
-              "status": "passed",
-              "name": "suite selection",
-              "message": "Loaded smoke suite for Route Logistics."
-            },
-            {
-              "status": "passed",
-              "name": "browser dry run",
-              "message": "Would open http://localhost:5177."
-            },
-            {
-              "status": "passed",
-              "name": "visual regression dry run",
-              "message": "Would compare screenshots against PNG baselines."
-            },
-            {
-              "status": "passed",
-              "name": "api dry run",
-              "message": "Would evaluate 1 API health check(s)."
-            },
-            {
-              "status": "passed",
-              "name": "firebase dry run",
-              "message": "Would run configured read-only Firebase checks."
-            },
-            {
-              "status": "passed",
-              "name": "network reliability budget",
-              "message": "0 failed requests within budget 0."
-            },
-            {
-              "status": "passed",
-              "name": "accessibility dry run",
-              "message": "Would run Axe accessibility checks."
-            },
-            {
-              "status": "passed",
-              "name": "security dry run",
-              "message": "Would scan captured client-side signals for obvious secret exposure."
-            },
-            {
-              "status": "passed",
-              "name": "ai dry run",
-              "message": "Would evaluate 2 persona prompt(s)."
-            },
-            {
-              "status": "passed",
-              "name": "mobile dry run",
-              "message": "Would inspect Maestro availability, 1 flow(s), and push notification readiness."
-            }
-          ],
-          "reportLinks": {
-            "html": "../reports/html/2026-06-30T01-28-35-196Z.html",
-            "json": "../reports/json/2026-06-30T01-28-35-196Z.json",
-            "junit": "../reports/junit/2026-06-30T01-28-35-196Z.xml"
-          },
-          "screenshots": [],
-          "categoryScores": {}
         }
       ]
     },
@@ -3554,15 +4501,15 @@ window.WORKSIDEQA_DASHBOARD = {
       "latestStatus": "PASS",
       "latestReadiness": 100,
       "statusReason": "Clean smoke run: 8 checks passed.",
-      "latestRunStartedAt": "2026-06-30T04:01:10.730Z",
-      "lastCleanRunStartedAt": "2026-06-30T04:01:10.730Z",
+      "latestRunStartedAt": "2026-06-30T15:47:50.487Z",
+      "lastCleanRunStartedAt": "2026-06-30T15:47:50.487Z",
       "failedChecks": 0,
       "warningChecks": 0,
       "skippedChecks": 0,
       "reportLinks": {
-        "html": "../reports/html/2026-06-30T04-02-37-765Z.html",
-        "json": "../reports/json/2026-06-30T04-02-37-765Z.json",
-        "junit": "../reports/junit/2026-06-30T04-02-37-765Z.xml"
+        "html": "../reports/html/2026-06-30T15-50-55-193Z.html",
+        "json": "../reports/json/2026-06-30T15-50-55-193Z.json",
+        "junit": "../reports/junit/2026-06-30T15-50-55-193Z.xml"
       },
       "categoryScores": {
         "browser": {
@@ -3662,6 +4609,506 @@ window.WORKSIDEQA_DASHBOARD = {
         ]
       },
       "recentRuns": [
+        {
+          "productKey": "sageset",
+          "productName": "SageSet",
+          "suite": "smoke",
+          "environment": "local",
+          "startedAt": "2026-06-30T15:47:50.487Z",
+          "durationMs": 15778,
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 8,
+            "passed": 8,
+            "failed": 0,
+            "warnings": 0,
+            "skipped": 0
+          },
+          "checks": [
+            {
+              "status": "passed",
+              "name": "suite selection",
+              "message": "Loaded smoke suite for SageSet."
+            },
+            {
+              "status": "passed",
+              "name": "dev server",
+              "message": "Healthy at http://127.0.0.1:5175"
+            },
+            {
+              "status": "passed",
+              "name": "open app",
+              "message": "http://127.0.0.1:5175 returned 200."
+            },
+            {
+              "status": "passed",
+              "name": "page title",
+              "message": "SageSet Fitness"
+            },
+            {
+              "status": "passed",
+              "name": "screenshot",
+              "message": "Captured initial page screenshot."
+            },
+            {
+              "status": "passed",
+              "name": "login",
+              "message": "Demo credentials submitted."
+            },
+            {
+              "status": "passed",
+              "name": "console errors",
+              "message": "No serious console errors captured."
+            },
+            {
+              "status": "passed",
+              "name": "network failures",
+              "message": "No failed network requests captured."
+            }
+          ],
+          "reportLinks": {
+            "html": "../reports/html/2026-06-30T15-50-55-193Z.html",
+            "json": "../reports/json/2026-06-30T15-50-55-193Z.json",
+            "junit": "../reports/junit/2026-06-30T15-50-55-193Z.xml"
+          },
+          "screenshots": [
+            "../screenshots/current/sageset/sageset-home.png"
+          ],
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 8,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          }
+        },
+        {
+          "productKey": "sageset",
+          "productName": "SageSet",
+          "suite": "smoke",
+          "environment": "local",
+          "startedAt": "2026-06-30T13:42:09.510Z",
+          "durationMs": 6533,
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 8,
+            "passed": 8,
+            "failed": 0,
+            "warnings": 0,
+            "skipped": 0
+          },
+          "checks": [
+            {
+              "status": "passed",
+              "name": "suite selection",
+              "message": "Loaded smoke suite for SageSet."
+            },
+            {
+              "status": "passed",
+              "name": "dev server",
+              "message": "Healthy at http://127.0.0.1:5175"
+            },
+            {
+              "status": "passed",
+              "name": "open app",
+              "message": "http://127.0.0.1:5175 returned 200."
+            },
+            {
+              "status": "passed",
+              "name": "page title",
+              "message": "SageSet Fitness"
+            },
+            {
+              "status": "passed",
+              "name": "screenshot",
+              "message": "Captured initial page screenshot."
+            },
+            {
+              "status": "passed",
+              "name": "login",
+              "message": "Demo credentials submitted."
+            },
+            {
+              "status": "passed",
+              "name": "console errors",
+              "message": "No serious console errors captured."
+            },
+            {
+              "status": "passed",
+              "name": "network failures",
+              "message": "No failed network requests captured."
+            }
+          ],
+          "reportLinks": {
+            "html": "../reports/html/2026-06-30T13-42-53-496Z.html",
+            "json": "../reports/json/2026-06-30T13-42-53-496Z.json",
+            "junit": "../reports/junit/2026-06-30T13-42-53-496Z.xml"
+          },
+          "screenshots": [
+            "../screenshots/current/sageset/sageset-home.png"
+          ],
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 8,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          }
+        },
+        {
+          "productKey": "sageset",
+          "productName": "SageSet",
+          "suite": "smoke",
+          "environment": "local",
+          "startedAt": "2026-06-30T13:38:52.676Z",
+          "durationMs": 18643,
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 8,
+            "passed": 8,
+            "failed": 0,
+            "warnings": 0,
+            "skipped": 0
+          },
+          "checks": [
+            {
+              "status": "passed",
+              "name": "suite selection",
+              "message": "Loaded smoke suite for SageSet."
+            },
+            {
+              "status": "passed",
+              "name": "dev server",
+              "message": "Healthy at http://127.0.0.1:5175"
+            },
+            {
+              "status": "passed",
+              "name": "open app",
+              "message": "http://127.0.0.1:5175 returned 200."
+            },
+            {
+              "status": "passed",
+              "name": "page title",
+              "message": "SageSet Fitness"
+            },
+            {
+              "status": "passed",
+              "name": "screenshot",
+              "message": "Captured initial page screenshot."
+            },
+            {
+              "status": "passed",
+              "name": "login",
+              "message": "Demo credentials submitted."
+            },
+            {
+              "status": "passed",
+              "name": "console errors",
+              "message": "No serious console errors captured."
+            },
+            {
+              "status": "passed",
+              "name": "network failures",
+              "message": "No failed network requests captured."
+            }
+          ],
+          "reportLinks": {
+            "html": "../reports/html/2026-06-30T13-41-32-052Z.html",
+            "json": "../reports/json/2026-06-30T13-41-32-052Z.json",
+            "junit": "../reports/junit/2026-06-30T13-41-32-052Z.xml"
+          },
+          "screenshots": [
+            "../screenshots/current/sageset/sageset-home.png"
+          ],
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 8,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          }
+        },
+        {
+          "productKey": "sageset",
+          "productName": "SageSet",
+          "suite": "smoke",
+          "environment": "local",
+          "startedAt": "2026-06-30T13:38:32.774Z",
+          "durationMs": 0,
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "warnings": 0,
+            "skipped": 0
+          },
+          "checks": [
+            {
+              "status": "passed",
+              "name": "suite selection",
+              "message": "Loaded smoke suite for SageSet."
+            },
+            {
+              "status": "passed",
+              "name": "browser dry run",
+              "message": "Would open http://127.0.0.1:5175."
+            }
+          ],
+          "reportLinks": {
+            "html": "../reports/html/2026-06-30T13-38-32-818Z.html",
+            "json": "../reports/json/2026-06-30T13-38-32-818Z.json",
+            "junit": "../reports/junit/2026-06-30T13-38-32-818Z.xml"
+          },
+          "screenshots": [],
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 2,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          }
+        },
         {
           "productKey": "sageset",
           "productName": "SageSet",
@@ -4183,270 +5630,6 @@ window.WORKSIDEQA_DASHBOARD = {
           },
           "screenshots": [],
           "categoryScores": {}
-        },
-        {
-          "productKey": "sageset",
-          "productName": "SageSet",
-          "suite": "smoke",
-          "environment": "local",
-          "startedAt": "2026-06-30T02:23:06.393Z",
-          "durationMs": 1,
-          "status": "PASS",
-          "readiness": 100,
-          "counts": {
-            "total": 2,
-            "passed": 2,
-            "failed": 0,
-            "warnings": 0,
-            "skipped": 0
-          },
-          "checks": [
-            {
-              "status": "passed",
-              "name": "suite selection",
-              "message": "Loaded smoke suite for SageSet."
-            },
-            {
-              "status": "passed",
-              "name": "browser dry run",
-              "message": "Would open http://localhost:5175."
-            }
-          ],
-          "reportLinks": {
-            "html": "../reports/html/2026-06-30T02-23-06-399Z.html",
-            "json": "../reports/json/2026-06-30T02-23-06-399Z.json",
-            "junit": "../reports/junit/2026-06-30T02-23-06-399Z.xml"
-          },
-          "screenshots": [],
-          "categoryScores": {}
-        },
-        {
-          "productKey": "sageset",
-          "productName": "SageSet",
-          "suite": "smoke",
-          "environment": "local",
-          "startedAt": "2026-06-30T01:38:00.913Z",
-          "durationMs": 0,
-          "status": "PASS",
-          "readiness": 100,
-          "counts": {
-            "total": 10,
-            "passed": 10,
-            "failed": 0,
-            "warnings": 0,
-            "skipped": 0
-          },
-          "checks": [
-            {
-              "status": "passed",
-              "name": "suite selection",
-              "message": "Loaded smoke suite for SageSet."
-            },
-            {
-              "status": "passed",
-              "name": "browser dry run",
-              "message": "Would open http://localhost:5175."
-            },
-            {
-              "status": "passed",
-              "name": "visual regression dry run",
-              "message": "Would compare screenshots against PNG baselines."
-            },
-            {
-              "status": "passed",
-              "name": "api dry run",
-              "message": "Would evaluate 1 API health check(s)."
-            },
-            {
-              "status": "passed",
-              "name": "firebase dry run",
-              "message": "Would run configured read-only Firebase checks."
-            },
-            {
-              "status": "passed",
-              "name": "network reliability budget",
-              "message": "0 failed requests within budget 0."
-            },
-            {
-              "status": "passed",
-              "name": "accessibility dry run",
-              "message": "Would run Axe accessibility checks."
-            },
-            {
-              "status": "passed",
-              "name": "security dry run",
-              "message": "Would scan captured client-side signals for obvious secret exposure."
-            },
-            {
-              "status": "passed",
-              "name": "ai dry run",
-              "message": "Would evaluate 2 persona prompt(s)."
-            },
-            {
-              "status": "passed",
-              "name": "mobile dry run",
-              "message": "Would inspect Maestro availability, 1 flow(s), and push notification readiness."
-            }
-          ],
-          "reportLinks": {
-            "html": "../reports/html/2026-06-30T01-38-00-917Z.html",
-            "json": "../reports/json/2026-06-30T01-38-00-917Z.json",
-            "junit": "../reports/junit/2026-06-30T01-38-00-917Z.xml"
-          },
-          "screenshots": [],
-          "categoryScores": {}
-        },
-        {
-          "productKey": "sageset",
-          "productName": "SageSet",
-          "suite": "smoke",
-          "environment": "local",
-          "startedAt": "2026-06-30T01:30:27.666Z",
-          "durationMs": 0,
-          "status": "PASS",
-          "readiness": 100,
-          "counts": {
-            "total": 10,
-            "passed": 10,
-            "failed": 0,
-            "warnings": 0,
-            "skipped": 0
-          },
-          "checks": [
-            {
-              "status": "passed",
-              "name": "suite selection",
-              "message": "Loaded smoke suite for SageSet."
-            },
-            {
-              "status": "passed",
-              "name": "browser dry run",
-              "message": "Would open http://localhost:5175."
-            },
-            {
-              "status": "passed",
-              "name": "visual regression dry run",
-              "message": "Would compare screenshots against PNG baselines."
-            },
-            {
-              "status": "passed",
-              "name": "api dry run",
-              "message": "Would evaluate 1 API health check(s)."
-            },
-            {
-              "status": "passed",
-              "name": "firebase dry run",
-              "message": "Would run configured read-only Firebase checks."
-            },
-            {
-              "status": "passed",
-              "name": "network reliability budget",
-              "message": "0 failed requests within budget 0."
-            },
-            {
-              "status": "passed",
-              "name": "accessibility dry run",
-              "message": "Would run Axe accessibility checks."
-            },
-            {
-              "status": "passed",
-              "name": "security dry run",
-              "message": "Would scan captured client-side signals for obvious secret exposure."
-            },
-            {
-              "status": "passed",
-              "name": "ai dry run",
-              "message": "Would evaluate 2 persona prompt(s)."
-            },
-            {
-              "status": "passed",
-              "name": "mobile dry run",
-              "message": "Would inspect Maestro availability, 1 flow(s), and push notification readiness."
-            }
-          ],
-          "reportLinks": {
-            "html": "../reports/html/2026-06-30T01-30-27-672Z.html",
-            "json": "../reports/json/2026-06-30T01-30-27-672Z.json",
-            "junit": "../reports/junit/2026-06-30T01-30-27-672Z.xml"
-          },
-          "screenshots": [],
-          "categoryScores": {}
-        },
-        {
-          "productKey": "sageset",
-          "productName": "SageSet",
-          "suite": "smoke",
-          "environment": "local",
-          "startedAt": "2026-06-30T01:29:41.491Z",
-          "durationMs": 1,
-          "status": "PASS",
-          "readiness": 100,
-          "counts": {
-            "total": 10,
-            "passed": 10,
-            "failed": 0,
-            "warnings": 0,
-            "skipped": 0
-          },
-          "checks": [
-            {
-              "status": "passed",
-              "name": "suite selection",
-              "message": "Loaded smoke suite for SageSet."
-            },
-            {
-              "status": "passed",
-              "name": "browser dry run",
-              "message": "Would open http://localhost:5175."
-            },
-            {
-              "status": "passed",
-              "name": "visual regression dry run",
-              "message": "Would compare screenshots against PNG baselines."
-            },
-            {
-              "status": "passed",
-              "name": "api dry run",
-              "message": "Would evaluate 1 API health check(s)."
-            },
-            {
-              "status": "passed",
-              "name": "firebase dry run",
-              "message": "Would run configured read-only Firebase checks."
-            },
-            {
-              "status": "passed",
-              "name": "network reliability budget",
-              "message": "0 failed requests within budget 0."
-            },
-            {
-              "status": "passed",
-              "name": "accessibility dry run",
-              "message": "Would run Axe accessibility checks."
-            },
-            {
-              "status": "passed",
-              "name": "security dry run",
-              "message": "Would scan captured client-side signals for obvious secret exposure."
-            },
-            {
-              "status": "passed",
-              "name": "ai dry run",
-              "message": "Would evaluate 2 persona prompt(s)."
-            },
-            {
-              "status": "passed",
-              "name": "mobile dry run",
-              "message": "Would inspect Maestro availability, 1 flow(s), and push notification readiness."
-            }
-          ],
-          "reportLinks": {
-            "html": "../reports/html/2026-06-30T01-29-41-497Z.html",
-            "json": "../reports/json/2026-06-30T01-29-41-497Z.json",
-            "junit": "../reports/junit/2026-06-30T01-29-41-497Z.xml"
-          },
-          "screenshots": [],
-          "categoryScores": {}
         }
       ]
     },
@@ -4457,15 +5640,15 @@ window.WORKSIDEQA_DASHBOARD = {
       "latestStatus": "PASS",
       "latestReadiness": 100,
       "statusReason": "Clean smoke run: 8 checks passed.",
-      "latestRunStartedAt": "2026-06-30T04:01:10.730Z",
-      "lastCleanRunStartedAt": "2026-06-30T04:01:10.730Z",
+      "latestRunStartedAt": "2026-06-30T15:47:50.487Z",
+      "lastCleanRunStartedAt": "2026-06-30T15:47:50.487Z",
       "failedChecks": 0,
       "warningChecks": 0,
       "skippedChecks": 0,
       "reportLinks": {
-        "html": "../reports/html/2026-06-30T04-02-37-765Z.html",
-        "json": "../reports/json/2026-06-30T04-02-37-765Z.json",
-        "junit": "../reports/junit/2026-06-30T04-02-37-765Z.xml"
+        "html": "../reports/html/2026-06-30T15-50-55-193Z.html",
+        "json": "../reports/json/2026-06-30T15-50-55-193Z.json",
+        "junit": "../reports/junit/2026-06-30T15-50-55-193Z.xml"
       },
       "categoryScores": {
         "browser": {
@@ -4565,6 +5748,506 @@ window.WORKSIDEQA_DASHBOARD = {
         ]
       },
       "recentRuns": [
+        {
+          "productKey": "support-console",
+          "productName": "Workside Support Console",
+          "suite": "smoke",
+          "environment": "local",
+          "startedAt": "2026-06-30T15:47:50.487Z",
+          "durationMs": 11499,
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 8,
+            "passed": 8,
+            "failed": 0,
+            "warnings": 0,
+            "skipped": 0
+          },
+          "checks": [
+            {
+              "status": "passed",
+              "name": "suite selection",
+              "message": "Loaded smoke suite for Workside Support Console."
+            },
+            {
+              "status": "passed",
+              "name": "dev server",
+              "message": "Healthy at http://127.0.0.1:5176"
+            },
+            {
+              "status": "passed",
+              "name": "open app",
+              "message": "http://127.0.0.1:5176 returned 200."
+            },
+            {
+              "status": "passed",
+              "name": "page title",
+              "message": "worksidesupportconsole"
+            },
+            {
+              "status": "passed",
+              "name": "screenshot",
+              "message": "Captured initial page screenshot."
+            },
+            {
+              "status": "passed",
+              "name": "login",
+              "message": "Demo credentials submitted."
+            },
+            {
+              "status": "passed",
+              "name": "console errors",
+              "message": "No serious console errors captured."
+            },
+            {
+              "status": "passed",
+              "name": "network failures",
+              "message": "No failed network requests captured."
+            }
+          ],
+          "reportLinks": {
+            "html": "../reports/html/2026-06-30T15-50-55-193Z.html",
+            "json": "../reports/json/2026-06-30T15-50-55-193Z.json",
+            "junit": "../reports/junit/2026-06-30T15-50-55-193Z.xml"
+          },
+          "screenshots": [
+            "../screenshots/current/support-console/support-console-home.png"
+          ],
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 8,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          }
+        },
+        {
+          "productKey": "support-console",
+          "productName": "Workside Support Console",
+          "suite": "smoke",
+          "environment": "local",
+          "startedAt": "2026-06-30T13:42:09.510Z",
+          "durationMs": 4747,
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 8,
+            "passed": 8,
+            "failed": 0,
+            "warnings": 0,
+            "skipped": 0
+          },
+          "checks": [
+            {
+              "status": "passed",
+              "name": "suite selection",
+              "message": "Loaded smoke suite for Workside Support Console."
+            },
+            {
+              "status": "passed",
+              "name": "dev server",
+              "message": "Healthy at http://127.0.0.1:5176"
+            },
+            {
+              "status": "passed",
+              "name": "open app",
+              "message": "http://127.0.0.1:5176 returned 200."
+            },
+            {
+              "status": "passed",
+              "name": "page title",
+              "message": "worksidesupportconsole"
+            },
+            {
+              "status": "passed",
+              "name": "screenshot",
+              "message": "Captured initial page screenshot."
+            },
+            {
+              "status": "passed",
+              "name": "login",
+              "message": "Demo credentials submitted."
+            },
+            {
+              "status": "passed",
+              "name": "console errors",
+              "message": "No serious console errors captured."
+            },
+            {
+              "status": "passed",
+              "name": "network failures",
+              "message": "No failed network requests captured."
+            }
+          ],
+          "reportLinks": {
+            "html": "../reports/html/2026-06-30T13-42-53-496Z.html",
+            "json": "../reports/json/2026-06-30T13-42-53-496Z.json",
+            "junit": "../reports/junit/2026-06-30T13-42-53-496Z.xml"
+          },
+          "screenshots": [
+            "../screenshots/current/support-console/support-console-home.png"
+          ],
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 8,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          }
+        },
+        {
+          "productKey": "support-console",
+          "productName": "Workside Support Console",
+          "suite": "smoke",
+          "environment": "local",
+          "startedAt": "2026-06-30T13:38:52.676Z",
+          "durationMs": 18243,
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 8,
+            "passed": 8,
+            "failed": 0,
+            "warnings": 0,
+            "skipped": 0
+          },
+          "checks": [
+            {
+              "status": "passed",
+              "name": "suite selection",
+              "message": "Loaded smoke suite for Workside Support Console."
+            },
+            {
+              "status": "passed",
+              "name": "dev server",
+              "message": "Healthy at http://127.0.0.1:5176"
+            },
+            {
+              "status": "passed",
+              "name": "open app",
+              "message": "http://127.0.0.1:5176 returned 200."
+            },
+            {
+              "status": "passed",
+              "name": "page title",
+              "message": "worksidesupportconsole"
+            },
+            {
+              "status": "passed",
+              "name": "screenshot",
+              "message": "Captured initial page screenshot."
+            },
+            {
+              "status": "passed",
+              "name": "login",
+              "message": "Demo credentials submitted."
+            },
+            {
+              "status": "passed",
+              "name": "console errors",
+              "message": "No serious console errors captured."
+            },
+            {
+              "status": "passed",
+              "name": "network failures",
+              "message": "No failed network requests captured."
+            }
+          ],
+          "reportLinks": {
+            "html": "../reports/html/2026-06-30T13-41-32-052Z.html",
+            "json": "../reports/json/2026-06-30T13-41-32-052Z.json",
+            "junit": "../reports/junit/2026-06-30T13-41-32-052Z.xml"
+          },
+          "screenshots": [
+            "../screenshots/current/support-console/support-console-home.png"
+          ],
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 8,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          }
+        },
+        {
+          "productKey": "support-console",
+          "productName": "Workside Support Console",
+          "suite": "smoke",
+          "environment": "local",
+          "startedAt": "2026-06-30T13:38:32.774Z",
+          "durationMs": 0,
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "warnings": 0,
+            "skipped": 0
+          },
+          "checks": [
+            {
+              "status": "passed",
+              "name": "suite selection",
+              "message": "Loaded smoke suite for Workside Support Console."
+            },
+            {
+              "status": "passed",
+              "name": "browser dry run",
+              "message": "Would open http://127.0.0.1:5176."
+            }
+          ],
+          "reportLinks": {
+            "html": "../reports/html/2026-06-30T13-38-32-818Z.html",
+            "json": "../reports/json/2026-06-30T13-38-32-818Z.json",
+            "junit": "../reports/junit/2026-06-30T13-38-32-818Z.xml"
+          },
+          "screenshots": [],
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 2,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          }
+        },
         {
           "productKey": "support-console",
           "productName": "Workside Support Console",
@@ -4978,315 +6661,3011 @@ window.WORKSIDEQA_DASHBOARD = {
           },
           "screenshots": [],
           "categoryScores": {}
-        },
-        {
-          "productKey": "support-console",
-          "productName": "Workside Support Console",
-          "suite": "smoke",
-          "environment": "local",
-          "startedAt": "2026-06-30T01:38:00.913Z",
-          "durationMs": 0,
-          "status": "PASS",
-          "readiness": 100,
-          "counts": {
-            "total": 10,
-            "passed": 10,
-            "failed": 0,
-            "warnings": 0,
-            "skipped": 0
-          },
-          "checks": [
-            {
-              "status": "passed",
-              "name": "suite selection",
-              "message": "Loaded smoke suite for Workside Support Console."
-            },
-            {
-              "status": "passed",
-              "name": "browser dry run",
-              "message": "Would open http://localhost:5176."
-            },
-            {
-              "status": "passed",
-              "name": "visual regression dry run",
-              "message": "Would compare screenshots against PNG baselines."
-            },
-            {
-              "status": "passed",
-              "name": "api dry run",
-              "message": "Would evaluate 1 API health check(s)."
-            },
-            {
-              "status": "passed",
-              "name": "firebase dry run",
-              "message": "Would run configured read-only Firebase checks."
-            },
-            {
-              "status": "passed",
-              "name": "network reliability budget",
-              "message": "0 failed requests within budget 0."
-            },
-            {
-              "status": "passed",
-              "name": "accessibility dry run",
-              "message": "Would run Axe accessibility checks."
-            },
-            {
-              "status": "passed",
-              "name": "security dry run",
-              "message": "Would scan captured client-side signals for obvious secret exposure."
-            },
-            {
-              "status": "passed",
-              "name": "ai dry run",
-              "message": "Would evaluate 1 persona prompt(s)."
-            },
-            {
-              "status": "passed",
-              "name": "mobile dry run",
-              "message": "Would inspect Maestro availability, 0 flow(s), and push notification readiness."
-            }
-          ],
-          "reportLinks": {
-            "html": "../reports/html/2026-06-30T01-38-00-917Z.html",
-            "json": "../reports/json/2026-06-30T01-38-00-917Z.json",
-            "junit": "../reports/junit/2026-06-30T01-38-00-917Z.xml"
-          },
-          "screenshots": [],
-          "categoryScores": {}
-        },
-        {
-          "productKey": "support-console",
-          "productName": "Workside Support Console",
-          "suite": "smoke",
-          "environment": "local",
-          "startedAt": "2026-06-30T01:30:27.666Z",
-          "durationMs": 1,
-          "status": "PASS",
-          "readiness": 100,
-          "counts": {
-            "total": 10,
-            "passed": 10,
-            "failed": 0,
-            "warnings": 0,
-            "skipped": 0
-          },
-          "checks": [
-            {
-              "status": "passed",
-              "name": "suite selection",
-              "message": "Loaded smoke suite for Workside Support Console."
-            },
-            {
-              "status": "passed",
-              "name": "browser dry run",
-              "message": "Would open http://localhost:5176."
-            },
-            {
-              "status": "passed",
-              "name": "visual regression dry run",
-              "message": "Would compare screenshots against PNG baselines."
-            },
-            {
-              "status": "passed",
-              "name": "api dry run",
-              "message": "Would evaluate 1 API health check(s)."
-            },
-            {
-              "status": "passed",
-              "name": "firebase dry run",
-              "message": "Would run configured read-only Firebase checks."
-            },
-            {
-              "status": "passed",
-              "name": "network reliability budget",
-              "message": "0 failed requests within budget 0."
-            },
-            {
-              "status": "passed",
-              "name": "accessibility dry run",
-              "message": "Would run Axe accessibility checks."
-            },
-            {
-              "status": "passed",
-              "name": "security dry run",
-              "message": "Would scan captured client-side signals for obvious secret exposure."
-            },
-            {
-              "status": "passed",
-              "name": "ai dry run",
-              "message": "Would evaluate 1 persona prompt(s)."
-            },
-            {
-              "status": "passed",
-              "name": "mobile dry run",
-              "message": "Would inspect Maestro availability, 0 flow(s), and push notification readiness."
-            }
-          ],
-          "reportLinks": {
-            "html": "../reports/html/2026-06-30T01-30-27-672Z.html",
-            "json": "../reports/json/2026-06-30T01-30-27-672Z.json",
-            "junit": "../reports/junit/2026-06-30T01-30-27-672Z.xml"
-          },
-          "screenshots": [],
-          "categoryScores": {}
-        },
-        {
-          "productKey": "support-console",
-          "productName": "Workside Support Console",
-          "suite": "smoke",
-          "environment": "local",
-          "startedAt": "2026-06-30T01:29:41.491Z",
-          "durationMs": 0,
-          "status": "PASS",
-          "readiness": 100,
-          "counts": {
-            "total": 10,
-            "passed": 10,
-            "failed": 0,
-            "warnings": 0,
-            "skipped": 0
-          },
-          "checks": [
-            {
-              "status": "passed",
-              "name": "suite selection",
-              "message": "Loaded smoke suite for Workside Support Console."
-            },
-            {
-              "status": "passed",
-              "name": "browser dry run",
-              "message": "Would open http://localhost:5176."
-            },
-            {
-              "status": "passed",
-              "name": "visual regression dry run",
-              "message": "Would compare screenshots against PNG baselines."
-            },
-            {
-              "status": "passed",
-              "name": "api dry run",
-              "message": "Would evaluate 1 API health check(s)."
-            },
-            {
-              "status": "passed",
-              "name": "firebase dry run",
-              "message": "Would run configured read-only Firebase checks."
-            },
-            {
-              "status": "passed",
-              "name": "network reliability budget",
-              "message": "0 failed requests within budget 0."
-            },
-            {
-              "status": "passed",
-              "name": "accessibility dry run",
-              "message": "Would run Axe accessibility checks."
-            },
-            {
-              "status": "passed",
-              "name": "security dry run",
-              "message": "Would scan captured client-side signals for obvious secret exposure."
-            },
-            {
-              "status": "passed",
-              "name": "ai dry run",
-              "message": "Would evaluate 1 persona prompt(s)."
-            },
-            {
-              "status": "passed",
-              "name": "mobile dry run",
-              "message": "Would inspect Maestro availability, 0 flow(s), and push notification readiness."
-            }
-          ],
-          "reportLinks": {
-            "html": "../reports/html/2026-06-30T01-29-41-497Z.html",
-            "json": "../reports/json/2026-06-30T01-29-41-497Z.json",
-            "junit": "../reports/junit/2026-06-30T01-29-41-497Z.xml"
-          },
-          "screenshots": [],
-          "categoryScores": {}
-        },
-        {
-          "productKey": "support-console",
-          "productName": "Workside Support Console",
-          "suite": "smoke",
-          "environment": "local",
-          "startedAt": "2026-06-30T01:28:35.191Z",
-          "durationMs": 0,
-          "status": "PASS",
-          "readiness": 100,
-          "counts": {
-            "total": 10,
-            "passed": 10,
-            "failed": 0,
-            "warnings": 0,
-            "skipped": 0
-          },
-          "checks": [
-            {
-              "status": "passed",
-              "name": "suite selection",
-              "message": "Loaded smoke suite for Workside Support Console."
-            },
-            {
-              "status": "passed",
-              "name": "browser dry run",
-              "message": "Would open http://localhost:5176."
-            },
-            {
-              "status": "passed",
-              "name": "visual regression dry run",
-              "message": "Would compare screenshots against PNG baselines."
-            },
-            {
-              "status": "passed",
-              "name": "api dry run",
-              "message": "Would evaluate 1 API health check(s)."
-            },
-            {
-              "status": "passed",
-              "name": "firebase dry run",
-              "message": "Would run configured read-only Firebase checks."
-            },
-            {
-              "status": "passed",
-              "name": "network reliability budget",
-              "message": "0 failed requests within budget 0."
-            },
-            {
-              "status": "passed",
-              "name": "accessibility dry run",
-              "message": "Would run Axe accessibility checks."
-            },
-            {
-              "status": "passed",
-              "name": "security dry run",
-              "message": "Would scan captured client-side signals for obvious secret exposure."
-            },
-            {
-              "status": "passed",
-              "name": "ai dry run",
-              "message": "Would evaluate 1 persona prompt(s)."
-            },
-            {
-              "status": "passed",
-              "name": "mobile dry run",
-              "message": "Would inspect Maestro availability, 0 flow(s), and push notification readiness."
-            }
-          ],
-          "reportLinks": {
-            "html": "../reports/html/2026-06-30T01-28-35-196Z.html",
-            "json": "../reports/json/2026-06-30T01-28-35-196Z.json",
-            "junit": "../reports/junit/2026-06-30T01-28-35-196Z.xml"
-          },
-          "screenshots": [],
-          "categoryScores": {}
         }
       ]
     }
   ],
   "recentRuns": [
+    {
+      "productKey": "anyryde",
+      "productName": "AnyRyde",
+      "suite": "smoke",
+      "environment": "local",
+      "startedAt": "2026-06-30T15:47:50.487Z",
+      "durationMs": 95735,
+      "status": "PASS",
+      "readiness": 100,
+      "counts": {
+        "total": 8,
+        "passed": 8,
+        "failed": 0,
+        "warnings": 0,
+        "skipped": 0
+      },
+      "checks": [
+        {
+          "status": "passed",
+          "name": "suite selection",
+          "message": "Loaded smoke suite for AnyRyde."
+        },
+        {
+          "status": "passed",
+          "name": "dev server",
+          "message": "Healthy at http://127.0.0.1:3000"
+        },
+        {
+          "status": "passed",
+          "name": "open app",
+          "message": "http://127.0.0.1:3000 returned 200."
+        },
+        {
+          "status": "passed",
+          "name": "page title",
+          "message": "React App"
+        },
+        {
+          "status": "passed",
+          "name": "screenshot",
+          "message": "Captured initial page screenshot."
+        },
+        {
+          "status": "passed",
+          "name": "login",
+          "message": "Demo credentials submitted."
+        },
+        {
+          "status": "passed",
+          "name": "console errors",
+          "message": "No serious console errors captured."
+        },
+        {
+          "status": "passed",
+          "name": "network failures",
+          "message": "No failed network requests captured."
+        }
+      ],
+      "reportLinks": {
+        "html": "../reports/html/2026-06-30T15-50-55-193Z.html",
+        "json": "../reports/json/2026-06-30T15-50-55-193Z.json",
+        "junit": "../reports/junit/2026-06-30T15-50-55-193Z.xml"
+      },
+      "screenshots": [
+        "../screenshots/current/anyryde/anyryde-home.png"
+      ],
+      "categoryScores": {
+        "browser": {
+          "status": "passed",
+          "score": 100,
+          "passed": 8,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "api": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "firebase": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "accessibility": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "performance": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "security": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "visual": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "ai": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        }
+      }
+    },
+    {
+      "productKey": "merxus",
+      "productName": "Merxus",
+      "suite": "smoke",
+      "environment": "local",
+      "startedAt": "2026-06-30T15:47:50.487Z",
+      "durationMs": 27911,
+      "status": "PASS",
+      "readiness": 100,
+      "counts": {
+        "total": 8,
+        "passed": 8,
+        "failed": 0,
+        "warnings": 0,
+        "skipped": 0
+      },
+      "checks": [
+        {
+          "status": "passed",
+          "name": "suite selection",
+          "message": "Loaded smoke suite for Merxus."
+        },
+        {
+          "status": "passed",
+          "name": "dev server",
+          "message": "Healthy at http://127.0.0.1:5174"
+        },
+        {
+          "status": "passed",
+          "name": "open app",
+          "message": "http://127.0.0.1:5174 returned 200."
+        },
+        {
+          "status": "passed",
+          "name": "page title",
+          "message": "Merxus - AI Assistant for Restaurants"
+        },
+        {
+          "status": "passed",
+          "name": "screenshot",
+          "message": "Captured initial page screenshot."
+        },
+        {
+          "status": "passed",
+          "name": "login",
+          "message": "Demo credentials submitted."
+        },
+        {
+          "status": "passed",
+          "name": "console errors",
+          "message": "No serious console errors captured."
+        },
+        {
+          "status": "passed",
+          "name": "network failures",
+          "message": "No failed network requests captured."
+        }
+      ],
+      "reportLinks": {
+        "html": "../reports/html/2026-06-30T15-50-55-193Z.html",
+        "json": "../reports/json/2026-06-30T15-50-55-193Z.json",
+        "junit": "../reports/junit/2026-06-30T15-50-55-193Z.xml"
+      },
+      "screenshots": [
+        "../screenshots/current/merxus/merxus-home.png"
+      ],
+      "categoryScores": {
+        "browser": {
+          "status": "passed",
+          "score": 100,
+          "passed": 8,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "api": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "firebase": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "accessibility": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "performance": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "security": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "visual": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "ai": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        }
+      }
+    },
+    {
+      "productKey": "radiusiq",
+      "productName": "RadiusIQ",
+      "suite": "smoke",
+      "environment": "local",
+      "startedAt": "2026-06-30T15:47:50.487Z",
+      "durationMs": 11593,
+      "status": "PASS",
+      "readiness": 100,
+      "counts": {
+        "total": 8,
+        "passed": 8,
+        "failed": 0,
+        "warnings": 0,
+        "skipped": 0
+      },
+      "checks": [
+        {
+          "status": "passed",
+          "name": "suite selection",
+          "message": "Loaded smoke suite for RadiusIQ."
+        },
+        {
+          "status": "passed",
+          "name": "dev server",
+          "message": "Healthy at http://127.0.0.1:5173"
+        },
+        {
+          "status": "passed",
+          "name": "open app",
+          "message": "http://127.0.0.1:5173 returned 200."
+        },
+        {
+          "status": "passed",
+          "name": "page title",
+          "message": "RadiusIQ"
+        },
+        {
+          "status": "passed",
+          "name": "screenshot",
+          "message": "Captured initial page screenshot."
+        },
+        {
+          "status": "passed",
+          "name": "login",
+          "message": "Demo email login request submitted."
+        },
+        {
+          "status": "passed",
+          "name": "console errors",
+          "message": "No serious console errors captured."
+        },
+        {
+          "status": "passed",
+          "name": "network failures",
+          "message": "No failed network requests captured."
+        }
+      ],
+      "reportLinks": {
+        "html": "../reports/html/2026-06-30T15-50-55-193Z.html",
+        "json": "../reports/json/2026-06-30T15-50-55-193Z.json",
+        "junit": "../reports/junit/2026-06-30T15-50-55-193Z.xml"
+      },
+      "screenshots": [
+        "../screenshots/current/radiusiq/radiusiq-home.png"
+      ],
+      "categoryScores": {
+        "browser": {
+          "status": "passed",
+          "score": 100,
+          "passed": 8,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "api": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "firebase": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "accessibility": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "performance": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "security": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "visual": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "ai": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        }
+      }
+    },
+    {
+      "productKey": "route-logistics",
+      "productName": "Route Logistics",
+      "suite": "smoke",
+      "environment": "local",
+      "startedAt": "2026-06-30T15:47:50.487Z",
+      "durationMs": 22123,
+      "status": "PASS",
+      "readiness": 100,
+      "counts": {
+        "total": 8,
+        "passed": 8,
+        "failed": 0,
+        "warnings": 0,
+        "skipped": 0
+      },
+      "checks": [
+        {
+          "status": "passed",
+          "name": "suite selection",
+          "message": "Loaded smoke suite for Route Logistics."
+        },
+        {
+          "status": "passed",
+          "name": "dev server",
+          "message": "Healthy at http://127.0.0.1:5177"
+        },
+        {
+          "status": "passed",
+          "name": "open app",
+          "message": "http://127.0.0.1:5177 returned 200."
+        },
+        {
+          "status": "passed",
+          "name": "page title",
+          "message": "Route Logistics"
+        },
+        {
+          "status": "passed",
+          "name": "screenshot",
+          "message": "Captured initial page screenshot."
+        },
+        {
+          "status": "passed",
+          "name": "login",
+          "message": "Demo credentials submitted."
+        },
+        {
+          "status": "passed",
+          "name": "console errors",
+          "message": "No serious console errors captured."
+        },
+        {
+          "status": "passed",
+          "name": "network failures",
+          "message": "No failed network requests captured."
+        }
+      ],
+      "reportLinks": {
+        "html": "../reports/html/2026-06-30T15-50-55-193Z.html",
+        "json": "../reports/json/2026-06-30T15-50-55-193Z.json",
+        "junit": "../reports/junit/2026-06-30T15-50-55-193Z.xml"
+      },
+      "screenshots": [
+        "../screenshots/current/route-logistics/route-logistics-home.png"
+      ],
+      "categoryScores": {
+        "browser": {
+          "status": "passed",
+          "score": 100,
+          "passed": 8,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "api": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "firebase": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "accessibility": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "performance": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "security": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "visual": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "ai": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        }
+      }
+    },
+    {
+      "productKey": "sageset",
+      "productName": "SageSet",
+      "suite": "smoke",
+      "environment": "local",
+      "startedAt": "2026-06-30T15:47:50.487Z",
+      "durationMs": 15778,
+      "status": "PASS",
+      "readiness": 100,
+      "counts": {
+        "total": 8,
+        "passed": 8,
+        "failed": 0,
+        "warnings": 0,
+        "skipped": 0
+      },
+      "checks": [
+        {
+          "status": "passed",
+          "name": "suite selection",
+          "message": "Loaded smoke suite for SageSet."
+        },
+        {
+          "status": "passed",
+          "name": "dev server",
+          "message": "Healthy at http://127.0.0.1:5175"
+        },
+        {
+          "status": "passed",
+          "name": "open app",
+          "message": "http://127.0.0.1:5175 returned 200."
+        },
+        {
+          "status": "passed",
+          "name": "page title",
+          "message": "SageSet Fitness"
+        },
+        {
+          "status": "passed",
+          "name": "screenshot",
+          "message": "Captured initial page screenshot."
+        },
+        {
+          "status": "passed",
+          "name": "login",
+          "message": "Demo credentials submitted."
+        },
+        {
+          "status": "passed",
+          "name": "console errors",
+          "message": "No serious console errors captured."
+        },
+        {
+          "status": "passed",
+          "name": "network failures",
+          "message": "No failed network requests captured."
+        }
+      ],
+      "reportLinks": {
+        "html": "../reports/html/2026-06-30T15-50-55-193Z.html",
+        "json": "../reports/json/2026-06-30T15-50-55-193Z.json",
+        "junit": "../reports/junit/2026-06-30T15-50-55-193Z.xml"
+      },
+      "screenshots": [
+        "../screenshots/current/sageset/sageset-home.png"
+      ],
+      "categoryScores": {
+        "browser": {
+          "status": "passed",
+          "score": 100,
+          "passed": 8,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "api": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "firebase": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "accessibility": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "performance": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "security": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "visual": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "ai": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        }
+      }
+    },
+    {
+      "productKey": "support-console",
+      "productName": "Workside Support Console",
+      "suite": "smoke",
+      "environment": "local",
+      "startedAt": "2026-06-30T15:47:50.487Z",
+      "durationMs": 11499,
+      "status": "PASS",
+      "readiness": 100,
+      "counts": {
+        "total": 8,
+        "passed": 8,
+        "failed": 0,
+        "warnings": 0,
+        "skipped": 0
+      },
+      "checks": [
+        {
+          "status": "passed",
+          "name": "suite selection",
+          "message": "Loaded smoke suite for Workside Support Console."
+        },
+        {
+          "status": "passed",
+          "name": "dev server",
+          "message": "Healthy at http://127.0.0.1:5176"
+        },
+        {
+          "status": "passed",
+          "name": "open app",
+          "message": "http://127.0.0.1:5176 returned 200."
+        },
+        {
+          "status": "passed",
+          "name": "page title",
+          "message": "worksidesupportconsole"
+        },
+        {
+          "status": "passed",
+          "name": "screenshot",
+          "message": "Captured initial page screenshot."
+        },
+        {
+          "status": "passed",
+          "name": "login",
+          "message": "Demo credentials submitted."
+        },
+        {
+          "status": "passed",
+          "name": "console errors",
+          "message": "No serious console errors captured."
+        },
+        {
+          "status": "passed",
+          "name": "network failures",
+          "message": "No failed network requests captured."
+        }
+      ],
+      "reportLinks": {
+        "html": "../reports/html/2026-06-30T15-50-55-193Z.html",
+        "json": "../reports/json/2026-06-30T15-50-55-193Z.json",
+        "junit": "../reports/junit/2026-06-30T15-50-55-193Z.xml"
+      },
+      "screenshots": [
+        "../screenshots/current/support-console/support-console-home.png"
+      ],
+      "categoryScores": {
+        "browser": {
+          "status": "passed",
+          "score": 100,
+          "passed": 8,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "api": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "firebase": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "accessibility": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "performance": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "security": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "visual": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "ai": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        }
+      }
+    },
+    {
+      "productKey": "anyryde",
+      "productName": "AnyRyde",
+      "suite": "smoke",
+      "environment": "local",
+      "startedAt": "2026-06-30T13:42:09.510Z",
+      "durationMs": 8773,
+      "status": "PASS",
+      "readiness": 100,
+      "counts": {
+        "total": 8,
+        "passed": 8,
+        "failed": 0,
+        "warnings": 0,
+        "skipped": 0
+      },
+      "checks": [
+        {
+          "status": "passed",
+          "name": "suite selection",
+          "message": "Loaded smoke suite for AnyRyde."
+        },
+        {
+          "status": "passed",
+          "name": "dev server",
+          "message": "Healthy at http://127.0.0.1:3000"
+        },
+        {
+          "status": "passed",
+          "name": "open app",
+          "message": "http://127.0.0.1:3000 returned 200."
+        },
+        {
+          "status": "passed",
+          "name": "page title",
+          "message": "React App"
+        },
+        {
+          "status": "passed",
+          "name": "screenshot",
+          "message": "Captured initial page screenshot."
+        },
+        {
+          "status": "passed",
+          "name": "login",
+          "message": "Demo credentials submitted."
+        },
+        {
+          "status": "passed",
+          "name": "console errors",
+          "message": "No serious console errors captured."
+        },
+        {
+          "status": "passed",
+          "name": "network failures",
+          "message": "No failed network requests captured."
+        }
+      ],
+      "reportLinks": {
+        "html": "../reports/html/2026-06-30T13-42-53-496Z.html",
+        "json": "../reports/json/2026-06-30T13-42-53-496Z.json",
+        "junit": "../reports/junit/2026-06-30T13-42-53-496Z.xml"
+      },
+      "screenshots": [
+        "../screenshots/current/anyryde/anyryde-home.png"
+      ],
+      "categoryScores": {
+        "browser": {
+          "status": "passed",
+          "score": 100,
+          "passed": 8,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "api": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "firebase": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "accessibility": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "performance": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "security": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "visual": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "ai": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        }
+      }
+    },
+    {
+      "productKey": "merxus",
+      "productName": "Merxus",
+      "suite": "smoke",
+      "environment": "local",
+      "startedAt": "2026-06-30T13:42:09.510Z",
+      "durationMs": 11550,
+      "status": "PASS",
+      "readiness": 100,
+      "counts": {
+        "total": 8,
+        "passed": 8,
+        "failed": 0,
+        "warnings": 0,
+        "skipped": 0
+      },
+      "checks": [
+        {
+          "status": "passed",
+          "name": "suite selection",
+          "message": "Loaded smoke suite for Merxus."
+        },
+        {
+          "status": "passed",
+          "name": "dev server",
+          "message": "Healthy at http://127.0.0.1:5174"
+        },
+        {
+          "status": "passed",
+          "name": "open app",
+          "message": "http://127.0.0.1:5174 returned 200."
+        },
+        {
+          "status": "passed",
+          "name": "page title",
+          "message": "Merxus - AI Assistant for Restaurants"
+        },
+        {
+          "status": "passed",
+          "name": "screenshot",
+          "message": "Captured initial page screenshot."
+        },
+        {
+          "status": "passed",
+          "name": "login",
+          "message": "Demo credentials submitted."
+        },
+        {
+          "status": "passed",
+          "name": "console errors",
+          "message": "No serious console errors captured."
+        },
+        {
+          "status": "passed",
+          "name": "network failures",
+          "message": "No failed network requests captured."
+        }
+      ],
+      "reportLinks": {
+        "html": "../reports/html/2026-06-30T13-42-53-496Z.html",
+        "json": "../reports/json/2026-06-30T13-42-53-496Z.json",
+        "junit": "../reports/junit/2026-06-30T13-42-53-496Z.xml"
+      },
+      "screenshots": [
+        "../screenshots/current/merxus/merxus-home.png"
+      ],
+      "categoryScores": {
+        "browser": {
+          "status": "passed",
+          "score": 100,
+          "passed": 8,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "api": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "firebase": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "accessibility": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "performance": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "security": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "visual": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "ai": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        }
+      }
+    },
+    {
+      "productKey": "radiusiq",
+      "productName": "RadiusIQ",
+      "suite": "smoke",
+      "environment": "local",
+      "startedAt": "2026-06-30T13:42:09.510Z",
+      "durationMs": 6395,
+      "status": "PASS",
+      "readiness": 100,
+      "counts": {
+        "total": 8,
+        "passed": 8,
+        "failed": 0,
+        "warnings": 0,
+        "skipped": 0
+      },
+      "checks": [
+        {
+          "status": "passed",
+          "name": "suite selection",
+          "message": "Loaded smoke suite for RadiusIQ."
+        },
+        {
+          "status": "passed",
+          "name": "dev server",
+          "message": "Healthy at http://127.0.0.1:5173"
+        },
+        {
+          "status": "passed",
+          "name": "open app",
+          "message": "http://127.0.0.1:5173 returned 200."
+        },
+        {
+          "status": "passed",
+          "name": "page title",
+          "message": "RadiusIQ"
+        },
+        {
+          "status": "passed",
+          "name": "screenshot",
+          "message": "Captured initial page screenshot."
+        },
+        {
+          "status": "passed",
+          "name": "login",
+          "message": "Demo email login request submitted."
+        },
+        {
+          "status": "passed",
+          "name": "console errors",
+          "message": "No serious console errors captured."
+        },
+        {
+          "status": "passed",
+          "name": "network failures",
+          "message": "No failed network requests captured."
+        }
+      ],
+      "reportLinks": {
+        "html": "../reports/html/2026-06-30T13-42-53-496Z.html",
+        "json": "../reports/json/2026-06-30T13-42-53-496Z.json",
+        "junit": "../reports/junit/2026-06-30T13-42-53-496Z.xml"
+      },
+      "screenshots": [
+        "../screenshots/current/radiusiq/radiusiq-home.png"
+      ],
+      "categoryScores": {
+        "browser": {
+          "status": "passed",
+          "score": 100,
+          "passed": 8,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "api": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "firebase": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "accessibility": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "performance": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "security": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "visual": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "ai": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        }
+      }
+    },
+    {
+      "productKey": "route-logistics",
+      "productName": "Route Logistics",
+      "suite": "smoke",
+      "environment": "local",
+      "startedAt": "2026-06-30T13:42:09.510Z",
+      "durationMs": 5985,
+      "status": "PASS",
+      "readiness": 100,
+      "counts": {
+        "total": 8,
+        "passed": 8,
+        "failed": 0,
+        "warnings": 0,
+        "skipped": 0
+      },
+      "checks": [
+        {
+          "status": "passed",
+          "name": "suite selection",
+          "message": "Loaded smoke suite for Route Logistics."
+        },
+        {
+          "status": "passed",
+          "name": "dev server",
+          "message": "Healthy at http://127.0.0.1:5177"
+        },
+        {
+          "status": "passed",
+          "name": "open app",
+          "message": "http://127.0.0.1:5177 returned 200."
+        },
+        {
+          "status": "passed",
+          "name": "page title",
+          "message": "Route Logistics"
+        },
+        {
+          "status": "passed",
+          "name": "screenshot",
+          "message": "Captured initial page screenshot."
+        },
+        {
+          "status": "passed",
+          "name": "login",
+          "message": "Demo credentials submitted."
+        },
+        {
+          "status": "passed",
+          "name": "console errors",
+          "message": "No serious console errors captured."
+        },
+        {
+          "status": "passed",
+          "name": "network failures",
+          "message": "No failed network requests captured."
+        }
+      ],
+      "reportLinks": {
+        "html": "../reports/html/2026-06-30T13-42-53-496Z.html",
+        "json": "../reports/json/2026-06-30T13-42-53-496Z.json",
+        "junit": "../reports/junit/2026-06-30T13-42-53-496Z.xml"
+      },
+      "screenshots": [
+        "../screenshots/current/route-logistics/route-logistics-home.png"
+      ],
+      "categoryScores": {
+        "browser": {
+          "status": "passed",
+          "score": 100,
+          "passed": 8,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "api": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "firebase": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "accessibility": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "performance": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "security": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "visual": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "ai": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        }
+      }
+    },
+    {
+      "productKey": "sageset",
+      "productName": "SageSet",
+      "suite": "smoke",
+      "environment": "local",
+      "startedAt": "2026-06-30T13:42:09.510Z",
+      "durationMs": 6533,
+      "status": "PASS",
+      "readiness": 100,
+      "counts": {
+        "total": 8,
+        "passed": 8,
+        "failed": 0,
+        "warnings": 0,
+        "skipped": 0
+      },
+      "checks": [
+        {
+          "status": "passed",
+          "name": "suite selection",
+          "message": "Loaded smoke suite for SageSet."
+        },
+        {
+          "status": "passed",
+          "name": "dev server",
+          "message": "Healthy at http://127.0.0.1:5175"
+        },
+        {
+          "status": "passed",
+          "name": "open app",
+          "message": "http://127.0.0.1:5175 returned 200."
+        },
+        {
+          "status": "passed",
+          "name": "page title",
+          "message": "SageSet Fitness"
+        },
+        {
+          "status": "passed",
+          "name": "screenshot",
+          "message": "Captured initial page screenshot."
+        },
+        {
+          "status": "passed",
+          "name": "login",
+          "message": "Demo credentials submitted."
+        },
+        {
+          "status": "passed",
+          "name": "console errors",
+          "message": "No serious console errors captured."
+        },
+        {
+          "status": "passed",
+          "name": "network failures",
+          "message": "No failed network requests captured."
+        }
+      ],
+      "reportLinks": {
+        "html": "../reports/html/2026-06-30T13-42-53-496Z.html",
+        "json": "../reports/json/2026-06-30T13-42-53-496Z.json",
+        "junit": "../reports/junit/2026-06-30T13-42-53-496Z.xml"
+      },
+      "screenshots": [
+        "../screenshots/current/sageset/sageset-home.png"
+      ],
+      "categoryScores": {
+        "browser": {
+          "status": "passed",
+          "score": 100,
+          "passed": 8,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "api": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "firebase": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "accessibility": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "performance": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "security": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "visual": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "ai": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        }
+      }
+    },
+    {
+      "productKey": "support-console",
+      "productName": "Workside Support Console",
+      "suite": "smoke",
+      "environment": "local",
+      "startedAt": "2026-06-30T13:42:09.510Z",
+      "durationMs": 4747,
+      "status": "PASS",
+      "readiness": 100,
+      "counts": {
+        "total": 8,
+        "passed": 8,
+        "failed": 0,
+        "warnings": 0,
+        "skipped": 0
+      },
+      "checks": [
+        {
+          "status": "passed",
+          "name": "suite selection",
+          "message": "Loaded smoke suite for Workside Support Console."
+        },
+        {
+          "status": "passed",
+          "name": "dev server",
+          "message": "Healthy at http://127.0.0.1:5176"
+        },
+        {
+          "status": "passed",
+          "name": "open app",
+          "message": "http://127.0.0.1:5176 returned 200."
+        },
+        {
+          "status": "passed",
+          "name": "page title",
+          "message": "worksidesupportconsole"
+        },
+        {
+          "status": "passed",
+          "name": "screenshot",
+          "message": "Captured initial page screenshot."
+        },
+        {
+          "status": "passed",
+          "name": "login",
+          "message": "Demo credentials submitted."
+        },
+        {
+          "status": "passed",
+          "name": "console errors",
+          "message": "No serious console errors captured."
+        },
+        {
+          "status": "passed",
+          "name": "network failures",
+          "message": "No failed network requests captured."
+        }
+      ],
+      "reportLinks": {
+        "html": "../reports/html/2026-06-30T13-42-53-496Z.html",
+        "json": "../reports/json/2026-06-30T13-42-53-496Z.json",
+        "junit": "../reports/junit/2026-06-30T13-42-53-496Z.xml"
+      },
+      "screenshots": [
+        "../screenshots/current/support-console/support-console-home.png"
+      ],
+      "categoryScores": {
+        "browser": {
+          "status": "passed",
+          "score": 100,
+          "passed": 8,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "api": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "firebase": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "accessibility": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "performance": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "security": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "visual": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "ai": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        }
+      }
+    },
+    {
+      "productKey": "anyryde",
+      "productName": "AnyRyde",
+      "suite": "smoke",
+      "environment": "local",
+      "startedAt": "2026-06-30T13:38:52.676Z",
+      "durationMs": 66078,
+      "status": "FAIL",
+      "readiness": 0,
+      "counts": {
+        "total": 8,
+        "passed": 7,
+        "failed": 1,
+        "warnings": 0,
+        "skipped": 0
+      },
+      "checks": [
+        {
+          "status": "passed",
+          "name": "suite selection",
+          "message": "Loaded smoke suite for AnyRyde."
+        },
+        {
+          "status": "failed",
+          "name": "dev server",
+          "message": "Did not become healthy at http://127.0.0.1:3000."
+        },
+        {
+          "status": "passed",
+          "name": "open app",
+          "message": "http://127.0.0.1:3000 returned 200."
+        },
+        {
+          "status": "passed",
+          "name": "page title",
+          "message": "React App"
+        },
+        {
+          "status": "passed",
+          "name": "screenshot",
+          "message": "Captured initial page screenshot."
+        },
+        {
+          "status": "passed",
+          "name": "login",
+          "message": "Demo credentials submitted."
+        },
+        {
+          "status": "passed",
+          "name": "console errors",
+          "message": "No serious console errors captured."
+        },
+        {
+          "status": "passed",
+          "name": "network failures",
+          "message": "No failed network requests captured."
+        }
+      ],
+      "reportLinks": {
+        "html": "../reports/html/2026-06-30T13-41-32-052Z.html",
+        "json": "../reports/json/2026-06-30T13-41-32-052Z.json",
+        "junit": "../reports/junit/2026-06-30T13-41-32-052Z.xml"
+      },
+      "screenshots": [
+        "../screenshots/current/anyryde/anyryde-home.png"
+      ],
+      "categoryScores": {
+        "browser": {
+          "status": "failed",
+          "score": 0,
+          "passed": 7,
+          "failed": 1,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "api": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "firebase": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "accessibility": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "performance": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "security": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "visual": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "ai": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        }
+      }
+    },
+    {
+      "productKey": "merxus",
+      "productName": "Merxus",
+      "suite": "smoke",
+      "environment": "local",
+      "startedAt": "2026-06-30T13:38:52.676Z",
+      "durationMs": 22570,
+      "status": "PASS",
+      "readiness": 100,
+      "counts": {
+        "total": 8,
+        "passed": 8,
+        "failed": 0,
+        "warnings": 0,
+        "skipped": 0
+      },
+      "checks": [
+        {
+          "status": "passed",
+          "name": "suite selection",
+          "message": "Loaded smoke suite for Merxus."
+        },
+        {
+          "status": "passed",
+          "name": "dev server",
+          "message": "Healthy at http://127.0.0.1:5174"
+        },
+        {
+          "status": "passed",
+          "name": "open app",
+          "message": "http://127.0.0.1:5174 returned 200."
+        },
+        {
+          "status": "passed",
+          "name": "page title",
+          "message": "Merxus - AI Assistant for Restaurants"
+        },
+        {
+          "status": "passed",
+          "name": "screenshot",
+          "message": "Captured initial page screenshot."
+        },
+        {
+          "status": "passed",
+          "name": "login",
+          "message": "Demo credentials submitted."
+        },
+        {
+          "status": "passed",
+          "name": "console errors",
+          "message": "No serious console errors captured."
+        },
+        {
+          "status": "passed",
+          "name": "network failures",
+          "message": "No failed network requests captured."
+        }
+      ],
+      "reportLinks": {
+        "html": "../reports/html/2026-06-30T13-41-32-052Z.html",
+        "json": "../reports/json/2026-06-30T13-41-32-052Z.json",
+        "junit": "../reports/junit/2026-06-30T13-41-32-052Z.xml"
+      },
+      "screenshots": [
+        "../screenshots/current/merxus/merxus-home.png"
+      ],
+      "categoryScores": {
+        "browser": {
+          "status": "passed",
+          "score": 100,
+          "passed": 8,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "api": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "firebase": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "accessibility": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "performance": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "security": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "visual": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "ai": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        }
+      }
+    },
+    {
+      "productKey": "radiusiq",
+      "productName": "RadiusIQ",
+      "suite": "smoke",
+      "environment": "local",
+      "startedAt": "2026-06-30T13:38:52.676Z",
+      "durationMs": 12204,
+      "status": "PASS",
+      "readiness": 100,
+      "counts": {
+        "total": 8,
+        "passed": 8,
+        "failed": 0,
+        "warnings": 0,
+        "skipped": 0
+      },
+      "checks": [
+        {
+          "status": "passed",
+          "name": "suite selection",
+          "message": "Loaded smoke suite for RadiusIQ."
+        },
+        {
+          "status": "passed",
+          "name": "dev server",
+          "message": "Healthy at http://127.0.0.1:5173"
+        },
+        {
+          "status": "passed",
+          "name": "open app",
+          "message": "http://127.0.0.1:5173 returned 200."
+        },
+        {
+          "status": "passed",
+          "name": "page title",
+          "message": "RadiusIQ"
+        },
+        {
+          "status": "passed",
+          "name": "screenshot",
+          "message": "Captured initial page screenshot."
+        },
+        {
+          "status": "passed",
+          "name": "login",
+          "message": "Demo email login request submitted."
+        },
+        {
+          "status": "passed",
+          "name": "console errors",
+          "message": "No serious console errors captured."
+        },
+        {
+          "status": "passed",
+          "name": "network failures",
+          "message": "No failed network requests captured."
+        }
+      ],
+      "reportLinks": {
+        "html": "../reports/html/2026-06-30T13-41-32-052Z.html",
+        "json": "../reports/json/2026-06-30T13-41-32-052Z.json",
+        "junit": "../reports/junit/2026-06-30T13-41-32-052Z.xml"
+      },
+      "screenshots": [
+        "../screenshots/current/radiusiq/radiusiq-home.png"
+      ],
+      "categoryScores": {
+        "browser": {
+          "status": "passed",
+          "score": 100,
+          "passed": 8,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "api": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "firebase": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "accessibility": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "performance": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "security": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "visual": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "ai": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        }
+      }
+    },
+    {
+      "productKey": "route-logistics",
+      "productName": "Route Logistics",
+      "suite": "smoke",
+      "environment": "local",
+      "startedAt": "2026-06-30T13:38:52.676Z",
+      "durationMs": 21634,
+      "status": "PASS",
+      "readiness": 100,
+      "counts": {
+        "total": 8,
+        "passed": 8,
+        "failed": 0,
+        "warnings": 0,
+        "skipped": 0
+      },
+      "checks": [
+        {
+          "status": "passed",
+          "name": "suite selection",
+          "message": "Loaded smoke suite for Route Logistics."
+        },
+        {
+          "status": "passed",
+          "name": "dev server",
+          "message": "Healthy at http://127.0.0.1:5177"
+        },
+        {
+          "status": "passed",
+          "name": "open app",
+          "message": "http://127.0.0.1:5177 returned 200."
+        },
+        {
+          "status": "passed",
+          "name": "page title",
+          "message": "Route Logistics"
+        },
+        {
+          "status": "passed",
+          "name": "screenshot",
+          "message": "Captured initial page screenshot."
+        },
+        {
+          "status": "passed",
+          "name": "login",
+          "message": "Demo credentials submitted."
+        },
+        {
+          "status": "passed",
+          "name": "console errors",
+          "message": "No serious console errors captured."
+        },
+        {
+          "status": "passed",
+          "name": "network failures",
+          "message": "No failed network requests captured."
+        }
+      ],
+      "reportLinks": {
+        "html": "../reports/html/2026-06-30T13-41-32-052Z.html",
+        "json": "../reports/json/2026-06-30T13-41-32-052Z.json",
+        "junit": "../reports/junit/2026-06-30T13-41-32-052Z.xml"
+      },
+      "screenshots": [
+        "../screenshots/current/route-logistics/route-logistics-home.png"
+      ],
+      "categoryScores": {
+        "browser": {
+          "status": "passed",
+          "score": 100,
+          "passed": 8,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "api": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "firebase": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "accessibility": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "performance": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "security": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "visual": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "ai": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        }
+      }
+    },
+    {
+      "productKey": "sageset",
+      "productName": "SageSet",
+      "suite": "smoke",
+      "environment": "local",
+      "startedAt": "2026-06-30T13:38:52.676Z",
+      "durationMs": 18643,
+      "status": "PASS",
+      "readiness": 100,
+      "counts": {
+        "total": 8,
+        "passed": 8,
+        "failed": 0,
+        "warnings": 0,
+        "skipped": 0
+      },
+      "checks": [
+        {
+          "status": "passed",
+          "name": "suite selection",
+          "message": "Loaded smoke suite for SageSet."
+        },
+        {
+          "status": "passed",
+          "name": "dev server",
+          "message": "Healthy at http://127.0.0.1:5175"
+        },
+        {
+          "status": "passed",
+          "name": "open app",
+          "message": "http://127.0.0.1:5175 returned 200."
+        },
+        {
+          "status": "passed",
+          "name": "page title",
+          "message": "SageSet Fitness"
+        },
+        {
+          "status": "passed",
+          "name": "screenshot",
+          "message": "Captured initial page screenshot."
+        },
+        {
+          "status": "passed",
+          "name": "login",
+          "message": "Demo credentials submitted."
+        },
+        {
+          "status": "passed",
+          "name": "console errors",
+          "message": "No serious console errors captured."
+        },
+        {
+          "status": "passed",
+          "name": "network failures",
+          "message": "No failed network requests captured."
+        }
+      ],
+      "reportLinks": {
+        "html": "../reports/html/2026-06-30T13-41-32-052Z.html",
+        "json": "../reports/json/2026-06-30T13-41-32-052Z.json",
+        "junit": "../reports/junit/2026-06-30T13-41-32-052Z.xml"
+      },
+      "screenshots": [
+        "../screenshots/current/sageset/sageset-home.png"
+      ],
+      "categoryScores": {
+        "browser": {
+          "status": "passed",
+          "score": 100,
+          "passed": 8,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "api": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "firebase": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "accessibility": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "performance": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "security": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "visual": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "ai": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        }
+      }
+    },
+    {
+      "productKey": "support-console",
+      "productName": "Workside Support Console",
+      "suite": "smoke",
+      "environment": "local",
+      "startedAt": "2026-06-30T13:38:52.676Z",
+      "durationMs": 18243,
+      "status": "PASS",
+      "readiness": 100,
+      "counts": {
+        "total": 8,
+        "passed": 8,
+        "failed": 0,
+        "warnings": 0,
+        "skipped": 0
+      },
+      "checks": [
+        {
+          "status": "passed",
+          "name": "suite selection",
+          "message": "Loaded smoke suite for Workside Support Console."
+        },
+        {
+          "status": "passed",
+          "name": "dev server",
+          "message": "Healthy at http://127.0.0.1:5176"
+        },
+        {
+          "status": "passed",
+          "name": "open app",
+          "message": "http://127.0.0.1:5176 returned 200."
+        },
+        {
+          "status": "passed",
+          "name": "page title",
+          "message": "worksidesupportconsole"
+        },
+        {
+          "status": "passed",
+          "name": "screenshot",
+          "message": "Captured initial page screenshot."
+        },
+        {
+          "status": "passed",
+          "name": "login",
+          "message": "Demo credentials submitted."
+        },
+        {
+          "status": "passed",
+          "name": "console errors",
+          "message": "No serious console errors captured."
+        },
+        {
+          "status": "passed",
+          "name": "network failures",
+          "message": "No failed network requests captured."
+        }
+      ],
+      "reportLinks": {
+        "html": "../reports/html/2026-06-30T13-41-32-052Z.html",
+        "json": "../reports/json/2026-06-30T13-41-32-052Z.json",
+        "junit": "../reports/junit/2026-06-30T13-41-32-052Z.xml"
+      },
+      "screenshots": [
+        "../screenshots/current/support-console/support-console-home.png"
+      ],
+      "categoryScores": {
+        "browser": {
+          "status": "passed",
+          "score": 100,
+          "passed": 8,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "api": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "firebase": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "accessibility": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "performance": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "security": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "visual": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "ai": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        }
+      }
+    },
+    {
+      "productKey": "anyryde",
+      "productName": "AnyRyde",
+      "suite": "smoke",
+      "environment": "local",
+      "startedAt": "2026-06-30T13:38:32.774Z",
+      "durationMs": 1,
+      "status": "PASS",
+      "readiness": 100,
+      "counts": {
+        "total": 2,
+        "passed": 2,
+        "failed": 0,
+        "warnings": 0,
+        "skipped": 0
+      },
+      "checks": [
+        {
+          "status": "passed",
+          "name": "suite selection",
+          "message": "Loaded smoke suite for AnyRyde."
+        },
+        {
+          "status": "passed",
+          "name": "browser dry run",
+          "message": "Would open http://127.0.0.1:3000."
+        }
+      ],
+      "reportLinks": {
+        "html": "../reports/html/2026-06-30T13-38-32-818Z.html",
+        "json": "../reports/json/2026-06-30T13-38-32-818Z.json",
+        "junit": "../reports/junit/2026-06-30T13-38-32-818Z.xml"
+      },
+      "screenshots": [],
+      "categoryScores": {
+        "browser": {
+          "status": "passed",
+          "score": 100,
+          "passed": 2,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "api": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "firebase": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "accessibility": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "performance": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "security": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "visual": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "ai": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        }
+      }
+    },
+    {
+      "productKey": "merxus",
+      "productName": "Merxus",
+      "suite": "smoke",
+      "environment": "local",
+      "startedAt": "2026-06-30T13:38:32.774Z",
+      "durationMs": 1,
+      "status": "PASS",
+      "readiness": 100,
+      "counts": {
+        "total": 2,
+        "passed": 2,
+        "failed": 0,
+        "warnings": 0,
+        "skipped": 0
+      },
+      "checks": [
+        {
+          "status": "passed",
+          "name": "suite selection",
+          "message": "Loaded smoke suite for Merxus."
+        },
+        {
+          "status": "passed",
+          "name": "browser dry run",
+          "message": "Would open http://127.0.0.1:5174."
+        }
+      ],
+      "reportLinks": {
+        "html": "../reports/html/2026-06-30T13-38-32-818Z.html",
+        "json": "../reports/json/2026-06-30T13-38-32-818Z.json",
+        "junit": "../reports/junit/2026-06-30T13-38-32-818Z.xml"
+      },
+      "screenshots": [],
+      "categoryScores": {
+        "browser": {
+          "status": "passed",
+          "score": 100,
+          "passed": 2,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "api": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "firebase": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "accessibility": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "performance": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "security": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "visual": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "ai": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        }
+      }
+    },
+    {
+      "productKey": "radiusiq",
+      "productName": "RadiusIQ",
+      "suite": "smoke",
+      "environment": "local",
+      "startedAt": "2026-06-30T13:38:32.774Z",
+      "durationMs": 0,
+      "status": "PASS",
+      "readiness": 100,
+      "counts": {
+        "total": 2,
+        "passed": 2,
+        "failed": 0,
+        "warnings": 0,
+        "skipped": 0
+      },
+      "checks": [
+        {
+          "status": "passed",
+          "name": "suite selection",
+          "message": "Loaded smoke suite for RadiusIQ."
+        },
+        {
+          "status": "passed",
+          "name": "browser dry run",
+          "message": "Would open http://127.0.0.1:5173."
+        }
+      ],
+      "reportLinks": {
+        "html": "../reports/html/2026-06-30T13-38-32-818Z.html",
+        "json": "../reports/json/2026-06-30T13-38-32-818Z.json",
+        "junit": "../reports/junit/2026-06-30T13-38-32-818Z.xml"
+      },
+      "screenshots": [],
+      "categoryScores": {
+        "browser": {
+          "status": "passed",
+          "score": 100,
+          "passed": 2,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "api": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "firebase": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "accessibility": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "performance": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "security": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "visual": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "ai": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        }
+      }
+    },
+    {
+      "productKey": "route-logistics",
+      "productName": "Route Logistics",
+      "suite": "smoke",
+      "environment": "local",
+      "startedAt": "2026-06-30T13:38:32.774Z",
+      "durationMs": 0,
+      "status": "PASS",
+      "readiness": 100,
+      "counts": {
+        "total": 2,
+        "passed": 2,
+        "failed": 0,
+        "warnings": 0,
+        "skipped": 0
+      },
+      "checks": [
+        {
+          "status": "passed",
+          "name": "suite selection",
+          "message": "Loaded smoke suite for Route Logistics."
+        },
+        {
+          "status": "passed",
+          "name": "browser dry run",
+          "message": "Would open http://127.0.0.1:5177."
+        }
+      ],
+      "reportLinks": {
+        "html": "../reports/html/2026-06-30T13-38-32-818Z.html",
+        "json": "../reports/json/2026-06-30T13-38-32-818Z.json",
+        "junit": "../reports/junit/2026-06-30T13-38-32-818Z.xml"
+      },
+      "screenshots": [],
+      "categoryScores": {
+        "browser": {
+          "status": "passed",
+          "score": 100,
+          "passed": 2,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "api": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "firebase": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "accessibility": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "performance": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "security": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "visual": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "ai": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        }
+      }
+    },
+    {
+      "productKey": "sageset",
+      "productName": "SageSet",
+      "suite": "smoke",
+      "environment": "local",
+      "startedAt": "2026-06-30T13:38:32.774Z",
+      "durationMs": 0,
+      "status": "PASS",
+      "readiness": 100,
+      "counts": {
+        "total": 2,
+        "passed": 2,
+        "failed": 0,
+        "warnings": 0,
+        "skipped": 0
+      },
+      "checks": [
+        {
+          "status": "passed",
+          "name": "suite selection",
+          "message": "Loaded smoke suite for SageSet."
+        },
+        {
+          "status": "passed",
+          "name": "browser dry run",
+          "message": "Would open http://127.0.0.1:5175."
+        }
+      ],
+      "reportLinks": {
+        "html": "../reports/html/2026-06-30T13-38-32-818Z.html",
+        "json": "../reports/json/2026-06-30T13-38-32-818Z.json",
+        "junit": "../reports/junit/2026-06-30T13-38-32-818Z.xml"
+      },
+      "screenshots": [],
+      "categoryScores": {
+        "browser": {
+          "status": "passed",
+          "score": 100,
+          "passed": 2,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "api": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "firebase": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "accessibility": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "performance": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "security": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "visual": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "ai": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        }
+      }
+    },
+    {
+      "productKey": "support-console",
+      "productName": "Workside Support Console",
+      "suite": "smoke",
+      "environment": "local",
+      "startedAt": "2026-06-30T13:38:32.774Z",
+      "durationMs": 0,
+      "status": "PASS",
+      "readiness": 100,
+      "counts": {
+        "total": 2,
+        "passed": 2,
+        "failed": 0,
+        "warnings": 0,
+        "skipped": 0
+      },
+      "checks": [
+        {
+          "status": "passed",
+          "name": "suite selection",
+          "message": "Loaded smoke suite for Workside Support Console."
+        },
+        {
+          "status": "passed",
+          "name": "browser dry run",
+          "message": "Would open http://127.0.0.1:5176."
+        }
+      ],
+      "reportLinks": {
+        "html": "../reports/html/2026-06-30T13-38-32-818Z.html",
+        "json": "../reports/json/2026-06-30T13-38-32-818Z.json",
+        "junit": "../reports/junit/2026-06-30T13-38-32-818Z.xml"
+      },
+      "screenshots": [],
+      "categoryScores": {
+        "browser": {
+          "status": "passed",
+          "score": 100,
+          "passed": 2,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "api": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "firebase": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "accessibility": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "performance": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "security": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "visual": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "ai": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        }
+      }
+    },
     {
       "productKey": "anyryde",
       "productName": "AnyRyde",
@@ -11052,1756 +15431,17 @@ window.WORKSIDEQA_DASHBOARD = {
       },
       "screenshots": [],
       "categoryScores": {}
-    },
-    {
-      "productKey": "anyryde",
-      "productName": "AnyRyde",
-      "suite": "smoke",
-      "environment": "local",
-      "startedAt": "2026-06-30T01:28:35.191Z",
-      "durationMs": 2,
-      "status": "PASS",
-      "readiness": 100,
-      "counts": {
-        "total": 10,
-        "passed": 10,
-        "failed": 0,
-        "warnings": 0,
-        "skipped": 0
-      },
-      "checks": [
-        {
-          "status": "passed",
-          "name": "suite selection",
-          "message": "Loaded smoke suite for AnyRyde."
-        },
-        {
-          "status": "passed",
-          "name": "browser dry run",
-          "message": "Would open http://localhost:5178."
-        },
-        {
-          "status": "passed",
-          "name": "visual regression dry run",
-          "message": "Would compare screenshots against PNG baselines."
-        },
-        {
-          "status": "passed",
-          "name": "api dry run",
-          "message": "Would evaluate 1 API health check(s)."
-        },
-        {
-          "status": "passed",
-          "name": "firebase dry run",
-          "message": "Would run configured read-only Firebase checks."
-        },
-        {
-          "status": "passed",
-          "name": "network reliability budget",
-          "message": "0 failed requests within budget 0."
-        },
-        {
-          "status": "passed",
-          "name": "accessibility dry run",
-          "message": "Would run Axe accessibility checks."
-        },
-        {
-          "status": "passed",
-          "name": "security dry run",
-          "message": "Would scan captured client-side signals for obvious secret exposure."
-        },
-        {
-          "status": "passed",
-          "name": "ai dry run",
-          "message": "Would evaluate 2 persona prompt(s)."
-        },
-        {
-          "status": "passed",
-          "name": "mobile dry run",
-          "message": "Would inspect Maestro availability, 1 flow(s), and push notification readiness."
-        }
-      ],
-      "reportLinks": {
-        "html": "../reports/html/2026-06-30T01-28-35-196Z.html",
-        "json": "../reports/json/2026-06-30T01-28-35-196Z.json",
-        "junit": "../reports/junit/2026-06-30T01-28-35-196Z.xml"
-      },
-      "screenshots": [],
-      "categoryScores": {}
-    },
-    {
-      "productKey": "merxus",
-      "productName": "Merxus",
-      "suite": "smoke",
-      "environment": "local",
-      "startedAt": "2026-06-30T01:28:35.191Z",
-      "durationMs": 0,
-      "status": "PASS",
-      "readiness": 100,
-      "counts": {
-        "total": 10,
-        "passed": 10,
-        "failed": 0,
-        "warnings": 0,
-        "skipped": 0
-      },
-      "checks": [
-        {
-          "status": "passed",
-          "name": "suite selection",
-          "message": "Loaded smoke suite for Merxus."
-        },
-        {
-          "status": "passed",
-          "name": "browser dry run",
-          "message": "Would open http://localhost:5174."
-        },
-        {
-          "status": "passed",
-          "name": "visual regression dry run",
-          "message": "Would compare screenshots against PNG baselines."
-        },
-        {
-          "status": "passed",
-          "name": "api dry run",
-          "message": "Would evaluate 1 API health check(s)."
-        },
-        {
-          "status": "passed",
-          "name": "firebase dry run",
-          "message": "Would run configured read-only Firebase checks."
-        },
-        {
-          "status": "passed",
-          "name": "network reliability budget",
-          "message": "0 failed requests within budget 0."
-        },
-        {
-          "status": "passed",
-          "name": "accessibility dry run",
-          "message": "Would run Axe accessibility checks."
-        },
-        {
-          "status": "passed",
-          "name": "security dry run",
-          "message": "Would scan captured client-side signals for obvious secret exposure."
-        },
-        {
-          "status": "passed",
-          "name": "ai dry run",
-          "message": "Would evaluate 2 persona prompt(s)."
-        },
-        {
-          "status": "passed",
-          "name": "mobile dry run",
-          "message": "Would inspect Maestro availability, 0 flow(s), and push notification readiness."
-        }
-      ],
-      "reportLinks": {
-        "html": "../reports/html/2026-06-30T01-28-35-196Z.html",
-        "json": "../reports/json/2026-06-30T01-28-35-196Z.json",
-        "junit": "../reports/junit/2026-06-30T01-28-35-196Z.xml"
-      },
-      "screenshots": [],
-      "categoryScores": {}
-    },
-    {
-      "productKey": "radiusiq",
-      "productName": "RadiusIQ",
-      "suite": "smoke",
-      "environment": "local",
-      "startedAt": "2026-06-30T01:28:35.191Z",
-      "durationMs": 0,
-      "status": "PASS",
-      "readiness": 100,
-      "counts": {
-        "total": 10,
-        "passed": 10,
-        "failed": 0,
-        "warnings": 0,
-        "skipped": 0
-      },
-      "checks": [
-        {
-          "status": "passed",
-          "name": "suite selection",
-          "message": "Loaded smoke suite for RadiusIQ."
-        },
-        {
-          "status": "passed",
-          "name": "browser dry run",
-          "message": "Would open http://localhost:5173."
-        },
-        {
-          "status": "passed",
-          "name": "visual regression dry run",
-          "message": "Would compare screenshots against PNG baselines."
-        },
-        {
-          "status": "passed",
-          "name": "api dry run",
-          "message": "Would evaluate 1 API health check(s)."
-        },
-        {
-          "status": "passed",
-          "name": "firebase dry run",
-          "message": "Would run configured read-only Firebase checks."
-        },
-        {
-          "status": "passed",
-          "name": "network reliability budget",
-          "message": "0 failed requests within budget 0."
-        },
-        {
-          "status": "passed",
-          "name": "accessibility dry run",
-          "message": "Would run Axe accessibility checks."
-        },
-        {
-          "status": "passed",
-          "name": "security dry run",
-          "message": "Would scan captured client-side signals for obvious secret exposure."
-        },
-        {
-          "status": "passed",
-          "name": "ai dry run",
-          "message": "Would evaluate 3 persona prompt(s)."
-        },
-        {
-          "status": "passed",
-          "name": "mobile dry run",
-          "message": "Would inspect Maestro availability, 0 flow(s), and push notification readiness."
-        }
-      ],
-      "reportLinks": {
-        "html": "../reports/html/2026-06-30T01-28-35-196Z.html",
-        "json": "../reports/json/2026-06-30T01-28-35-196Z.json",
-        "junit": "../reports/junit/2026-06-30T01-28-35-196Z.xml"
-      },
-      "screenshots": [],
-      "categoryScores": {}
-    },
-    {
-      "productKey": "route-logistics",
-      "productName": "Route Logistics",
-      "suite": "smoke",
-      "environment": "local",
-      "startedAt": "2026-06-30T01:28:35.191Z",
-      "durationMs": 0,
-      "status": "PASS",
-      "readiness": 100,
-      "counts": {
-        "total": 10,
-        "passed": 10,
-        "failed": 0,
-        "warnings": 0,
-        "skipped": 0
-      },
-      "checks": [
-        {
-          "status": "passed",
-          "name": "suite selection",
-          "message": "Loaded smoke suite for Route Logistics."
-        },
-        {
-          "status": "passed",
-          "name": "browser dry run",
-          "message": "Would open http://localhost:5177."
-        },
-        {
-          "status": "passed",
-          "name": "visual regression dry run",
-          "message": "Would compare screenshots against PNG baselines."
-        },
-        {
-          "status": "passed",
-          "name": "api dry run",
-          "message": "Would evaluate 1 API health check(s)."
-        },
-        {
-          "status": "passed",
-          "name": "firebase dry run",
-          "message": "Would run configured read-only Firebase checks."
-        },
-        {
-          "status": "passed",
-          "name": "network reliability budget",
-          "message": "0 failed requests within budget 0."
-        },
-        {
-          "status": "passed",
-          "name": "accessibility dry run",
-          "message": "Would run Axe accessibility checks."
-        },
-        {
-          "status": "passed",
-          "name": "security dry run",
-          "message": "Would scan captured client-side signals for obvious secret exposure."
-        },
-        {
-          "status": "passed",
-          "name": "ai dry run",
-          "message": "Would evaluate 2 persona prompt(s)."
-        },
-        {
-          "status": "passed",
-          "name": "mobile dry run",
-          "message": "Would inspect Maestro availability, 1 flow(s), and push notification readiness."
-        }
-      ],
-      "reportLinks": {
-        "html": "../reports/html/2026-06-30T01-28-35-196Z.html",
-        "json": "../reports/json/2026-06-30T01-28-35-196Z.json",
-        "junit": "../reports/junit/2026-06-30T01-28-35-196Z.xml"
-      },
-      "screenshots": [],
-      "categoryScores": {}
-    },
-    {
-      "productKey": "sageset",
-      "productName": "SageSet",
-      "suite": "smoke",
-      "environment": "local",
-      "startedAt": "2026-06-30T01:28:35.191Z",
-      "durationMs": 0,
-      "status": "PASS",
-      "readiness": 100,
-      "counts": {
-        "total": 10,
-        "passed": 10,
-        "failed": 0,
-        "warnings": 0,
-        "skipped": 0
-      },
-      "checks": [
-        {
-          "status": "passed",
-          "name": "suite selection",
-          "message": "Loaded smoke suite for SageSet."
-        },
-        {
-          "status": "passed",
-          "name": "browser dry run",
-          "message": "Would open http://localhost:5175."
-        },
-        {
-          "status": "passed",
-          "name": "visual regression dry run",
-          "message": "Would compare screenshots against PNG baselines."
-        },
-        {
-          "status": "passed",
-          "name": "api dry run",
-          "message": "Would evaluate 1 API health check(s)."
-        },
-        {
-          "status": "passed",
-          "name": "firebase dry run",
-          "message": "Would run configured read-only Firebase checks."
-        },
-        {
-          "status": "passed",
-          "name": "network reliability budget",
-          "message": "0 failed requests within budget 0."
-        },
-        {
-          "status": "passed",
-          "name": "accessibility dry run",
-          "message": "Would run Axe accessibility checks."
-        },
-        {
-          "status": "passed",
-          "name": "security dry run",
-          "message": "Would scan captured client-side signals for obvious secret exposure."
-        },
-        {
-          "status": "passed",
-          "name": "ai dry run",
-          "message": "Would evaluate 2 persona prompt(s)."
-        },
-        {
-          "status": "passed",
-          "name": "mobile dry run",
-          "message": "Would inspect Maestro availability, 1 flow(s), and push notification readiness."
-        }
-      ],
-      "reportLinks": {
-        "html": "../reports/html/2026-06-30T01-28-35-196Z.html",
-        "json": "../reports/json/2026-06-30T01-28-35-196Z.json",
-        "junit": "../reports/junit/2026-06-30T01-28-35-196Z.xml"
-      },
-      "screenshots": [],
-      "categoryScores": {}
-    },
-    {
-      "productKey": "support-console",
-      "productName": "Workside Support Console",
-      "suite": "smoke",
-      "environment": "local",
-      "startedAt": "2026-06-30T01:28:35.191Z",
-      "durationMs": 0,
-      "status": "PASS",
-      "readiness": 100,
-      "counts": {
-        "total": 10,
-        "passed": 10,
-        "failed": 0,
-        "warnings": 0,
-        "skipped": 0
-      },
-      "checks": [
-        {
-          "status": "passed",
-          "name": "suite selection",
-          "message": "Loaded smoke suite for Workside Support Console."
-        },
-        {
-          "status": "passed",
-          "name": "browser dry run",
-          "message": "Would open http://localhost:5176."
-        },
-        {
-          "status": "passed",
-          "name": "visual regression dry run",
-          "message": "Would compare screenshots against PNG baselines."
-        },
-        {
-          "status": "passed",
-          "name": "api dry run",
-          "message": "Would evaluate 1 API health check(s)."
-        },
-        {
-          "status": "passed",
-          "name": "firebase dry run",
-          "message": "Would run configured read-only Firebase checks."
-        },
-        {
-          "status": "passed",
-          "name": "network reliability budget",
-          "message": "0 failed requests within budget 0."
-        },
-        {
-          "status": "passed",
-          "name": "accessibility dry run",
-          "message": "Would run Axe accessibility checks."
-        },
-        {
-          "status": "passed",
-          "name": "security dry run",
-          "message": "Would scan captured client-side signals for obvious secret exposure."
-        },
-        {
-          "status": "passed",
-          "name": "ai dry run",
-          "message": "Would evaluate 1 persona prompt(s)."
-        },
-        {
-          "status": "passed",
-          "name": "mobile dry run",
-          "message": "Would inspect Maestro availability, 0 flow(s), and push notification readiness."
-        }
-      ],
-      "reportLinks": {
-        "html": "../reports/html/2026-06-30T01-28-35-196Z.html",
-        "json": "../reports/json/2026-06-30T01-28-35-196Z.json",
-        "junit": "../reports/junit/2026-06-30T01-28-35-196Z.xml"
-      },
-      "screenshots": [],
-      "categoryScores": {}
-    },
-    {
-      "productKey": "radiusiq",
-      "productName": "RadiusIQ",
-      "suite": "smoke",
-      "environment": "local",
-      "startedAt": "2026-06-30T01:28:35.190Z",
-      "durationMs": 2,
-      "status": "PASS",
-      "readiness": 100,
-      "counts": {
-        "total": 10,
-        "passed": 10,
-        "failed": 0,
-        "warnings": 0,
-        "skipped": 0
-      },
-      "checks": [
-        {
-          "status": "passed",
-          "name": "suite selection",
-          "message": "Loaded smoke suite for RadiusIQ."
-        },
-        {
-          "status": "passed",
-          "name": "browser dry run",
-          "message": "Would open http://localhost:5173."
-        },
-        {
-          "status": "passed",
-          "name": "visual regression dry run",
-          "message": "Would compare screenshots against PNG baselines."
-        },
-        {
-          "status": "passed",
-          "name": "api dry run",
-          "message": "Would evaluate 1 API health check(s)."
-        },
-        {
-          "status": "passed",
-          "name": "firebase dry run",
-          "message": "Would run configured read-only Firebase checks."
-        },
-        {
-          "status": "passed",
-          "name": "network reliability budget",
-          "message": "0 failed requests within budget 0."
-        },
-        {
-          "status": "passed",
-          "name": "accessibility dry run",
-          "message": "Would run Axe accessibility checks."
-        },
-        {
-          "status": "passed",
-          "name": "security dry run",
-          "message": "Would scan captured client-side signals for obvious secret exposure."
-        },
-        {
-          "status": "passed",
-          "name": "ai dry run",
-          "message": "Would evaluate 3 persona prompt(s)."
-        },
-        {
-          "status": "passed",
-          "name": "mobile dry run",
-          "message": "Would inspect Maestro availability, 0 flow(s), and push notification readiness."
-        }
-      ],
-      "reportLinks": {
-        "html": "../reports/html/2026-06-30T01-28-35-193Z.html",
-        "json": "../reports/json/2026-06-30T01-28-35-193Z.json",
-        "junit": "../reports/junit/2026-06-30T01-28-35-193Z.xml"
-      },
-      "screenshots": [],
-      "categoryScores": {}
-    },
-    {
-      "productKey": "anyryde",
-      "productName": "AnyRyde",
-      "suite": "smoke",
-      "environment": "local",
-      "startedAt": "2026-06-30T01:05:53.292Z",
-      "durationMs": 1,
-      "status": "PASS",
-      "readiness": 100,
-      "counts": {
-        "total": 9,
-        "passed": 9,
-        "failed": 0,
-        "warnings": 0,
-        "skipped": 0
-      },
-      "checks": [
-        {
-          "status": "passed",
-          "name": "suite selection",
-          "message": "Loaded smoke suite for AnyRyde."
-        },
-        {
-          "status": "passed",
-          "name": "browser dry run",
-          "message": "Would open http://localhost:5178."
-        },
-        {
-          "status": "passed",
-          "name": "api dry run",
-          "message": "Would evaluate 0 API health check(s)."
-        },
-        {
-          "status": "passed",
-          "name": "firebase dry run",
-          "message": "Would run configured read-only Firebase checks."
-        },
-        {
-          "status": "passed",
-          "name": "network reliability budget",
-          "message": "0 failed requests within budget 0."
-        },
-        {
-          "status": "passed",
-          "name": "accessibility dry run",
-          "message": "Would run basic accessibility heuristics."
-        },
-        {
-          "status": "passed",
-          "name": "security dry run",
-          "message": "Would scan captured client-side signals for obvious secret exposure."
-        },
-        {
-          "status": "passed",
-          "name": "ai dry run",
-          "message": "Would evaluate 2 persona prompt(s)."
-        },
-        {
-          "status": "passed",
-          "name": "mobile dry run",
-          "message": "Would inspect Maestro availability and configured flows."
-        }
-      ],
-      "reportLinks": {
-        "html": "../reports/html/2026-06-30T01-05-53-296Z.html",
-        "json": "../reports/json/2026-06-30T01-05-53-296Z.json",
-        "junit": "../reports/junit/2026-06-30T01-05-53-296Z.xml"
-      },
-      "screenshots": [],
-      "categoryScores": {}
-    },
-    {
-      "productKey": "merxus",
-      "productName": "Merxus",
-      "suite": "smoke",
-      "environment": "local",
-      "startedAt": "2026-06-30T01:05:53.292Z",
-      "durationMs": 1,
-      "status": "PASS",
-      "readiness": 100,
-      "counts": {
-        "total": 9,
-        "passed": 9,
-        "failed": 0,
-        "warnings": 0,
-        "skipped": 0
-      },
-      "checks": [
-        {
-          "status": "passed",
-          "name": "suite selection",
-          "message": "Loaded smoke suite for Merxus."
-        },
-        {
-          "status": "passed",
-          "name": "browser dry run",
-          "message": "Would open http://localhost:5174."
-        },
-        {
-          "status": "passed",
-          "name": "api dry run",
-          "message": "Would evaluate 0 API health check(s)."
-        },
-        {
-          "status": "passed",
-          "name": "firebase dry run",
-          "message": "Would run configured read-only Firebase checks."
-        },
-        {
-          "status": "passed",
-          "name": "network reliability budget",
-          "message": "0 failed requests within budget 0."
-        },
-        {
-          "status": "passed",
-          "name": "accessibility dry run",
-          "message": "Would run basic accessibility heuristics."
-        },
-        {
-          "status": "passed",
-          "name": "security dry run",
-          "message": "Would scan captured client-side signals for obvious secret exposure."
-        },
-        {
-          "status": "passed",
-          "name": "ai dry run",
-          "message": "Would evaluate 2 persona prompt(s)."
-        },
-        {
-          "status": "passed",
-          "name": "mobile dry run",
-          "message": "Would inspect Maestro availability and configured flows."
-        }
-      ],
-      "reportLinks": {
-        "html": "../reports/html/2026-06-30T01-05-53-296Z.html",
-        "json": "../reports/json/2026-06-30T01-05-53-296Z.json",
-        "junit": "../reports/junit/2026-06-30T01-05-53-296Z.xml"
-      },
-      "screenshots": [],
-      "categoryScores": {}
-    },
-    {
-      "productKey": "radiusiq",
-      "productName": "RadiusIQ",
-      "suite": "smoke",
-      "environment": "local",
-      "startedAt": "2026-06-30T01:05:53.292Z",
-      "durationMs": 0,
-      "status": "PASS",
-      "readiness": 100,
-      "counts": {
-        "total": 9,
-        "passed": 9,
-        "failed": 0,
-        "warnings": 0,
-        "skipped": 0
-      },
-      "checks": [
-        {
-          "status": "passed",
-          "name": "suite selection",
-          "message": "Loaded smoke suite for RadiusIQ."
-        },
-        {
-          "status": "passed",
-          "name": "browser dry run",
-          "message": "Would open http://localhost:5173."
-        },
-        {
-          "status": "passed",
-          "name": "api dry run",
-          "message": "Would evaluate 0 API health check(s)."
-        },
-        {
-          "status": "passed",
-          "name": "firebase dry run",
-          "message": "Would run configured read-only Firebase checks."
-        },
-        {
-          "status": "passed",
-          "name": "network reliability budget",
-          "message": "0 failed requests within budget 0."
-        },
-        {
-          "status": "passed",
-          "name": "accessibility dry run",
-          "message": "Would run basic accessibility heuristics."
-        },
-        {
-          "status": "passed",
-          "name": "security dry run",
-          "message": "Would scan captured client-side signals for obvious secret exposure."
-        },
-        {
-          "status": "passed",
-          "name": "ai dry run",
-          "message": "Would evaluate 3 persona prompt(s)."
-        },
-        {
-          "status": "passed",
-          "name": "mobile dry run",
-          "message": "Would inspect Maestro availability and configured flows."
-        }
-      ],
-      "reportLinks": {
-        "html": "../reports/html/2026-06-30T01-05-53-296Z.html",
-        "json": "../reports/json/2026-06-30T01-05-53-296Z.json",
-        "junit": "../reports/junit/2026-06-30T01-05-53-296Z.xml"
-      },
-      "screenshots": [],
-      "categoryScores": {}
-    },
-    {
-      "productKey": "route-logistics",
-      "productName": "Route Logistics",
-      "suite": "smoke",
-      "environment": "local",
-      "startedAt": "2026-06-30T01:05:53.292Z",
-      "durationMs": 0,
-      "status": "PASS",
-      "readiness": 100,
-      "counts": {
-        "total": 9,
-        "passed": 9,
-        "failed": 0,
-        "warnings": 0,
-        "skipped": 0
-      },
-      "checks": [
-        {
-          "status": "passed",
-          "name": "suite selection",
-          "message": "Loaded smoke suite for Route Logistics."
-        },
-        {
-          "status": "passed",
-          "name": "browser dry run",
-          "message": "Would open http://localhost:5177."
-        },
-        {
-          "status": "passed",
-          "name": "api dry run",
-          "message": "Would evaluate 0 API health check(s)."
-        },
-        {
-          "status": "passed",
-          "name": "firebase dry run",
-          "message": "Would run configured read-only Firebase checks."
-        },
-        {
-          "status": "passed",
-          "name": "network reliability budget",
-          "message": "0 failed requests within budget 0."
-        },
-        {
-          "status": "passed",
-          "name": "accessibility dry run",
-          "message": "Would run basic accessibility heuristics."
-        },
-        {
-          "status": "passed",
-          "name": "security dry run",
-          "message": "Would scan captured client-side signals for obvious secret exposure."
-        },
-        {
-          "status": "passed",
-          "name": "ai dry run",
-          "message": "Would evaluate 2 persona prompt(s)."
-        },
-        {
-          "status": "passed",
-          "name": "mobile dry run",
-          "message": "Would inspect Maestro availability and configured flows."
-        }
-      ],
-      "reportLinks": {
-        "html": "../reports/html/2026-06-30T01-05-53-296Z.html",
-        "json": "../reports/json/2026-06-30T01-05-53-296Z.json",
-        "junit": "../reports/junit/2026-06-30T01-05-53-296Z.xml"
-      },
-      "screenshots": [],
-      "categoryScores": {}
-    },
-    {
-      "productKey": "sageset",
-      "productName": "SageSet",
-      "suite": "smoke",
-      "environment": "local",
-      "startedAt": "2026-06-30T01:05:53.292Z",
-      "durationMs": 0,
-      "status": "PASS",
-      "readiness": 100,
-      "counts": {
-        "total": 9,
-        "passed": 9,
-        "failed": 0,
-        "warnings": 0,
-        "skipped": 0
-      },
-      "checks": [
-        {
-          "status": "passed",
-          "name": "suite selection",
-          "message": "Loaded smoke suite for SageSet."
-        },
-        {
-          "status": "passed",
-          "name": "browser dry run",
-          "message": "Would open http://localhost:5175."
-        },
-        {
-          "status": "passed",
-          "name": "api dry run",
-          "message": "Would evaluate 0 API health check(s)."
-        },
-        {
-          "status": "passed",
-          "name": "firebase dry run",
-          "message": "Would run configured read-only Firebase checks."
-        },
-        {
-          "status": "passed",
-          "name": "network reliability budget",
-          "message": "0 failed requests within budget 0."
-        },
-        {
-          "status": "passed",
-          "name": "accessibility dry run",
-          "message": "Would run basic accessibility heuristics."
-        },
-        {
-          "status": "passed",
-          "name": "security dry run",
-          "message": "Would scan captured client-side signals for obvious secret exposure."
-        },
-        {
-          "status": "passed",
-          "name": "ai dry run",
-          "message": "Would evaluate 2 persona prompt(s)."
-        },
-        {
-          "status": "passed",
-          "name": "mobile dry run",
-          "message": "Would inspect Maestro availability and configured flows."
-        }
-      ],
-      "reportLinks": {
-        "html": "../reports/html/2026-06-30T01-05-53-296Z.html",
-        "json": "../reports/json/2026-06-30T01-05-53-296Z.json",
-        "junit": "../reports/junit/2026-06-30T01-05-53-296Z.xml"
-      },
-      "screenshots": [],
-      "categoryScores": {}
-    },
-    {
-      "productKey": "support-console",
-      "productName": "Workside Support Console",
-      "suite": "smoke",
-      "environment": "local",
-      "startedAt": "2026-06-30T01:05:53.292Z",
-      "durationMs": 0,
-      "status": "PASS",
-      "readiness": 100,
-      "counts": {
-        "total": 9,
-        "passed": 9,
-        "failed": 0,
-        "warnings": 0,
-        "skipped": 0
-      },
-      "checks": [
-        {
-          "status": "passed",
-          "name": "suite selection",
-          "message": "Loaded smoke suite for Workside Support Console."
-        },
-        {
-          "status": "passed",
-          "name": "browser dry run",
-          "message": "Would open http://localhost:5176."
-        },
-        {
-          "status": "passed",
-          "name": "api dry run",
-          "message": "Would evaluate 0 API health check(s)."
-        },
-        {
-          "status": "passed",
-          "name": "firebase dry run",
-          "message": "Would run configured read-only Firebase checks."
-        },
-        {
-          "status": "passed",
-          "name": "network reliability budget",
-          "message": "0 failed requests within budget 0."
-        },
-        {
-          "status": "passed",
-          "name": "accessibility dry run",
-          "message": "Would run basic accessibility heuristics."
-        },
-        {
-          "status": "passed",
-          "name": "security dry run",
-          "message": "Would scan captured client-side signals for obvious secret exposure."
-        },
-        {
-          "status": "passed",
-          "name": "ai dry run",
-          "message": "Would evaluate 1 persona prompt(s)."
-        },
-        {
-          "status": "passed",
-          "name": "mobile dry run",
-          "message": "Would inspect Maestro availability and configured flows."
-        }
-      ],
-      "reportLinks": {
-        "html": "../reports/html/2026-06-30T01-05-53-296Z.html",
-        "json": "../reports/json/2026-06-30T01-05-53-296Z.json",
-        "junit": "../reports/junit/2026-06-30T01-05-53-296Z.xml"
-      },
-      "screenshots": [],
-      "categoryScores": {}
-    },
-    {
-      "productKey": "radiusiq",
-      "productName": "RadiusIQ",
-      "suite": "smoke",
-      "environment": "local",
-      "startedAt": "2026-06-30T01:05:53.291Z",
-      "durationMs": 1,
-      "status": "PASS",
-      "readiness": 100,
-      "counts": {
-        "total": 9,
-        "passed": 9,
-        "failed": 0,
-        "warnings": 0,
-        "skipped": 0
-      },
-      "checks": [
-        {
-          "status": "passed",
-          "name": "suite selection",
-          "message": "Loaded smoke suite for RadiusIQ."
-        },
-        {
-          "status": "passed",
-          "name": "browser dry run",
-          "message": "Would open http://localhost:5173."
-        },
-        {
-          "status": "passed",
-          "name": "api dry run",
-          "message": "Would evaluate 0 API health check(s)."
-        },
-        {
-          "status": "passed",
-          "name": "firebase dry run",
-          "message": "Would run configured read-only Firebase checks."
-        },
-        {
-          "status": "passed",
-          "name": "network reliability budget",
-          "message": "0 failed requests within budget 0."
-        },
-        {
-          "status": "passed",
-          "name": "accessibility dry run",
-          "message": "Would run basic accessibility heuristics."
-        },
-        {
-          "status": "passed",
-          "name": "security dry run",
-          "message": "Would scan captured client-side signals for obvious secret exposure."
-        },
-        {
-          "status": "passed",
-          "name": "ai dry run",
-          "message": "Would evaluate 3 persona prompt(s)."
-        },
-        {
-          "status": "passed",
-          "name": "mobile dry run",
-          "message": "Would inspect Maestro availability and configured flows."
-        }
-      ],
-      "reportLinks": {
-        "html": "../reports/html/2026-06-30T01-05-53-293Z.html",
-        "json": "../reports/json/2026-06-30T01-05-53-293Z.json",
-        "junit": "../reports/junit/2026-06-30T01-05-53-293Z.xml"
-      },
-      "screenshots": [],
-      "categoryScores": {}
-    },
-    {
-      "productKey": "radiusiq",
-      "productName": "RadiusIQ",
-      "suite": "smoke",
-      "environment": "local",
-      "startedAt": "2026-06-30T01:05:35.067Z",
-      "durationMs": "2549",
-      "status": "FAIL",
-      "readiness": 44,
-      "counts": {
-        "total": 9,
-        "passed": 2,
-        "failed": 2,
-        "warnings": 0,
-        "skipped": 5
-      },
-      "checks": [
-        {
-          "status": "passed",
-          "name": "suite selection",
-          "message": "Loaded smoke suite for RadiusIQ."
-        },
-        {
-          "status": "failed",
-          "name": "browser smoke",
-          "message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/\", waiting until \"domcontentloaded\"\u001b[22m\n"
-        },
-        {
-          "status": "skipped",
-          "name": "api health",
-          "message": "No API health checks configured."
-        },
-        {
-          "status": "skipped",
-          "name": "firebase read-only verification",
-          "message": "Firebase project radiusiq-prod is registered; service credentials are required for live read-only checks."
-        },
-        {
-          "status": "failed",
-          "name": "network reliability budget",
-          "message": "1 failed requests exceeds budget 0."
-        },
-        {
-          "status": "skipped",
-          "name": "accessibility axe",
-          "message": "Axe integration is planned; current run records readiness only."
-        },
-        {
-          "status": "passed",
-          "name": "secret exposure",
-          "message": "No obvious secret-like values captured in console output."
-        },
-        {
-          "status": "skipped",
-          "name": "ai personas",
-          "message": "AI persona testing is not enabled for this product."
-        },
-        {
-          "status": "skipped",
-          "name": "mobile",
-          "message": "Mobile testing is not enabled for this product."
-        }
-      ],
-      "reportLinks": {
-        "html": "../reports/html/2026-06-30T01-05-37-617Z.html",
-        "json": "../reports/json/2026-06-30T01-05-37-617Z.json",
-        "junit": "../reports/junit/2026-06-30T01-05-37-617Z.xml"
-      },
-      "screenshots": [],
-      "categoryScores": {}
-    },
-    {
-      "productKey": "anyryde",
-      "productName": "AnyRyde",
-      "suite": "smoke",
-      "environment": "local",
-      "startedAt": "2026-06-30T01:05:29.655Z",
-      "durationMs": "1",
-      "status": "PASS",
-      "readiness": 100,
-      "counts": {
-        "total": 9,
-        "passed": 9,
-        "failed": 0,
-        "warnings": 0,
-        "skipped": 0
-      },
-      "checks": [
-        {
-          "status": "passed",
-          "name": "suite selection",
-          "message": "Loaded smoke suite for AnyRyde."
-        },
-        {
-          "status": "passed",
-          "name": "browser dry run",
-          "message": "Would open http://localhost:5178."
-        },
-        {
-          "status": "passed",
-          "name": "api dry run",
-          "message": "Would evaluate 0 API health check(s)."
-        },
-        {
-          "status": "passed",
-          "name": "firebase dry run",
-          "message": "Would run configured read-only Firebase checks."
-        },
-        {
-          "status": "passed",
-          "name": "network reliability budget",
-          "message": "0 failed requests within budget 0."
-        },
-        {
-          "status": "passed",
-          "name": "accessibility dry run",
-          "message": "Would run basic accessibility heuristics."
-        },
-        {
-          "status": "passed",
-          "name": "security dry run",
-          "message": "Would scan captured client-side signals for obvious secret exposure."
-        },
-        {
-          "status": "passed",
-          "name": "ai dry run",
-          "message": "Would evaluate 2 persona prompt(s)."
-        },
-        {
-          "status": "passed",
-          "name": "mobile dry run",
-          "message": "Would inspect Maestro availability and configured flows."
-        }
-      ],
-      "reportLinks": {
-        "html": "../reports/html/2026-06-30T01-05-29-659Z.html",
-        "json": "../reports/json/2026-06-30T01-05-29-659Z.json",
-        "junit": "../reports/junit/2026-06-30T01-05-29-659Z.xml"
-      },
-      "screenshots": [],
-      "categoryScores": {}
-    },
-    {
-      "productKey": "merxus",
-      "productName": "Merxus",
-      "suite": "smoke",
-      "environment": "local",
-      "startedAt": "2026-06-30T01:05:29.655Z",
-      "durationMs": "0",
-      "status": "PASS",
-      "readiness": 100,
-      "counts": {
-        "total": 9,
-        "passed": 9,
-        "failed": 0,
-        "warnings": 0,
-        "skipped": 0
-      },
-      "checks": [
-        {
-          "status": "passed",
-          "name": "suite selection",
-          "message": "Loaded smoke suite for Merxus."
-        },
-        {
-          "status": "passed",
-          "name": "browser dry run",
-          "message": "Would open http://localhost:5174."
-        },
-        {
-          "status": "passed",
-          "name": "api dry run",
-          "message": "Would evaluate 0 API health check(s)."
-        },
-        {
-          "status": "passed",
-          "name": "firebase dry run",
-          "message": "Would run configured read-only Firebase checks."
-        },
-        {
-          "status": "passed",
-          "name": "network reliability budget",
-          "message": "0 failed requests within budget 0."
-        },
-        {
-          "status": "passed",
-          "name": "accessibility dry run",
-          "message": "Would run basic accessibility heuristics."
-        },
-        {
-          "status": "passed",
-          "name": "security dry run",
-          "message": "Would scan captured client-side signals for obvious secret exposure."
-        },
-        {
-          "status": "passed",
-          "name": "ai dry run",
-          "message": "Would evaluate 2 persona prompt(s)."
-        },
-        {
-          "status": "passed",
-          "name": "mobile dry run",
-          "message": "Would inspect Maestro availability and configured flows."
-        }
-      ],
-      "reportLinks": {
-        "html": "../reports/html/2026-06-30T01-05-29-659Z.html",
-        "json": "../reports/json/2026-06-30T01-05-29-659Z.json",
-        "junit": "../reports/junit/2026-06-30T01-05-29-659Z.xml"
-      },
-      "screenshots": [],
-      "categoryScores": {}
-    },
-    {
-      "productKey": "radiusiq",
-      "productName": "RadiusIQ",
-      "suite": "smoke",
-      "environment": "local",
-      "startedAt": "2026-06-30T01:05:29.655Z",
-      "durationMs": "0",
-      "status": "PASS",
-      "readiness": 100,
-      "counts": {
-        "total": 9,
-        "passed": 9,
-        "failed": 0,
-        "warnings": 0,
-        "skipped": 0
-      },
-      "checks": [
-        {
-          "status": "passed",
-          "name": "suite selection",
-          "message": "Loaded smoke suite for RadiusIQ."
-        },
-        {
-          "status": "passed",
-          "name": "browser dry run",
-          "message": "Would open http://localhost:5173."
-        },
-        {
-          "status": "passed",
-          "name": "api dry run",
-          "message": "Would evaluate 0 API health check(s)."
-        },
-        {
-          "status": "passed",
-          "name": "firebase dry run",
-          "message": "Would run configured read-only Firebase checks."
-        },
-        {
-          "status": "passed",
-          "name": "network reliability budget",
-          "message": "0 failed requests within budget 0."
-        },
-        {
-          "status": "passed",
-          "name": "accessibility dry run",
-          "message": "Would run basic accessibility heuristics."
-        },
-        {
-          "status": "passed",
-          "name": "security dry run",
-          "message": "Would scan captured client-side signals for obvious secret exposure."
-        },
-        {
-          "status": "passed",
-          "name": "ai dry run",
-          "message": "Would evaluate 3 persona prompt(s)."
-        },
-        {
-          "status": "passed",
-          "name": "mobile dry run",
-          "message": "Would inspect Maestro availability and configured flows."
-        }
-      ],
-      "reportLinks": {
-        "html": "../reports/html/2026-06-30T01-05-29-659Z.html",
-        "json": "../reports/json/2026-06-30T01-05-29-659Z.json",
-        "junit": "../reports/junit/2026-06-30T01-05-29-659Z.xml"
-      },
-      "screenshots": [],
-      "categoryScores": {}
-    },
-    {
-      "productKey": "route-logistics",
-      "productName": "Route Logistics",
-      "suite": "smoke",
-      "environment": "local",
-      "startedAt": "2026-06-30T01:05:29.655Z",
-      "durationMs": "0",
-      "status": "PASS",
-      "readiness": 100,
-      "counts": {
-        "total": 9,
-        "passed": 9,
-        "failed": 0,
-        "warnings": 0,
-        "skipped": 0
-      },
-      "checks": [
-        {
-          "status": "passed",
-          "name": "suite selection",
-          "message": "Loaded smoke suite for Route Logistics."
-        },
-        {
-          "status": "passed",
-          "name": "browser dry run",
-          "message": "Would open http://localhost:5177."
-        },
-        {
-          "status": "passed",
-          "name": "api dry run",
-          "message": "Would evaluate 0 API health check(s)."
-        },
-        {
-          "status": "passed",
-          "name": "firebase dry run",
-          "message": "Would run configured read-only Firebase checks."
-        },
-        {
-          "status": "passed",
-          "name": "network reliability budget",
-          "message": "0 failed requests within budget 0."
-        },
-        {
-          "status": "passed",
-          "name": "accessibility dry run",
-          "message": "Would run basic accessibility heuristics."
-        },
-        {
-          "status": "passed",
-          "name": "security dry run",
-          "message": "Would scan captured client-side signals for obvious secret exposure."
-        },
-        {
-          "status": "passed",
-          "name": "ai dry run",
-          "message": "Would evaluate 2 persona prompt(s)."
-        },
-        {
-          "status": "passed",
-          "name": "mobile dry run",
-          "message": "Would inspect Maestro availability and configured flows."
-        }
-      ],
-      "reportLinks": {
-        "html": "../reports/html/2026-06-30T01-05-29-659Z.html",
-        "json": "../reports/json/2026-06-30T01-05-29-659Z.json",
-        "junit": "../reports/junit/2026-06-30T01-05-29-659Z.xml"
-      },
-      "screenshots": [],
-      "categoryScores": {}
-    },
-    {
-      "productKey": "sageset",
-      "productName": "SageSet",
-      "suite": "smoke",
-      "environment": "local",
-      "startedAt": "2026-06-30T01:05:29.655Z",
-      "durationMs": "1",
-      "status": "PASS",
-      "readiness": 100,
-      "counts": {
-        "total": 9,
-        "passed": 9,
-        "failed": 0,
-        "warnings": 0,
-        "skipped": 0
-      },
-      "checks": [
-        {
-          "status": "passed",
-          "name": "suite selection",
-          "message": "Loaded smoke suite for SageSet."
-        },
-        {
-          "status": "passed",
-          "name": "browser dry run",
-          "message": "Would open http://localhost:5175."
-        },
-        {
-          "status": "passed",
-          "name": "api dry run",
-          "message": "Would evaluate 0 API health check(s)."
-        },
-        {
-          "status": "passed",
-          "name": "firebase dry run",
-          "message": "Would run configured read-only Firebase checks."
-        },
-        {
-          "status": "passed",
-          "name": "network reliability budget",
-          "message": "0 failed requests within budget 0."
-        },
-        {
-          "status": "passed",
-          "name": "accessibility dry run",
-          "message": "Would run basic accessibility heuristics."
-        },
-        {
-          "status": "passed",
-          "name": "security dry run",
-          "message": "Would scan captured client-side signals for obvious secret exposure."
-        },
-        {
-          "status": "passed",
-          "name": "ai dry run",
-          "message": "Would evaluate 2 persona prompt(s)."
-        },
-        {
-          "status": "passed",
-          "name": "mobile dry run",
-          "message": "Would inspect Maestro availability and configured flows."
-        }
-      ],
-      "reportLinks": {
-        "html": "../reports/html/2026-06-30T01-05-29-659Z.html",
-        "json": "../reports/json/2026-06-30T01-05-29-659Z.json",
-        "junit": "../reports/junit/2026-06-30T01-05-29-659Z.xml"
-      },
-      "screenshots": [],
-      "categoryScores": {}
-    },
-    {
-      "productKey": "support-console",
-      "productName": "Workside Support Console",
-      "suite": "smoke",
-      "environment": "local",
-      "startedAt": "2026-06-30T01:05:29.655Z",
-      "durationMs": "0",
-      "status": "PASS",
-      "readiness": 100,
-      "counts": {
-        "total": 9,
-        "passed": 9,
-        "failed": 0,
-        "warnings": 0,
-        "skipped": 0
-      },
-      "checks": [
-        {
-          "status": "passed",
-          "name": "suite selection",
-          "message": "Loaded smoke suite for Workside Support Console."
-        },
-        {
-          "status": "passed",
-          "name": "browser dry run",
-          "message": "Would open http://localhost:5176."
-        },
-        {
-          "status": "passed",
-          "name": "api dry run",
-          "message": "Would evaluate 0 API health check(s)."
-        },
-        {
-          "status": "passed",
-          "name": "firebase dry run",
-          "message": "Would run configured read-only Firebase checks."
-        },
-        {
-          "status": "passed",
-          "name": "network reliability budget",
-          "message": "0 failed requests within budget 0."
-        },
-        {
-          "status": "passed",
-          "name": "accessibility dry run",
-          "message": "Would run basic accessibility heuristics."
-        },
-        {
-          "status": "passed",
-          "name": "security dry run",
-          "message": "Would scan captured client-side signals for obvious secret exposure."
-        },
-        {
-          "status": "passed",
-          "name": "ai dry run",
-          "message": "Would evaluate 1 persona prompt(s)."
-        },
-        {
-          "status": "passed",
-          "name": "mobile dry run",
-          "message": "Would inspect Maestro availability and configured flows."
-        }
-      ],
-      "reportLinks": {
-        "html": "../reports/html/2026-06-30T01-05-29-659Z.html",
-        "json": "../reports/json/2026-06-30T01-05-29-659Z.json",
-        "junit": "../reports/junit/2026-06-30T01-05-29-659Z.xml"
-      },
-      "screenshots": [],
-      "categoryScores": {}
-    },
-    {
-      "productKey": "radiusiq",
-      "productName": "RadiusIQ",
-      "suite": "smoke",
-      "environment": "local",
-      "startedAt": "2026-06-30T01:05:29.094Z",
-      "durationMs": "1",
-      "status": "PASS",
-      "readiness": 100,
-      "counts": {
-        "total": 9,
-        "passed": 9,
-        "failed": 0,
-        "warnings": 0,
-        "skipped": 0
-      },
-      "checks": [
-        {
-          "status": "passed",
-          "name": "suite selection",
-          "message": "Loaded smoke suite for RadiusIQ."
-        },
-        {
-          "status": "passed",
-          "name": "browser dry run",
-          "message": "Would open http://localhost:5173."
-        },
-        {
-          "status": "passed",
-          "name": "api dry run",
-          "message": "Would evaluate 0 API health check(s)."
-        },
-        {
-          "status": "passed",
-          "name": "firebase dry run",
-          "message": "Would run configured read-only Firebase checks."
-        },
-        {
-          "status": "passed",
-          "name": "network reliability budget",
-          "message": "0 failed requests within budget 0."
-        },
-        {
-          "status": "passed",
-          "name": "accessibility dry run",
-          "message": "Would run basic accessibility heuristics."
-        },
-        {
-          "status": "passed",
-          "name": "security dry run",
-          "message": "Would scan captured client-side signals for obvious secret exposure."
-        },
-        {
-          "status": "passed",
-          "name": "ai dry run",
-          "message": "Would evaluate 3 persona prompt(s)."
-        },
-        {
-          "status": "passed",
-          "name": "mobile dry run",
-          "message": "Would inspect Maestro availability and configured flows."
-        }
-      ],
-      "reportLinks": {
-        "html": "../reports/html/2026-06-30T01-05-29-096Z.html",
-        "json": "../reports/json/2026-06-30T01-05-29-096Z.json",
-        "junit": "../reports/junit/2026-06-30T01-05-29-096Z.xml"
-      },
-      "screenshots": [],
-      "categoryScores": {}
-    },
-    {
-      "productKey": "anyryde",
-      "productName": "AnyRyde",
-      "suite": "smoke",
-      "environment": "local",
-      "startedAt": "2026-06-30T01:04:45.010Z",
-      "durationMs": "4392",
-      "status": "FAIL",
-      "readiness": 44,
-      "counts": {
-        "total": 9,
-        "passed": 2,
-        "failed": 2,
-        "warnings": 0,
-        "skipped": 5
-      },
-      "checks": [
-        {
-          "status": "passed",
-          "name": "suite selection",
-          "message": "Loaded smoke suite for AnyRyde."
-        },
-        {
-          "status": "failed",
-          "name": "browser smoke",
-          "message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5178/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5178/\", waiting until \"domcontentloaded\"\u001b[22m\n"
-        },
-        {
-          "status": "skipped",
-          "name": "api health",
-          "message": "No API health checks configured."
-        },
-        {
-          "status": "skipped",
-          "name": "firebase read-only verification",
-          "message": "Firebase project anyryde-prod is registered; service credentials are required for live read-only checks."
-        },
-        {
-          "status": "failed",
-          "name": "network reliability budget",
-          "message": "1 failed requests exceeds budget 0."
-        },
-        {
-          "status": "skipped",
-          "name": "accessibility axe",
-          "message": "Axe integration is planned; current run records readiness only."
-        },
-        {
-          "status": "passed",
-          "name": "secret exposure",
-          "message": "No obvious secret-like values captured in console output."
-        },
-        {
-          "status": "skipped",
-          "name": "ai personas",
-          "message": "AI persona testing is not enabled for this product."
-        },
-        {
-          "status": "skipped",
-          "name": "maestro",
-          "message": "Maestro is not installed or not on PATH."
-        }
-      ],
-      "reportLinks": {
-        "html": "../reports/html/2026-06-30T01-05-01-973Z.html",
-        "json": "../reports/json/2026-06-30T01-05-01-973Z.json",
-        "junit": "../reports/junit/2026-06-30T01-05-01-973Z.xml"
-      },
-      "screenshots": [],
-      "categoryScores": {}
-    },
-    {
-      "productKey": "merxus",
-      "productName": "Merxus",
-      "suite": "smoke",
-      "environment": "local",
-      "startedAt": "2026-06-30T01:04:45.010Z",
-      "durationMs": "2522",
-      "status": "FAIL",
-      "readiness": 44,
-      "counts": {
-        "total": 9,
-        "passed": 2,
-        "failed": 2,
-        "warnings": 0,
-        "skipped": 5
-      },
-      "checks": [
-        {
-          "status": "passed",
-          "name": "suite selection",
-          "message": "Loaded smoke suite for Merxus."
-        },
-        {
-          "status": "failed",
-          "name": "browser smoke",
-          "message": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5174/\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5174/\", waiting until \"domcontentloaded\"\u001b[22m\n"
-        },
-        {
-          "status": "skipped",
-          "name": "api health",
-          "message": "No API health checks configured."
-        },
-        {
-          "status": "skipped",
-          "name": "firebase read-only verification",
-          "message": "Firebase project merxus-prod is registered; service credentials are required for live read-only checks."
-        },
-        {
-          "status": "failed",
-          "name": "network reliability budget",
-          "message": "1 failed requests exceeds budget 0."
-        },
-        {
-          "status": "skipped",
-          "name": "accessibility axe",
-          "message": "Axe integration is planned; current run records readiness only."
-        },
-        {
-          "status": "passed",
-          "name": "secret exposure",
-          "message": "No obvious secret-like values captured in console output."
-        },
-        {
-          "status": "skipped",
-          "name": "ai conversation evaluation",
-          "message": "Prompt library is present; live model evaluation requires explicit credentials."
-        },
-        {
-          "status": "skipped",
-          "name": "mobile",
-          "message": "Mobile testing is not enabled for this product."
-        }
-      ],
-      "reportLinks": {
-        "html": "../reports/html/2026-06-30T01-05-01-973Z.html",
-        "json": "../reports/json/2026-06-30T01-05-01-973Z.json",
-        "junit": "../reports/junit/2026-06-30T01-05-01-973Z.xml"
-      },
-      "screenshots": [],
-      "categoryScores": {}
     }
   ],
   "releaseComparison": {
     "platformVersion": "0.1.0-alpha",
-    "generatedAt": "2026-06-30T04:50:56.230Z",
+    "generatedAt": "2026-06-30T15:51:03.132Z",
     "products": [
       {
         "productKey": "anyryde",
         "productName": "AnyRyde",
-        "latestStartedAt": "2026-06-30T04:01:10.730Z",
-        "previousStartedAt": "2026-06-30T03:57:25.491Z",
+        "latestStartedAt": "2026-06-30T15:47:50.487Z",
+        "previousStartedAt": "2026-06-30T13:42:09.510Z",
         "statusBefore": "PASS",
         "statusAfter": "PASS",
         "readinessBefore": 100,
@@ -12816,8 +15456,8 @@ window.WORKSIDEQA_DASHBOARD = {
       {
         "productKey": "merxus",
         "productName": "Merxus",
-        "latestStartedAt": "2026-06-30T04:01:10.730Z",
-        "previousStartedAt": "2026-06-30T03:09:08.246Z",
+        "latestStartedAt": "2026-06-30T15:47:50.487Z",
+        "previousStartedAt": "2026-06-30T13:42:09.510Z",
         "statusBefore": "PASS",
         "statusAfter": "PASS",
         "readinessBefore": 100,
@@ -12832,8 +15472,8 @@ window.WORKSIDEQA_DASHBOARD = {
       {
         "productKey": "radiusiq",
         "productName": "RadiusIQ",
-        "latestStartedAt": "2026-06-30T04:01:10.730Z",
-        "previousStartedAt": "2026-06-30T03:08:50.108Z",
+        "latestStartedAt": "2026-06-30T15:47:50.487Z",
+        "previousStartedAt": "2026-06-30T13:42:09.510Z",
         "statusBefore": "PASS",
         "statusAfter": "PASS",
         "readinessBefore": 100,
@@ -12848,8 +15488,8 @@ window.WORKSIDEQA_DASHBOARD = {
       {
         "productKey": "route-logistics",
         "productName": "Route Logistics",
-        "latestStartedAt": "2026-06-30T04:01:10.730Z",
-        "previousStartedAt": "2026-06-30T03:59:46.301Z",
+        "latestStartedAt": "2026-06-30T15:47:50.487Z",
+        "previousStartedAt": "2026-06-30T13:42:09.510Z",
         "statusBefore": "PASS",
         "statusAfter": "PASS",
         "readinessBefore": 100,
@@ -12864,8 +15504,8 @@ window.WORKSIDEQA_DASHBOARD = {
       {
         "productKey": "sageset",
         "productName": "SageSet",
-        "latestStartedAt": "2026-06-30T04:01:10.730Z",
-        "previousStartedAt": "2026-06-30T03:33:26.097Z",
+        "latestStartedAt": "2026-06-30T15:47:50.487Z",
+        "previousStartedAt": "2026-06-30T13:42:09.510Z",
         "statusBefore": "PASS",
         "statusAfter": "PASS",
         "readinessBefore": 100,
@@ -12880,8 +15520,8 @@ window.WORKSIDEQA_DASHBOARD = {
       {
         "productKey": "support-console",
         "productName": "Workside Support Console",
-        "latestStartedAt": "2026-06-30T04:01:10.730Z",
-        "previousStartedAt": "2026-06-30T02:56:19.884Z",
+        "latestStartedAt": "2026-06-30T15:47:50.487Z",
+        "previousStartedAt": "2026-06-30T13:42:09.510Z",
         "statusBefore": "PASS",
         "statusAfter": "PASS",
         "readinessBefore": 100,
@@ -12903,6 +15543,2340 @@ window.WORKSIDEQA_DASHBOARD = {
     }
   },
   "runs": [
+    {
+      "id": "2026-06-30T15-50-55-193Z",
+      "status": "PASS",
+      "suite": "smoke",
+      "environment": "local",
+      "startedAt": "2026-06-30T15:47:50.487Z",
+      "durationMs": 184707,
+      "counts": {
+        "total": 48,
+        "passed": 48,
+        "failed": 0,
+        "skipped": 0,
+        "warnings": 0
+      },
+      "releaseReadiness": 100,
+      "platformVersion": "0.1.0-alpha",
+      "productSummaries": [
+        {
+          "productKey": "anyryde",
+          "productName": "AnyRyde",
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 8,
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0,
+            "warnings": 0
+          },
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 8,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          },
+          "screenshots": [
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\anyryde\\anyryde-home.png",
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\anyryde\\anyryde-after-login.png"
+          ]
+        },
+        {
+          "productKey": "merxus",
+          "productName": "Merxus",
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 8,
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0,
+            "warnings": 0
+          },
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 8,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          },
+          "screenshots": [
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\merxus\\merxus-home.png",
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\merxus\\merxus-after-login.png"
+          ]
+        },
+        {
+          "productKey": "radiusiq",
+          "productName": "RadiusIQ",
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 8,
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0,
+            "warnings": 0
+          },
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 8,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          },
+          "screenshots": [
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\radiusiq\\radiusiq-home.png",
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\radiusiq\\radiusiq-after-login.png"
+          ]
+        },
+        {
+          "productKey": "route-logistics",
+          "productName": "Route Logistics",
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 8,
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0,
+            "warnings": 0
+          },
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 8,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          },
+          "screenshots": [
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\route-logistics\\route-logistics-home.png",
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\route-logistics\\route-logistics-after-login.png"
+          ]
+        },
+        {
+          "productKey": "sageset",
+          "productName": "SageSet",
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 8,
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0,
+            "warnings": 0
+          },
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 8,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          },
+          "screenshots": [
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\sageset\\sageset-home.png",
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\sageset\\sageset-after-login.png"
+          ]
+        },
+        {
+          "productKey": "support-console",
+          "productName": "Workside Support Console",
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 8,
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0,
+            "warnings": 0
+          },
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 8,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          },
+          "screenshots": [
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\support-console\\support-console-home.png",
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\support-console\\support-console-after-login.png"
+          ]
+        }
+      ],
+      "categoryScores": {
+        "browser": {
+          "status": "passed",
+          "score": 100,
+          "passed": 48,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "api": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "firebase": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "accessibility": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "performance": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "security": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "visual": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "ai": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        }
+      },
+      "reportLinks": {
+        "json": "C:\\Users\\sjroy\\Source\\WorksideQA\\reports\\json\\2026-06-30T15-50-55-193Z.json",
+        "html": "C:\\Users\\sjroy\\Source\\WorksideQA\\reports\\html\\2026-06-30T15-50-55-193Z.html",
+        "junit": "C:\\Users\\sjroy\\Source\\WorksideQA\\reports\\junit\\2026-06-30T15-50-55-193Z.xml"
+      }
+    },
+    {
+      "id": "2026-06-30T13-42-53-496Z",
+      "status": "PASS",
+      "suite": "smoke",
+      "environment": "local",
+      "startedAt": "2026-06-30T13:42:09.510Z",
+      "durationMs": 43985,
+      "counts": {
+        "total": 48,
+        "passed": 48,
+        "failed": 0,
+        "skipped": 0,
+        "warnings": 0
+      },
+      "releaseReadiness": 100,
+      "platformVersion": "0.1.0-alpha",
+      "productSummaries": [
+        {
+          "productKey": "anyryde",
+          "productName": "AnyRyde",
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 8,
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0,
+            "warnings": 0
+          },
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 8,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          },
+          "screenshots": [
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\anyryde\\anyryde-home.png",
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\anyryde\\anyryde-after-login.png"
+          ]
+        },
+        {
+          "productKey": "merxus",
+          "productName": "Merxus",
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 8,
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0,
+            "warnings": 0
+          },
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 8,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          },
+          "screenshots": [
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\merxus\\merxus-home.png",
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\merxus\\merxus-after-login.png"
+          ]
+        },
+        {
+          "productKey": "radiusiq",
+          "productName": "RadiusIQ",
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 8,
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0,
+            "warnings": 0
+          },
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 8,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          },
+          "screenshots": [
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\radiusiq\\radiusiq-home.png",
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\radiusiq\\radiusiq-after-login.png"
+          ]
+        },
+        {
+          "productKey": "route-logistics",
+          "productName": "Route Logistics",
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 8,
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0,
+            "warnings": 0
+          },
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 8,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          },
+          "screenshots": [
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\route-logistics\\route-logistics-home.png",
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\route-logistics\\route-logistics-after-login.png"
+          ]
+        },
+        {
+          "productKey": "sageset",
+          "productName": "SageSet",
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 8,
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0,
+            "warnings": 0
+          },
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 8,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          },
+          "screenshots": [
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\sageset\\sageset-home.png",
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\sageset\\sageset-after-login.png"
+          ]
+        },
+        {
+          "productKey": "support-console",
+          "productName": "Workside Support Console",
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 8,
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0,
+            "warnings": 0
+          },
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 8,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          },
+          "screenshots": [
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\support-console\\support-console-home.png",
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\support-console\\support-console-after-login.png"
+          ]
+        }
+      ],
+      "categoryScores": {
+        "browser": {
+          "status": "passed",
+          "score": 100,
+          "passed": 48,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "api": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "firebase": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "accessibility": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "performance": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "security": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "visual": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "ai": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        }
+      },
+      "reportLinks": {
+        "json": "C:\\Users\\sjroy\\Source\\WorksideQA\\reports\\json\\2026-06-30T13-42-53-496Z.json",
+        "html": "C:\\Users\\sjroy\\Source\\WorksideQA\\reports\\html\\2026-06-30T13-42-53-496Z.html",
+        "junit": "C:\\Users\\sjroy\\Source\\WorksideQA\\reports\\junit\\2026-06-30T13-42-53-496Z.xml"
+      }
+    },
+    {
+      "id": "2026-06-30T13-41-32-052Z",
+      "status": "FAIL",
+      "suite": "smoke",
+      "environment": "local",
+      "startedAt": "2026-06-30T13:38:52.676Z",
+      "durationMs": 159375,
+      "counts": {
+        "total": 48,
+        "passed": 47,
+        "failed": 1,
+        "skipped": 0,
+        "warnings": 0
+      },
+      "releaseReadiness": 83,
+      "platformVersion": "0.1.0-alpha",
+      "productSummaries": [
+        {
+          "productKey": "anyryde",
+          "productName": "AnyRyde",
+          "status": "FAIL",
+          "readiness": 0,
+          "counts": {
+            "total": 8,
+            "passed": 7,
+            "failed": 1,
+            "skipped": 0,
+            "warnings": 0
+          },
+          "categoryScores": {
+            "browser": {
+              "status": "failed",
+              "score": 0,
+              "passed": 7,
+              "failed": 1,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          },
+          "screenshots": [
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\anyryde\\anyryde-home.png",
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\anyryde\\anyryde-after-login.png"
+          ]
+        },
+        {
+          "productKey": "merxus",
+          "productName": "Merxus",
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 8,
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0,
+            "warnings": 0
+          },
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 8,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          },
+          "screenshots": [
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\merxus\\merxus-home.png",
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\merxus\\merxus-after-login.png"
+          ]
+        },
+        {
+          "productKey": "radiusiq",
+          "productName": "RadiusIQ",
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 8,
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0,
+            "warnings": 0
+          },
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 8,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          },
+          "screenshots": [
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\radiusiq\\radiusiq-home.png",
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\radiusiq\\radiusiq-after-login.png"
+          ]
+        },
+        {
+          "productKey": "route-logistics",
+          "productName": "Route Logistics",
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 8,
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0,
+            "warnings": 0
+          },
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 8,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          },
+          "screenshots": [
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\route-logistics\\route-logistics-home.png",
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\route-logistics\\route-logistics-after-login.png"
+          ]
+        },
+        {
+          "productKey": "sageset",
+          "productName": "SageSet",
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 8,
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0,
+            "warnings": 0
+          },
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 8,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          },
+          "screenshots": [
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\sageset\\sageset-home.png",
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\sageset\\sageset-after-login.png"
+          ]
+        },
+        {
+          "productKey": "support-console",
+          "productName": "Workside Support Console",
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 8,
+            "passed": 8,
+            "failed": 0,
+            "skipped": 0,
+            "warnings": 0
+          },
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 8,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          },
+          "screenshots": [
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\support-console\\support-console-home.png",
+            "C:\\Users\\sjroy\\Source\\WorksideQA\\screenshots\\current\\support-console\\support-console-after-login.png"
+          ]
+        }
+      ],
+      "categoryScores": {
+        "browser": {
+          "status": "failed",
+          "score": 0,
+          "passed": 47,
+          "failed": 1,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "api": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "firebase": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "accessibility": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "performance": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "security": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "visual": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "ai": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        }
+      },
+      "reportLinks": {
+        "json": "C:\\Users\\sjroy\\Source\\WorksideQA\\reports\\json\\2026-06-30T13-41-32-052Z.json",
+        "html": "C:\\Users\\sjroy\\Source\\WorksideQA\\reports\\html\\2026-06-30T13-41-32-052Z.html",
+        "junit": "C:\\Users\\sjroy\\Source\\WorksideQA\\reports\\junit\\2026-06-30T13-41-32-052Z.xml"
+      }
+    },
+    {
+      "id": "2026-06-30T13-38-32-818Z",
+      "status": "PASS",
+      "suite": "smoke",
+      "environment": "local",
+      "startedAt": "2026-06-30T13:38:32.774Z",
+      "durationMs": 44,
+      "counts": {
+        "total": 12,
+        "passed": 12,
+        "failed": 0,
+        "skipped": 0,
+        "warnings": 0
+      },
+      "releaseReadiness": 100,
+      "platformVersion": "0.1.0-alpha",
+      "productSummaries": [
+        {
+          "productKey": "anyryde",
+          "productName": "AnyRyde",
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "skipped": 0,
+            "warnings": 0
+          },
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 2,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          },
+          "screenshots": []
+        },
+        {
+          "productKey": "merxus",
+          "productName": "Merxus",
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "skipped": 0,
+            "warnings": 0
+          },
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 2,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          },
+          "screenshots": []
+        },
+        {
+          "productKey": "radiusiq",
+          "productName": "RadiusIQ",
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "skipped": 0,
+            "warnings": 0
+          },
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 2,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          },
+          "screenshots": []
+        },
+        {
+          "productKey": "route-logistics",
+          "productName": "Route Logistics",
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "skipped": 0,
+            "warnings": 0
+          },
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 2,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          },
+          "screenshots": []
+        },
+        {
+          "productKey": "sageset",
+          "productName": "SageSet",
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "skipped": 0,
+            "warnings": 0
+          },
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 2,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          },
+          "screenshots": []
+        },
+        {
+          "productKey": "support-console",
+          "productName": "Workside Support Console",
+          "status": "PASS",
+          "readiness": 100,
+          "counts": {
+            "total": 2,
+            "passed": 2,
+            "failed": 0,
+            "skipped": 0,
+            "warnings": 0
+          },
+          "categoryScores": {
+            "browser": {
+              "status": "passed",
+              "score": 100,
+              "passed": 2,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "api": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "firebase": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "accessibility": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "performance": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "security": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "visual": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            },
+            "ai": {
+              "status": "not evaluated",
+              "score": null,
+              "passed": 0,
+              "failed": 0,
+              "warnings": 0,
+              "skipped": 0
+            }
+          },
+          "screenshots": []
+        }
+      ],
+      "categoryScores": {
+        "browser": {
+          "status": "passed",
+          "score": 100,
+          "passed": 12,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "api": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "firebase": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "accessibility": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "performance": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "security": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "visual": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        },
+        "ai": {
+          "status": "not evaluated",
+          "score": null,
+          "passed": 0,
+          "failed": 0,
+          "warnings": 0,
+          "skipped": 0
+        }
+      },
+      "reportLinks": {
+        "json": "C:\\Users\\sjroy\\Source\\WorksideQA\\reports\\json\\2026-06-30T13-38-32-818Z.json",
+        "html": "C:\\Users\\sjroy\\Source\\WorksideQA\\reports\\html\\2026-06-30T13-38-32-818Z.html",
+        "junit": "C:\\Users\\sjroy\\Source\\WorksideQA\\reports\\junit\\2026-06-30T13-38-32-818Z.xml"
+      }
+    },
     {
       "id": "2026-06-30T04-02-37-765Z",
       "status": "PASS",
@@ -15329,9 +20303,9 @@ window.WORKSIDEQA_DASHBOARD = {
   ],
   "aiReview": {
     "status": "generated",
-    "generatedAt": "2026-06-30T04:50:43.784Z",
+    "generatedAt": "2026-06-30T15:51:00.299Z",
     "recommendation": "deploy",
-    "summary": "[{\"id\":\"rs_022118414b7198a3006a434b20e55881998fe57c4998f5ed2a\",\"type\":\"reasoning\",\"content\":[],\"summary\":[]},{\"id\":\"msg_022118414b7198a3006a434b212da88199b37d7dcb1f1bfe90\",\"type\":\"message\",\"status\":\"completed\",\"content\":[{\"type\":\"output_text\",\"annotations\":[],\"logprobs\":[],\"text\":\"**Current release readiness:** 100%  \\n**Release comparison:** 6/6 products unchanged; 0 improved; 0 regressed; 0 new failures; 0 resolved failures\\n\\n**Clean products:**  \\n- AnyRyde  \\n- Merxus  \\n- RadiusIQ  \\n- Route Logistics  \\n- SageSet  \\n- Workside Support Console\\n\\n**Failing products:**  \\n- None\\n\\n**Major regressions:**  \\n- None\\n\\n**Warnings:**  \\n- Coverage is limited to smoke/browser checks only for this release snapshot.  \\n- API, Firebase, accessibility, performance, security, visual, and AI categories are not evaluated.  \\n- Historical failures exist in prior runs for AnyRyde, Route Logistics, and SageSet, but they are currently resolved.\\n\\n**Score deltas:**  \\n- AnyRyde: 0  \\n- Merxus: 0  \\n- RadiusIQ: 0  \\n- Route Logistics: 0  \\n- SageSet: 0  \\n- Workside Support Console: 0  \\n- Overall: 0\\n\\n**Next actions:**  \\n1. Proceed with release on the current green state.  \\n2. Schedule broader non-browser suites as follow-up validation.  \\n3. Keep monitoring the historically flaky products noted above.\\n\\n**Recommendation:** **Deploy**\"}],\"phase\":\"final_answer\",\"role\":\"assistant\"}]",
+    "summary": "[{\"id\":\"rs_08634fa3969bb354006a43e5e0d97081999606b1993a270c0d\",\"type\":\"reasoning\",\"content\":[],\"summary\":[]},{\"id\":\"msg_08634fa3969bb354006a43e5e0f884819995318160bbcc87f7\",\"type\":\"message\",\"status\":\"completed\",\"content\":[{\"type\":\"output_text\",\"annotations\":[],\"logprobs\":[],\"text\":\"**Current release readiness:** **100%**  \\n**Release status:** Stable across the latest indexed run.\\n\\n**Clean products:**\\n- AnyRyde\\n- Merxus\\n- RadiusIQ\\n- Route Logistics\\n- SageSet\\n- Workside Support Console\\n\\n**Failing products:**  \\n- None\\n\\n**Major regressions:**  \\n- None detected\\n\\n**Warnings:**  \\n- No warnings or skipped checks reported in the latest run\\n- Scope appears limited to **browser smoke checks only**; API / Firebase / accessibility / performance / security / visual / AI were **not evaluated**\\n\\n**Score deltas vs previous indexed run:**\\n- AnyRyde: **0**\\n- Merxus: **0**\\n- RadiusIQ: **0**\\n- Route Logistics: **0**\\n- SageSet: **0**\\n- Workside Support Console: **0**\\n- Overall: **0 regressed, 0 improved, 6 unchanged**\\n\\n**Next actions:**\\n1. Proceed with release if browser-smoke-only coverage is acceptable for this alpha.\\n2. Schedule broader validation for non-browser categories before any wider rollout.\\n3. Keep monitoring AnyRyde history since it had a prior failure earlier today, though it is now clean.\\n\\n**Recommendation:** **DEPLOY**\"}],\"phase\":\"final_answer\",\"role\":\"assistant\"}]",
     "markdown": "../reports/ai/latest-release-review.md",
     "json": "../reports/ai/latest-release-review.json"
   }

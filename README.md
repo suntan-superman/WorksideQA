@@ -23,6 +23,11 @@ npm install
 npm run qa:radiusiq
 npm run qa:radiusiq:dry
 npm run qa:all:dry
+npm run qa:release
+npm run qa:release:no-open
+npm run qa:release:dry
+npm run qa:release:radiusiq
+npm run qa:release:merxus
 node packages/qa-core/src/cli.js --product radiusiq --suite smoke
 npm run qa:dashboard:data
 npm run qa:ai-review
@@ -40,6 +45,16 @@ Use `--update-baselines` after reviewing a clean screenshot to create missing vi
 
 ```bash
 node packages/qa-core/src/cli.js --product radiusiq --suite smoke --start-server --update-baselines
+```
+
+Use `npm run qa:release` for the local release workflow. It runs smoke tests, rebuilds dashboard data, generates the AI release review and daily engineering report, prints the release summary, and opens `dashboard/index.html` automatically on Windows.
+
+```bash
+npm run qa:release
+npm run qa:release:no-open
+npm run qa:release:dry
+npm run qa:release:radiusiq
+npm run qa:release:merxus
 ```
 
 ## Local Secrets
@@ -70,11 +85,7 @@ Generated reports are intentionally ignored by Git:
 - `screenshots/diff`
 
 /////////////////////////////////////////////////////////////////
-node packages/qa-core/src/cli.js --all --suite smoke --start-server
-
-npm run qa:dashboard:data
-npm run qa:ai-review
-
+npm run qa:release
 Open dashboard: dashboard/index.html
 ////////////////////////////////////////////////////////////////
 
@@ -100,3 +111,11 @@ The WorksideQA platform version is stored in `package.json`, displayed in the da
 WorksideQA Platform v0.1.0-alpha
 
 The unified quality assurance, release readiness, and AI-assisted testing platform for all Workside Software applications.
+/////////////////////////////////////////////////////////////
+npm run qa:release
+npm run qa:release:no-open
+npm run qa:release:dry
+npm run qa:release:radiusiq
+npm run qa:release:merxus
+////////////////////////////////////////////////////////////
+

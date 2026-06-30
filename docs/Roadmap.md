@@ -52,5 +52,6 @@ Phase 5
 - [x] Add category rollups for reliability, performance, security, accessibility, visual, and AI.
 - [x] Add latest-vs-previous release comparison data.
 - [x] Add local daily engineering report output.
+- [x] Add one-command local release workflow.
 - [x] Ignore generated `reports/ai` artifacts.
 - [ ] Expand release-suite category coverage as product credentials become available.
