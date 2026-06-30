@@ -4,19 +4,20 @@
   "type": "react-vite",
   "status": "active",
   "baseUrl": {
-    "local": "http://localhost:5175",
+    "local": "http://127.0.0.1:5175",
     "staging": "https://sageset-staging.netlify.app",
     "production": "https://sageset.com"
   },
   "devServer": {
     "enabled": true,
-    "workingDirectory": "C:/Users/sjroy/Source/SageSet",
-    "command": "npm run dev",
+    "workingDirectory": "C:/Users/sjroy/Source/SageSet/web",
+    "command": "npm run dev -- --host 127.0.0.1 --port 5175",
     "port": 5175,
-    "healthUrl": "http://localhost:5175"
+    "healthUrl": "http://127.0.0.1:5175"
   },
   "auth": {
     "strategy": "email-password",
+    "loginPath": "/login",
     "demoUserEnvKey": "SAGESET_DEMO_EMAIL",
     "demoPasswordEnvKey": "SAGESET_DEMO_PASSWORD"
   },

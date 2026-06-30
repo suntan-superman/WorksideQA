@@ -1,4 +1,4 @@
-window.WORKSIDEQA_DASHBOARD = {
+{
   "platformVersion": "0.1.0-alpha",
   "generatedAt": "2026-06-30T04:02:52.421Z",
   "overallReadiness": 100,
@@ -8633,5 +8633,4 @@ window.WORKSIDEQA_DASHBOARD = {
     "markdown": "../reports/ai/latest-release-review.md",
     "json": "../reports/ai/latest-release-review.json"
   }
-};
-window.WORKSIDEQA_HISTORY = window.WORKSIDEQA_DASHBOARD;
+}

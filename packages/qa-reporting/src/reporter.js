@@ -1,6 +1,29 @@
 const path = require("path");
-const { ensureDir, fromRoot, maskSecrets, slugTimestamp, writeJson, writeText } = require("../../qa-utils/src");
+const { ensureDir, fromRoot, maskSecrets, platformVersion, slugTimestamp, writeJson, writeText } = require("../../qa-utils/src");
 const { writeDashboardData } = require("./dashboard-data");
+
+const CATEGORY_WEIGHTS = {
+  browser: 25,
+  api: 15,
+  firebase: 15,
+  accessibility: 10,
+  performance: 10,
+  security: 10,
+  visual: 10,
+  ai: 5,
+};
+
+function checkCategory(check) {
+  const name = String(check.name || "").toLowerCase();
+  if (name.includes("api") || name.includes("health check")) return "api";
+  if (name.includes("firebase")) return "firebase";
+  if (name.includes("accessibility") || name.includes("axe")) return "accessibility";
+  if (name.includes("performance") || name.includes("web vital")) return "performance";
+  if (name.includes("security")) return "security";
+  if (name.includes("visual") || name.includes("baseline") || name.includes("screenshot comparison")) return "visual";
+  if (name.startsWith("ai ") || name.includes("ai conversation") || name.includes("ai persona")) return "ai";
+  return "browser";
+}
 
 function countChecks(results) {
   const checks = results.flatMap((result) => result.checks || []);
@@ -15,6 +38,58 @@ function releaseReadiness(counts) {
   if (counts.total === 0) return 0;
   const score = ((counts.passed + counts.skipped * 0.4 + counts.warnings * 0.65) / counts.total) * 100;
   return Math.max(0, Math.min(100, Math.round(score)));
+}
+
+function scoreCategory(checks) {
+  if (!checks.length) return { status: "not evaluated", score: null, passed: 0, failed: 0, warnings: 0, skipped: 0 };
+  const counts = {
+    passed: checks.filter((check) => check.status === "passed").length,
+    failed: checks.filter((check) => check.status === "failed").length,
+    warnings: checks.filter((check) => check.status === "warning").length,
+    skipped: checks.filter((check) => check.status === "skipped").length,
+  };
+  if (counts.failed > 0) return { status: "failed", score: 0, ...counts };
+  const evaluated = counts.passed + counts.warnings;
+  if (evaluated === 0) return { status: "not evaluated", score: null, ...counts };
+  const score = Math.round(((counts.passed + counts.warnings * 0.65) / evaluated) * 100);
+  return { status: counts.warnings > 0 ? "warning" : "passed", score, ...counts };
+}
+
+function categoryScoresForChecks(checks) {
+  return Object.fromEntries(
+    Object.keys(CATEGORY_WEIGHTS).map((category) => [
+      category,
+      scoreCategory(checks.filter((check) => checkCategory(check) === category)),
+    ])
+  );
+}
+
+function weightedReadiness(categoryScores) {
+  let weightTotal = 0;
+  let valueTotal = 0;
+  for (const [category, weight] of Object.entries(CATEGORY_WEIGHTS)) {
+    const score = categoryScores[category]?.score;
+    if (score === null || score === undefined) continue;
+    weightTotal += weight;
+    valueTotal += score * weight;
+  }
+  if (weightTotal === 0) return 0;
+  return Math.round(valueTotal / weightTotal);
+}
+
+function summarizeProductResult(result) {
+  const checks = result.checks || [];
+  const counts = countChecks([result]);
+  const categoryScores = categoryScoresForChecks(checks);
+  return {
+    productKey: result.productKey,
+    productName: result.productName,
+    status: counts.failed > 0 ? "FAIL" : "PASS",
+    readiness: weightedReadiness(categoryScores),
+    counts,
+    categoryScores,
+    screenshots: result.artifacts?.screenshots || [],
+  };
 }
 
 function escapeHtml(value) {
@@ -66,7 +141,7 @@ function buildHtmlReport(run) {
 <body>
   <header>
     <h1>WorksideQA ${escapeHtml(run.status)}</h1>
-    <div class="meta">Suite: ${escapeHtml(run.suite)} | Environment: ${escapeHtml(run.environment)} | Started: ${escapeHtml(run.startedAt)} | Duration: ${escapeHtml(run.durationMs)}ms</div>
+    <div class="meta">Version: ${escapeHtml(run.platformVersion)} | Suite: ${escapeHtml(run.suite)} | Environment: ${escapeHtml(run.environment)} | Started: ${escapeHtml(run.startedAt)} | Duration: ${escapeHtml(run.durationMs)}ms</div>
     <section class="summary">
       <div class="tile"><span>Release readiness</span><strong>${run.releaseReadiness}%</strong></div>
       <div class="tile"><span>Passed</span><strong>${run.counts.passed}</strong></div>
@@ -116,11 +191,17 @@ function writeReports(runInput) {
   const timestamp = slugTimestamp();
   const counts = countChecks(runInput.results);
   const status = counts.failed > 0 ? "FAIL" : "PASS";
+  const productSummaries = (runInput.results || []).map(summarizeProductResult);
   const run = maskSecrets({
     ...runInput,
+    platformVersion: platformVersion(),
     status,
     counts,
-    releaseReadiness: releaseReadiness(counts),
+    productSummaries,
+    categoryScores: categoryScoresForChecks((runInput.results || []).flatMap((result) => result.checks || [])),
+    releaseReadiness: productSummaries.length
+      ? Math.round(productSummaries.reduce((sum, product) => sum + product.readiness, 0) / productSummaries.length)
+      : releaseReadiness(counts),
     jsonPath: fromRoot("reports", "json", `${timestamp}.json`),
     htmlPath: fromRoot("reports", "html", `${timestamp}.html`),
     junitPath: fromRoot("reports", "junit", `${timestamp}.xml`),
@@ -142,6 +223,14 @@ function writeReports(runInput) {
     durationMs: run.durationMs,
     counts: run.counts,
     releaseReadiness: run.releaseReadiness,
+    platformVersion: run.platformVersion,
+    productSummaries: run.productSummaries,
+    categoryScores: run.categoryScores,
+    reportLinks: {
+      json: run.jsonPath,
+      html: run.htmlPath,
+      junit: run.junitPath,
+    },
   });
   writeText(run.htmlPath, buildHtmlReport(run));
   writeText(run.junitPath, buildJunit(run));

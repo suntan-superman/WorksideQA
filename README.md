@@ -11,8 +11,9 @@ Shared QA automation platform for Workside Software products.
 - Manifest-driven API health check runner.
 - Non-destructive Firebase readiness checks.
 - Performance, Axe accessibility, security, AI, visual regression, and mobile runner support.
-- HTML, JSON, JUnit, and historical report output.
-- Local dashboard at `dashboard/index.html` with history ingestion and readiness trend chart.
+- HTML, JSON, JUnit, and historical report output with platform version metadata.
+- Product-centered Dashboard V2 at `dashboard/index.html`.
+- Credential-gated AI release review output.
 
 ## Commands
 
@@ -23,6 +24,7 @@ npm run qa:radiusiq:dry
 npm run qa:all:dry
 node packages/qa-core/src/cli.js --product radiusiq --suite smoke
 npm run qa:dashboard:data
+npm run qa:ai-review
 npm run qa:bug-report
 npm run qa:report
 ```
@@ -62,6 +64,24 @@ Generated reports are intentionally ignored by Git:
 - `reports/json`
 - `reports/junit`
 - `reports/history`
+- `reports/ai`
 - `screenshots/current`
 - `screenshots/diff`
+
+/////////////////////////////////////////////////////////////////
+node packages/qa-core/src/cli.js --all --suite smoke --start-server
+
+npm run qa:dashboard:data
+npm run qa:ai-review
+
+Open dashboard: dashboard/index.html
+////////////////////////////////////////////////////////////////
+
+## Versioning
+
+The WorksideQA platform version is stored in `package.json`, displayed in the dashboard, and written into JSON, HTML, dashboard, and AI release review outputs. See `docs/VERSIONING.md`.
+//////////////////////////////////////////////////////////////
+WorksideQA Platform v0.1.0-alpha
+
+The unified quality assurance, release readiness, and AI-assisted testing platform for all Workside Software applications.
 

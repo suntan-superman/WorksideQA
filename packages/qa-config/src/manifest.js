@@ -78,9 +78,10 @@ function resolveProductConfig(manifest, environment = "local") {
   };
 }
 
-function loadEnvFile(filePath = fromRoot(".env.local")) {
+function loadEnvFile(filePath = fromRoot(".env.local"), options = {}) {
   const fs = require("fs");
   if (!fileExists(filePath)) return {};
+  const override = options.override !== false;
 
   const entries = {};
   for (const line of fs.readFileSync(filePath, "utf8").split(/\r?\n/)) {
@@ -90,7 +91,7 @@ function loadEnvFile(filePath = fromRoot(".env.local")) {
     const key = trimmed.slice(0, index).trim();
     const value = trimmed.slice(index + 1).trim();
     entries[key] = value.replace(/^["']|["']$/g, "");
-    if (process.env[key] === undefined) process.env[key] = entries[key];
+    if (override || process.env[key] === undefined) process.env[key] = entries[key];
   }
 
   return entries;
@@ -104,4 +105,3 @@ module.exports = {
   resolveProductConfig,
   validateManifest,
 };
-

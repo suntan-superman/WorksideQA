@@ -40,3 +40,13 @@ Phase 5
 ☑ Dashboard ingestion from report history
 ☑ Trend table
 ☑ Trend charts
+# Dashboard V2 Progress
+
+- [x] Add WorksideQA platform version `0.1.0-alpha`.
+- [x] Include platform version in JSON and HTML reports.
+- [x] Generate normalized `dashboard/data/dashboard-summary.json`.
+- [x] Replace dashboard homepage with product-centered Dashboard V2.
+- [x] Add category-based readiness scoring.
+- [x] Add credential-gated AI release review command and outputs.
+- [x] Ignore generated `reports/ai` artifacts.
+- [ ] Expand release-suite category coverage as product credentials become available.

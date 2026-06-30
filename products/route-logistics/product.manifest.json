@@ -4,19 +4,25 @@
   "type": "react-vite",
   "status": "active",
   "baseUrl": {
-    "local": "http://localhost:5177",
+    "local": "http://127.0.0.1:5177",
     "staging": "https://route-logistics-staging.netlify.app",
     "production": "https://route.workside.software"
   },
   "devServer": {
     "enabled": true,
-    "workingDirectory": "C:/Users/sjroy/Source/routeLogistics",
-    "command": "npm run dev",
+    "workingDirectory": "C:/Users/sjroy/Source/routeLogistics/routeLogisticsWeb",
+    "command": "npm run dev -- --host 127.0.0.1 --port 5177",
     "port": 5177,
-    "healthUrl": "http://localhost:5177"
+    "healthUrl": "http://127.0.0.1:5177"
   },
   "auth": {
     "strategy": "email-password",
+    "loginPath": "/login",
+    "selectors": {
+      "email": "#email",
+      "password": "#password",
+      "submit": "button[type=\"submit\"]"
+    },
     "demoUserEnvKey": "ROUTE_LOGISTICS_DEMO_EMAIL",
     "demoPasswordEnvKey": "ROUTE_LOGISTICS_DEMO_PASSWORD"
   },

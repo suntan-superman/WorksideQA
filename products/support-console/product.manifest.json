@@ -4,21 +4,28 @@
   "type": "react-vite",
   "status": "active",
   "baseUrl": {
-    "local": "http://localhost:5176",
+    "local": "http://127.0.0.1:5176",
     "staging": "https://workside-support-console-staging.netlify.app",
     "production": "https://support.workside.software"
   },
   "devServer": {
     "enabled": true,
     "workingDirectory": "C:/Users/sjroy/Source/WorksideSupportConsole",
-    "command": "npm run dev",
+    "command": "npx vite --host 127.0.0.1 --port 5176",
     "port": 5176,
-    "healthUrl": "http://localhost:5176"
+    "healthUrl": "http://127.0.0.1:5176",
+    "healthTimeoutMs": 60000
   },
   "auth": {
     "strategy": "email-password",
+    "loginPath": "/",
     "demoUserEnvKey": "SUPPORT_CONSOLE_DEMO_EMAIL",
-    "demoPasswordEnvKey": "SUPPORT_CONSOLE_DEMO_PASSWORD"
+    "demoPasswordEnvKey": "SUPPORT_CONSOLE_DEMO_PASSWORD",
+    "selectors": {
+      "email": "#auth-email-input",
+      "password": "#auth-password-input",
+      "submit": "#firebase-login-button"
+    }
   },
   "firebase": {
     "enabled": true,

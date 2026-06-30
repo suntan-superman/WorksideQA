@@ -4,5 +4,5 @@ module.exports = {
   ...require("./masking"),
   ...require("./paths"),
   ...require("./time"),
+  ...require("./version"),
 };
-

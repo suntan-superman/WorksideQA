@@ -6,6 +6,7 @@ function parseArgs(argv) {
     headless: process.env.WORKSIDEQA_HEADLESS !== "false",
     dryRun: false,
     startServer: false,
+    aiReview: false,
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -18,6 +19,7 @@ function parseArgs(argv) {
     else if (arg === "--headless") options.headless = true;
     else if (arg === "--dry-run") options.dryRun = true;
     else if (arg === "--start-server") options.startServer = true;
+    else if (arg === "--ai-review") options.aiReview = true;
     else if (arg === "--update-baselines") options.updateBaselines = true;
     else if (arg === "--timeout") options.timeoutMs = Number(argv[++index]);
     else if (arg === "--help" || arg === "-h") options.help = true;
@@ -43,6 +45,7 @@ Options:
   --dry-run             Validate orchestration without launching apps
   --start-server        Start configured local dev server before browser checks
   --update-baselines    Create missing visual regression baselines from current screenshots
+  --ai-review           Generate credential-gated AI release review output
 `;
 }
 

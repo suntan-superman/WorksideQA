@@ -6,106 +6,212 @@
   <title>WorksideQA Dashboard</title>
   <script src="data/history.js"></script>
   <style>
-    :root { --ink:#182230; --muted:#667085; --line:#d0d5dd; --bg:#f7f8fa; --panel:#fff; --accent:#0f766e; --fail:#b42318; }
+    :root {
+      color-scheme: light;
+      --ink:#162033;
+      --muted:#667085;
+      --line:#d8dee8;
+      --bg:#f5f7fa;
+      --panel:#ffffff;
+      --pass:#146c43;
+      --fail:#b42318;
+      --warn:#9a6700;
+      --skip:#576071;
+      --accent:#175cd3;
+      --soft:#eef4ff;
+      --shadow:0 1px 2px rgba(16,24,40,.06);
+    }
+    * { box-sizing:border-box; }
     body { margin:0; font-family:Arial, sans-serif; background:var(--bg); color:var(--ink); }
-    header, main { max-width:1180px; margin:0 auto; padding:24px; }
-    h1 { margin:0 0 6px; font-size:30px; letter-spacing:0; }
-    p { margin:0; color:var(--muted); }
-    .grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin-top:22px; }
-    .card { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:16px; }
-    .label { color:var(--muted); font-size:13px; }
+    header, main { max-width:1280px; margin:0 auto; padding:24px; }
+    header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; padding-top:28px; }
+    h1 { margin:0; font-size:30px; letter-spacing:0; }
+    h2 { margin:28px 0 12px; font-size:20px; letter-spacing:0; }
+    h3 { margin:0; font-size:18px; letter-spacing:0; }
+    p { margin:4px 0 0; color:var(--muted); line-height:1.45; }
+    a { color:var(--accent); text-decoration:none; font-weight:700; }
+    a:hover { text-decoration:underline; }
+    .version { color:var(--muted); font-size:14px; text-align:right; line-height:1.5; }
+    .summary-grid, .product-grid { display:grid; gap:12px; }
+    .summary-grid { grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); }
+    .product-grid { grid-template-columns:repeat(auto-fit, minmax(290px, 1fr)); }
+    .card, details, .panel { background:var(--panel); border:1px solid var(--line); border-radius:8px; box-shadow:var(--shadow); }
+    .card { padding:16px; }
+    .label { display:block; color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
     .value { display:block; margin-top:8px; font-size:28px; font-weight:700; }
-    table { width:100%; margin-top:18px; border-collapse:collapse; background:#fff; border:1px solid var(--line); }
-    th, td { padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; }
+    .meta { color:var(--muted); font-size:13px; line-height:1.45; }
+    .row { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .stack { display:grid; gap:10px; margin-top:12px; }
+    .badge { display:inline-flex; align-items:center; justify-content:center; min-width:76px; border-radius:999px; padding:4px 9px; color:#fff; font-size:12px; font-weight:700; }
+    .pass { background:var(--pass); } .fail { background:var(--fail); } .warn { background:var(--warn); } .skip { background:var(--skip); }
+    .nodata { background:#475467; }
+    .metric-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin-top:12px; }
+    .metric { border:1px solid var(--line); border-radius:8px; padding:10px; background:#fbfcfe; }
+    .metric strong { display:block; margin-top:4px; font-size:18px; }
+    .actions { margin-top:12px; min-height:22px; }
+    canvas { width:100%; height:230px; background:var(--panel); border:1px solid var(--line); border-radius:8px; }
+    table { width:100%; border-collapse:collapse; background:var(--panel); border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+    th, td { padding:10px 12px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; font-size:14px; }
     th { color:var(--muted); font-size:12px; text-transform:uppercase; background:#fbfcfd; }
-    .pass { color:var(--accent); font-weight:700; }
-    .fail { color:var(--fail); font-weight:700; }
-    .chart { width:100%; height:240px; margin-top:18px; background:#fff; border:1px solid var(--line); border-radius:8px; }
+    tr:last-child td { border-bottom:0; }
+    details { margin-bottom:10px; }
+    summary { cursor:pointer; padding:14px 16px; list-style:none; }
+    summary::-webkit-details-marker { display:none; }
+    .detail-body { border-top:1px solid var(--line); padding:16px; display:grid; gap:16px; }
+    .category-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:8px; }
+    .category { border:1px solid var(--line); border-radius:8px; padding:10px; background:#fbfcfe; }
+    .thumbs { display:flex; gap:10px; flex-wrap:wrap; }
+    .thumbs img { width:220px; max-width:100%; border:1px solid var(--line); border-radius:8px; background:#fff; }
+    .ai { padding:16px; border-left:4px solid var(--accent); }
+    @media (max-width: 720px) {
+      header { display:block; }
+      .version { text-align:left; margin-top:8px; }
+      .metric-grid { grid-template-columns:1fr; }
+      th:nth-child(5), td:nth-child(5) { display:none; }
+    }
   </style>
 </head>
 <body>
   <header>
-    <h1>WorksideQA</h1>
-    <p>Local dashboard shell for historical runs, release readiness, screenshots, performance, accessibility, and AI review results.</p>
+    <div>
+      <h1>WorksideQA Platform</h1>
+      <p id="refresh">Last refresh unavailable</p>
+    </div>
+    <div class="version" id="version">Version unavailable</div>
   </header>
   <main>
-    <section class="grid">
-      <div class="card"><span class="label">Latest status</span><span class="value" id="latest-status">No data</span></div>
-      <div class="card"><span class="label">Release readiness</span><span class="value" id="readiness">0%</span></div>
-      <div class="card"><span class="label">Passed checks</span><span class="value" id="passed">0</span></div>
-      <div class="card"><span class="label">Failed checks</span><span class="value" id="failed">0</span></div>
-    </section>
-    <canvas class="chart" id="readiness-chart" width="1080" height="240"></canvas>
+    <section class="summary-grid" id="summary"></section>
+
+    <h2>Products</h2>
+    <section class="product-grid" id="products"></section>
+
+    <h2>Readiness Trend</h2>
+    <canvas id="trend" width="1160" height="230"></canvas>
+
+    <h2>Product Detail</h2>
+    <section id="details"></section>
+
+    <h2>Recent Runs</h2>
     <table>
-      <thead><tr><th>Started</th><th>Status</th><th>Suite</th><th>Environment</th><th>Readiness</th><th>Checks</th></tr></thead>
-      <tbody id="runs">
-        <tr><td colspan="6">No history indexed yet. Run `npm run qa:all:dry` to generate local data.</td></tr>
-      </tbody>
+      <thead><tr><th>Started</th><th>Product</th><th>Status</th><th>Readiness</th><th>Suite</th><th>Checks</th><th>Report</th></tr></thead>
+      <tbody id="runs"></tbody>
     </table>
-    <table>
-      <thead><tr><th>Area</th><th>Current coverage</th><th>Next step</th></tr></thead>
-      <tbody>
-        <tr><td>Browser</td><td>Playwright smoke runner</td><td>Add product-specific route assertions</td></tr>
-        <tr><td>API</td><td>Manifest-driven health checks</td><td>Register Cloud Run health endpoints</td></tr>
-        <tr><td>Firebase</td><td>Non-destructive readiness checks</td><td>Add service-account read-only adapter</td></tr>
-        <tr><td>Mobile</td><td>Maestro availability detection</td><td>Add Expo flow files</td></tr>
-        <tr><td>AI</td><td>Prompt library and persona checks</td><td>Add credential-gated evaluations</td></tr>
-      </tbody>
-    </table>
+
+    <h2>AI Review</h2>
+    <section class="panel ai" id="ai-review"></section>
   </main>
   <script>
-    const data = window.WORKSIDEQA_HISTORY || { runs: [], latest: null };
-    const latest = data.latest;
-    if (latest) {
-      document.getElementById("latest-status").textContent = latest.status;
-      document.getElementById("latest-status").className = latest.status === "PASS" ? "value pass" : "value fail";
-      document.getElementById("readiness").textContent = `${latest.releaseReadiness}%`;
-      document.getElementById("passed").textContent = latest.counts.passed;
-      document.getElementById("failed").textContent = latest.counts.failed;
-      document.getElementById("runs").innerHTML = data.runs.slice(0, 25).map((run) => `
-        <tr>
-          <td>${run.startedAt}</td>
-          <td class="${run.status === "PASS" ? "pass" : "fail"}">${run.status}</td>
-          <td>${run.suite}</td>
-          <td>${run.environment}</td>
-          <td>${run.releaseReadiness}%</td>
-          <td>${run.counts.passed} passed, ${run.counts.failed} failed, ${run.counts.skipped} skipped</td>
-        </tr>
-      `).join("");
+    const data = window.WORKSIDEQA_DASHBOARD || { products: [], recentRuns: [], overallReadiness: 0 };
+    const statusClass = (status) => status === "PASS" || status === "passed" ? "pass" : status === "FAIL" || status === "failed" ? "fail" : status === "warning" ? "warn" : status === "NO DATA" ? "nodata" : "skip";
+    const value = (item, fallback = "Not available") => item === null || item === undefined || item === "" ? fallback : item;
+    const percent = (item) => item === null || item === undefined ? "Not evaluated" : `${item}%`;
+    const escapeHtml = (text) => String(text ?? "").replace(/[&<>"']/g, (char) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[char]));
+    const badge = (status) => `<span class="badge ${statusClass(status)}">${escapeHtml(status)}</span>`;
+    const reportLink = (links) => links?.html ? `<a href="${escapeHtml(links.html)}">View report</a>` : "";
 
-      const canvas = document.getElementById("readiness-chart");
-      const context = canvas.getContext("2d");
-      const runs = data.runs.slice(0, 25).reverse();
-      const pad = 28;
-      context.clearRect(0, 0, canvas.width, canvas.height);
-      context.strokeStyle = "#d0d5dd";
-      context.lineWidth = 1;
-      for (let value = 0; value <= 100; value += 25) {
-        const y = canvas.height - pad - ((canvas.height - pad * 2) * value) / 100;
-        context.beginPath();
-        context.moveTo(pad, y);
-        context.lineTo(canvas.width - pad, y);
-        context.stroke();
-      }
-      context.strokeStyle = "#0f766e";
-      context.lineWidth = 3;
+    document.getElementById("version").textContent = `Version ${value(data.platformVersion)}`;
+    document.getElementById("refresh").textContent = `Last dashboard data refresh: ${value(data.generatedAt)}`;
+
+    const cleanProducts = data.products.filter((product) => product.latestStatus === "PASS").length;
+    const failingProducts = data.products.filter((product) => product.latestStatus === "FAIL").length;
+    document.getElementById("summary").innerHTML = [
+      ["Overall readiness", percent(data.overallReadiness)],
+      ["Clean products", `${cleanProducts}/${data.products.length}`],
+      ["Failing products", failingProducts],
+      ["Recent runs", data.recentRuns.length],
+    ].map(([label, val]) => `<div class="card"><span class="label">${label}</span><span class="value">${val}</span></div>`).join("");
+
+    document.getElementById("products").innerHTML = data.products.map((product) => `
+      <article class="card">
+        <div class="row"><h3>${escapeHtml(product.productName)}</h3>${badge(product.latestStatus)}</div>
+        <div class="metric-grid">
+          <div class="metric"><span class="label">Readiness</span><strong>${percent(product.latestReadiness)}</strong></div>
+          <div class="metric"><span class="label">Failed</span><strong>${product.failedChecks}</strong></div>
+          <div class="metric"><span class="label">Warnings</span><strong>${product.warningChecks}</strong></div>
+        </div>
+        <div class="stack meta">
+          <div>Last run: ${value(product.latestRunStartedAt)}</div>
+          <div>Last clean run: ${value(product.lastCleanRunStartedAt)}</div>
+        </div>
+        <div class="actions">${reportLink(product.reportLinks)}</div>
+      </article>
+    `).join("");
+
+    const categories = ["browser", "api", "firebase", "accessibility", "performance", "security", "visual", "ai"];
+    document.getElementById("details").innerHTML = data.products.map((product) => `
+      <details>
+        <summary><div class="row"><strong>${escapeHtml(product.productName)}</strong>${badge(product.latestStatus)}</div></summary>
+        <div class="detail-body">
+          <div class="category-grid">
+            ${categories.map((category) => {
+              const score = product.categoryScores?.[category] || { status: "not evaluated", score: null };
+              return `<div class="category"><span class="label">${category}</span><div class="row"><strong>${percent(score.score)}</strong>${badge(score.status)}</div></div>`;
+            }).join("")}
+          </div>
+          <div class="thumbs">
+            ${(product.latestArtifacts?.screenshots || []).slice(0, 4).map((shot) => `<a href="${escapeHtml(shot)}"><img src="${escapeHtml(shot)}" alt="${escapeHtml(product.productName)} screenshot"></a>`).join("")}
+          </div>
+          <table>
+            <thead><tr><th>Started</th><th>Status</th><th>Readiness</th><th>Checks</th><th>Report</th></tr></thead>
+            <tbody>
+              ${(product.recentRuns || []).map((run) => `<tr><td>${value(run.startedAt)}</td><td>${badge(run.status)}</td><td>${percent(run.readiness)}</td><td>${run.counts.passed} passed, ${run.counts.failed} failed, ${run.counts.warnings} warnings</td><td>${reportLink(run.reportLinks)}</td></tr>`).join("") || `<tr><td colspan="5">No runs indexed.</td></tr>`}
+            </tbody>
+          </table>
+        </div>
+      </details>
+    `).join("");
+
+    document.getElementById("runs").innerHTML = data.recentRuns.slice(0, 30).map((run) => `
+      <tr>
+        <td>${value(run.startedAt)}</td>
+        <td>${escapeHtml(run.productName)}</td>
+        <td>${badge(run.status)}</td>
+        <td>${percent(run.readiness)}</td>
+        <td>${escapeHtml(run.suite)}</td>
+        <td>${run.counts.passed} passed, ${run.counts.failed} failed, ${run.counts.skipped} skipped</td>
+        <td>${reportLink(run.reportLinks)}</td>
+      </tr>
+    `).join("") || `<tr><td colspan="7">No runs indexed.</td></tr>`;
+
+    const review = data.aiReview;
+    document.getElementById("ai-review").innerHTML = review ? `
+      <div class="row"><strong>${escapeHtml(review.recommendation)}</strong>${badge(review.status)}</div>
+      <p>${escapeHtml(review.summary)}</p>
+      <p>${value(review.generatedAt)} ${review.markdown ? `| <a href="${escapeHtml(review.markdown)}">Review</a>` : ""}</p>
+    ` : `<p>No AI review has been generated.</p>`;
+
+    const canvas = document.getElementById("trend");
+    const context = canvas.getContext("2d");
+    const runs = data.recentRuns.slice(0, 30).reverse();
+    const pad = 28;
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.strokeStyle = "#d8dee8";
+    context.lineWidth = 1;
+    for (let tick = 0; tick <= 100; tick += 25) {
+      const y = canvas.height - pad - ((canvas.height - pad * 2) * tick) / 100;
       context.beginPath();
-      runs.forEach((run, index) => {
-        const x = pad + ((canvas.width - pad * 2) * index) / Math.max(1, runs.length - 1);
-        const y = canvas.height - pad - ((canvas.height - pad * 2) * run.releaseReadiness) / 100;
-        if (index === 0) context.moveTo(x, y);
-        else context.lineTo(x, y);
-      });
+      context.moveTo(pad, y);
+      context.lineTo(canvas.width - pad, y);
       context.stroke();
-      runs.forEach((run, index) => {
-        const x = pad + ((canvas.width - pad * 2) * index) / Math.max(1, runs.length - 1);
-        const y = canvas.height - pad - ((canvas.height - pad * 2) * run.releaseReadiness) / 100;
-        context.fillStyle = run.status === "PASS" ? "#0f766e" : "#b42318";
-        context.beginPath();
-        context.arc(x, y, 4, 0, Math.PI * 2);
-        context.fill();
-      });
     }
+    context.strokeStyle = "#175cd3";
+    context.lineWidth = 3;
+    context.beginPath();
+    runs.forEach((run, index) => {
+      const x = pad + ((canvas.width - pad * 2) * index) / Math.max(1, runs.length - 1);
+      const y = canvas.height - pad - ((canvas.height - pad * 2) * (run.readiness || 0)) / 100;
+      if (index === 0) context.moveTo(x, y);
+      else context.lineTo(x, y);
+    });
+    context.stroke();
+    runs.forEach((run, index) => {
+      const x = pad + ((canvas.width - pad * 2) * index) / Math.max(1, runs.length - 1);
+      const y = canvas.height - pad - ((canvas.height - pad * 2) * (run.readiness || 0)) / 100;
+      context.fillStyle = run.status === "PASS" ? "#146c43" : "#b42318";
+      context.beginPath();
+      context.arc(x, y, 4, 0, Math.PI * 2);
+      context.fill();
+    });
   </script>
 </body>
 </html>

@@ -4,19 +4,20 @@
   "type": "expo-react-native",
   "status": "active",
   "baseUrl": {
-    "local": "http://localhost:5178",
+    "local": "http://127.0.0.1:3000",
     "staging": "https://anyryde-staging.netlify.app",
     "production": "https://anyryde.com"
   },
   "devServer": {
     "enabled": true,
-    "workingDirectory": "C:/Users/sjroy/Source/rydeIQ",
-    "command": "npm run dev",
-    "port": 5178,
-    "healthUrl": "http://localhost:5178"
+    "workingDirectory": "C:/Users/sjroy/Source/rydeIQ/rydeIQWeb",
+    "command": "npm run start",
+    "port": 3000,
+    "healthUrl": "http://127.0.0.1:3000"
   },
   "auth": {
     "strategy": "email-password",
+    "loginPath": "/login",
     "demoUserEnvKey": "ANYRYDE_DEMO_EMAIL",
     "demoPasswordEnvKey": "ANYRYDE_DEMO_PASSWORD"
   },

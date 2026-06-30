@@ -1,6 +1,6 @@
 {
   "name": "worksideqa",
-  "version": "1.0.0",
+  "version": "0.1.0-alpha",
   "description": "Shared QA automation platform for Workside Software products.",
   "main": "packages/qa-core/src/index.js",
   "directories": {
@@ -8,13 +8,14 @@
   },
   "scripts": {
     "qa": "node packages/qa-core/src/cli.js",
-    "qa:radiusiq": "node packages/qa-core/src/cli.js --product radiusiq --suite smoke",
-    "qa:merxus": "node packages/qa-core/src/cli.js --product merxus --suite smoke",
-    "qa:sageset": "node packages/qa-core/src/cli.js --product sageset --suite smoke",
+    "qa:radiusiq": "node packages/qa-core/src/cli.js --product radiusiq --suite smoke --start-server",
+    "qa:merxus": "node packages/qa-core/src/cli.js --product merxus --suite smoke --start-server",
+    "qa:sageset": "node packages/qa-core/src/cli.js --product sageset --suite smoke --start-server",
     "qa:all": "node packages/qa-core/src/cli.js --all --suite smoke",
     "qa:radiusiq:dry": "node packages/qa-core/src/cli.js --product radiusiq --suite smoke --dry-run",
     "qa:all:dry": "node packages/qa-core/src/cli.js --all --suite smoke --dry-run",
     "qa:dashboard:data": "node packages/qa-reporting/src/build-dashboard-data.js",
+    "qa:ai-review": "node packages/qa-core/src/cli.js --ai-review",
     "qa:bug-report": "node packages/qa-openai/src/generate-bug-report.js",
     "qa:env": "node packages/qa-config/src/print-env-status.js",
     "qa:report": "node packages/qa-reporting/src/open-latest-report.js",
