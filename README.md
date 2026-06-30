@@ -14,6 +14,7 @@ Shared QA automation platform for Workside Software products.
 - HTML, JSON, JUnit, and historical report output with platform version metadata.
 - Product-centered Dashboard V2 at `dashboard/index.html`.
 - Credential-gated AI release review output.
+- Release comparison and daily engineering report generation.
 
 ## Commands
 
@@ -80,8 +81,22 @@ Open dashboard: dashboard/index.html
 ## Versioning
 
 The WorksideQA platform version is stored in `package.json`, displayed in the dashboard, and written into JSON, HTML, dashboard, and AI release review outputs. See `docs/VERSIONING.md`.
+
+## Intelligent Release Advisor
+
+`npm run qa:dashboard:data` builds:
+
+- `dashboard/data/dashboard-summary.json`
+- `dashboard/data/release-comparison.json`
+
+`npm run qa:ai-review` builds:
+
+- `reports/ai/latest-release-review.md`
+- `reports/ai/latest-release-review.json`
+- `reports/ai/latest-release-comparison.json`
+- `reports/ai/daily-engineering-report.md`
+- `reports/ai/daily-engineering-report.json`
 //////////////////////////////////////////////////////////////
 WorksideQA Platform v0.1.0-alpha
 
 The unified quality assurance, release readiness, and AI-assisted testing platform for all Workside Software applications.
-

@@ -2,7 +2,7 @@
 const { writeDashboardData } = require("./dashboard-data");
 const { log } = require("../../qa-utils/src");
 
-const { outputPath, data } = writeDashboardData();
+const { outputPath, comparisonPath, data } = writeDashboardData();
 log(`Dashboard data written: ${outputPath}`);
+log(`Release comparison written: ${comparisonPath}`);
 log(`Runs indexed: ${data.runs.length}`);
-

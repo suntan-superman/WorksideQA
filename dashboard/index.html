@@ -13,17 +13,20 @@
       --line:#d8dee8;
       --bg:#f5f7fa;
       --panel:#ffffff;
-      --pass:#146c43;
+      --pass:#147145;
+      --pass-soft:#edf8f2;
       --fail:#b42318;
+      --fail-soft:#fff1f0;
       --warn:#9a6700;
+      --warn-soft:#fff8e6;
       --skip:#576071;
+      --skip-soft:#f2f4f7;
       --accent:#175cd3;
-      --soft:#eef4ff;
       --shadow:0 1px 2px rgba(16,24,40,.06);
     }
     * { box-sizing:border-box; }
     body { margin:0; font-family:Arial, sans-serif; background:var(--bg); color:var(--ink); }
-    header, main { max-width:1280px; margin:0 auto; padding:24px; }
+    header, main { max-width:1320px; margin:0 auto; padding:24px; }
     header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; padding-top:28px; }
     h1 { margin:0; font-size:30px; letter-spacing:0; }
     h2 { margin:28px 0 12px; font-size:20px; letter-spacing:0; }
@@ -32,22 +35,29 @@
     a { color:var(--accent); text-decoration:none; font-weight:700; }
     a:hover { text-decoration:underline; }
     .version { color:var(--muted); font-size:14px; text-align:right; line-height:1.5; }
-    .summary-grid, .product-grid { display:grid; gap:12px; }
+    .summary-grid, .product-grid, .score-grid { display:grid; gap:12px; }
     .summary-grid { grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); }
-    .product-grid { grid-template-columns:repeat(auto-fit, minmax(290px, 1fr)); }
+    .product-grid { grid-template-columns:repeat(auto-fit, minmax(330px, 1fr)); }
+    .score-grid { grid-template-columns:repeat(3, 1fr); }
     .card, details, .panel { background:var(--panel); border:1px solid var(--line); border-radius:8px; box-shadow:var(--shadow); }
     .card { padding:16px; }
+    .product-card.pass-card { border-color:#91d5ad; background:linear-gradient(180deg, #fff 0%, var(--pass-soft) 100%); }
+    .product-card.fail-card { border-color:#f5a3a0; background:linear-gradient(180deg, #fff 0%, var(--fail-soft) 100%); }
+    .product-card.warn-card { border-color:#f1c66f; background:linear-gradient(180deg, #fff 0%, var(--warn-soft) 100%); }
+    .product-card.nodata-card { border-color:#c8ced8; background:linear-gradient(180deg, #fff 0%, var(--skip-soft) 100%); }
     .label { display:block; color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
     .value { display:block; margin-top:8px; font-size:28px; font-weight:700; }
     .meta { color:var(--muted); font-size:13px; line-height:1.45; }
     .row { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .product-title { display:flex; align-items:center; gap:10px; min-width:0; }
+    .icon { display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border:1px solid var(--line); border-radius:8px; background:#fff; font-size:19px; flex:0 0 auto; }
     .stack { display:grid; gap:10px; margin-top:12px; }
-    .badge { display:inline-flex; align-items:center; justify-content:center; min-width:76px; border-radius:999px; padding:4px 9px; color:#fff; font-size:12px; font-weight:700; }
+    .badge { display:inline-flex; align-items:center; justify-content:center; min-width:76px; border-radius:999px; padding:4px 9px; color:#fff; font-size:12px; font-weight:700; white-space:nowrap; }
     .pass { background:var(--pass); } .fail { background:var(--fail); } .warn { background:var(--warn); } .skip { background:var(--skip); }
     .nodata { background:#475467; }
-    .metric-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; margin-top:12px; }
-    .metric { border:1px solid var(--line); border-radius:8px; padding:10px; background:#fbfcfe; }
-    .metric strong { display:block; margin-top:4px; font-size:18px; }
+    .why { min-height:40px; color:#344054; font-size:14px; line-height:1.45; }
+    .score { border:1px solid var(--line); border-radius:8px; padding:10px; background:rgba(255,255,255,.72); min-width:0; }
+    .score strong { display:block; margin-top:4px; font-size:18px; }
     .actions { margin-top:12px; min-height:22px; }
     canvas { width:100%; height:230px; background:var(--panel); border:1px solid var(--line); border-radius:8px; }
     table { width:100%; border-collapse:collapse; background:var(--panel); border:1px solid var(--line); border-radius:8px; overflow:hidden; }
@@ -60,13 +70,19 @@
     .detail-body { border-top:1px solid var(--line); padding:16px; display:grid; gap:16px; }
     .category-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:8px; }
     .category { border:1px solid var(--line); border-radius:8px; padding:10px; background:#fbfcfe; }
+    .timeline { display:grid; gap:8px; }
+    .timeline-step { display:grid; grid-template-columns:20px 150px 1fr; gap:10px; align-items:start; }
+    .dot { width:10px; height:10px; margin-top:5px; border-radius:999px; background:var(--skip); }
+    .dot.pass { background:var(--pass); } .dot.fail { background:var(--fail); } .dot.warn { background:var(--warn); }
     .thumbs { display:flex; gap:10px; flex-wrap:wrap; }
     .thumbs img { width:220px; max-width:100%; border:1px solid var(--line); border-radius:8px; background:#fff; }
     .ai { padding:16px; border-left:4px solid var(--accent); }
-    @media (max-width: 720px) {
+    @media (max-width: 760px) {
       header { display:block; }
       .version { text-align:left; margin-top:8px; }
-      .metric-grid { grid-template-columns:1fr; }
+      .score-grid { grid-template-columns:repeat(2, 1fr); }
+      .timeline-step { grid-template-columns:20px 1fr; }
+      .timeline-step .meta { grid-column:2; }
       th:nth-child(5), td:nth-child(5) { display:none; }
     }
   </style>
@@ -101,65 +117,92 @@
     <section class="panel ai" id="ai-review"></section>
   </main>
   <script>
-    const data = window.WORKSIDEQA_DASHBOARD || { products: [], recentRuns: [], overallReadiness: 0 };
+    const data = window.WORKSIDEQA_DASHBOARD || { products: [], recentRuns: [], overallReadiness: 0, releaseComparison: { products: [] } };
+    const labels = { reliability: "Reliability", performance: "Performance", security: "Security", accessibility: "Accessibility", visual: "Visual", ai: "AI" };
+    const detailCategories = ["browser", "api", "firebase", "accessibility", "performance", "security", "visual", "ai"];
+    const rollupCategories = ["reliability", "performance", "security", "accessibility", "visual", "ai"];
     const statusClass = (status) => status === "PASS" || status === "passed" ? "pass" : status === "FAIL" || status === "failed" ? "fail" : status === "warning" ? "warn" : status === "NO DATA" ? "nodata" : "skip";
+    const cardClass = (status) => status === "PASS" ? "pass-card" : status === "FAIL" ? "fail-card" : status === "NO DATA" ? "nodata-card" : "warn-card";
     const value = (item, fallback = "Not available") => item === null || item === undefined || item === "" ? fallback : item;
-    const percent = (item) => item === null || item === undefined ? "Not evaluated" : `${item}%`;
+    const percent = (item) => item === null || item === undefined ? "N/E" : `${item}%`;
     const escapeHtml = (text) => String(text ?? "").replace(/[&<>"']/g, (char) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[char]));
     const badge = (status) => `<span class="badge ${statusClass(status)}">${escapeHtml(status)}</span>`;
     const reportLink = (links) => links?.html ? `<a href="${escapeHtml(links.html)}">View report</a>` : "";
+    const comparisonFor = (key) => (data.releaseComparison?.products || []).find((item) => item.productKey === key);
 
     document.getElementById("version").textContent = `Version ${value(data.platformVersion)}`;
     document.getElementById("refresh").textContent = `Last dashboard data refresh: ${value(data.generatedAt)}`;
 
     const cleanProducts = data.products.filter((product) => product.latestStatus === "PASS").length;
     const failingProducts = data.products.filter((product) => product.latestStatus === "FAIL").length;
+    const comparison = data.releaseComparison?.summary || {};
     document.getElementById("summary").innerHTML = [
       ["Overall readiness", percent(data.overallReadiness)],
       ["Clean products", `${cleanProducts}/${data.products.length}`],
       ["Failing products", failingProducts],
-      ["Recent runs", data.recentRuns.length],
+      ["New failures", comparison.newFailures || 0],
+      ["Resolved failures", comparison.resolvedFailures || 0],
     ].map(([label, val]) => `<div class="card"><span class="label">${label}</span><span class="value">${val}</span></div>`).join("");
 
-    document.getElementById("products").innerHTML = data.products.map((product) => `
-      <article class="card">
-        <div class="row"><h3>${escapeHtml(product.productName)}</h3>${badge(product.latestStatus)}</div>
-        <div class="metric-grid">
-          <div class="metric"><span class="label">Readiness</span><strong>${percent(product.latestReadiness)}</strong></div>
-          <div class="metric"><span class="label">Failed</span><strong>${product.failedChecks}</strong></div>
-          <div class="metric"><span class="label">Warnings</span><strong>${product.warningChecks}</strong></div>
-        </div>
-        <div class="stack meta">
-          <div>Last run: ${value(product.latestRunStartedAt)}</div>
-          <div>Last clean run: ${value(product.lastCleanRunStartedAt)}</div>
-        </div>
-        <div class="actions">${reportLink(product.reportLinks)}</div>
-      </article>
-    `).join("");
+    document.getElementById("products").innerHTML = data.products.map((product) => {
+      const rollup = product.categoryRollup || {};
+      return `
+        <article class="card product-card ${cardClass(product.latestStatus)}">
+          <div class="row">
+            <div class="product-title"><span class="icon">${escapeHtml(product.icon || "")}</span><h3>${escapeHtml(product.productName)}</h3></div>
+            ${badge(product.latestStatus)}
+          </div>
+          <p class="why">${escapeHtml(product.statusReason)}</p>
+          <div class="score-grid">
+            ${rollupCategories.map((name) => `<div class="score"><span class="label">${labels[name]}</span><strong>${percent(rollup[name]?.score)}</strong></div>`).join("")}
+          </div>
+          <div class="stack meta">
+            <div>Last run: ${value(product.latestRunStartedAt)}</div>
+            <div>Last clean run: ${value(product.lastCleanRunStartedAt)}</div>
+          </div>
+          <div class="actions">${reportLink(product.reportLinks)}</div>
+        </article>
+      `;
+    }).join("");
 
-    const categories = ["browser", "api", "firebase", "accessibility", "performance", "security", "visual", "ai"];
-    document.getElementById("details").innerHTML = data.products.map((product) => `
-      <details>
-        <summary><div class="row"><strong>${escapeHtml(product.productName)}</strong>${badge(product.latestStatus)}</div></summary>
-        <div class="detail-body">
-          <div class="category-grid">
-            ${categories.map((category) => {
-              const score = product.categoryScores?.[category] || { status: "not evaluated", score: null };
-              return `<div class="category"><span class="label">${category}</span><div class="row"><strong>${percent(score.score)}</strong>${badge(score.status)}</div></div>`;
-            }).join("")}
+    document.getElementById("details").innerHTML = data.products.map((product) => {
+      const diff = comparisonFor(product.productKey);
+      const timeline = [
+        ["Run", product.latestStatus, product.statusReason],
+        ["Change", diff?.statusAfter || product.latestStatus, diff?.summary || "No comparison available."],
+        ["Smoke", product.categoryScores?.browser?.status || "not evaluated", `${percent(product.categoryScores?.browser?.score)} reliability`],
+        ["Visual", product.categoryScores?.visual?.status || "not evaluated", `${percent(product.categoryScores?.visual?.score)} visual`],
+        ["Accessibility", product.categoryScores?.accessibility?.status || "not evaluated", `${percent(product.categoryScores?.accessibility?.score)} accessibility`],
+        ["Performance", product.categoryScores?.performance?.status || "not evaluated", `${percent(product.categoryScores?.performance?.score)} performance`],
+        ["AI Review", product.categoryScores?.ai?.status || "not evaluated", `${percent(product.categoryScores?.ai?.score)} AI`],
+        ["Outcome", product.latestStatus, product.latestStatus === "PASS" ? "Ready for this suite." : "Needs attention before release."],
+      ];
+      return `
+        <details>
+          <summary><div class="row"><div class="product-title"><span class="icon">${escapeHtml(product.icon || "")}</span><strong>${escapeHtml(product.productName)}</strong></div>${badge(product.latestStatus)}</div></summary>
+          <div class="detail-body">
+            <div class="timeline">
+              ${timeline.map(([name, status, text]) => `<div class="timeline-step"><span class="dot ${statusClass(status)}"></span><strong>${escapeHtml(name)}</strong><span class="meta">${escapeHtml(text)}</span></div>`).join("")}
+            </div>
+            <div class="category-grid">
+              ${detailCategories.map((category) => {
+                const score = product.categoryScores?.[category] || { status: "not evaluated", score: null };
+                return `<div class="category"><span class="label">${category}</span><div class="row"><strong>${percent(score.score)}</strong>${badge(score.status)}</div></div>`;
+              }).join("")}
+            </div>
+            <div class="thumbs">
+              ${(product.latestArtifacts?.screenshots || []).slice(0, 4).map((shot) => `<a href="${escapeHtml(shot)}"><img src="${escapeHtml(shot)}" alt="${escapeHtml(product.productName)} screenshot"></a>`).join("")}
+            </div>
+            <table>
+              <thead><tr><th>Started</th><th>Status</th><th>Readiness</th><th>Checks</th><th>Report</th></tr></thead>
+              <tbody>
+                ${(product.recentRuns || []).map((run) => `<tr><td>${value(run.startedAt)}</td><td>${badge(run.status)}</td><td>${percent(run.readiness)}</td><td>${run.counts.passed} passed, ${run.counts.failed} failed, ${run.counts.warnings} warnings</td><td>${reportLink(run.reportLinks)}</td></tr>`).join("") || `<tr><td colspan="5">No runs indexed.</td></tr>`}
+              </tbody>
+            </table>
           </div>
-          <div class="thumbs">
-            ${(product.latestArtifacts?.screenshots || []).slice(0, 4).map((shot) => `<a href="${escapeHtml(shot)}"><img src="${escapeHtml(shot)}" alt="${escapeHtml(product.productName)} screenshot"></a>`).join("")}
-          </div>
-          <table>
-            <thead><tr><th>Started</th><th>Status</th><th>Readiness</th><th>Checks</th><th>Report</th></tr></thead>
-            <tbody>
-              ${(product.recentRuns || []).map((run) => `<tr><td>${value(run.startedAt)}</td><td>${badge(run.status)}</td><td>${percent(run.readiness)}</td><td>${run.counts.passed} passed, ${run.counts.failed} failed, ${run.counts.warnings} warnings</td><td>${reportLink(run.reportLinks)}</td></tr>`).join("") || `<tr><td colspan="5">No runs indexed.</td></tr>`}
-            </tbody>
-          </table>
-        </div>
-      </details>
-    `).join("");
+        </details>
+      `;
+    }).join("");
 
     document.getElementById("runs").innerHTML = data.recentRuns.slice(0, 30).map((run) => `
       <tr>
@@ -207,7 +250,7 @@
     runs.forEach((run, index) => {
       const x = pad + ((canvas.width - pad * 2) * index) / Math.max(1, runs.length - 1);
       const y = canvas.height - pad - ((canvas.height - pad * 2) * (run.readiness || 0)) / 100;
-      context.fillStyle = run.status === "PASS" ? "#146c43" : "#b42318";
+      context.fillStyle = run.status === "PASS" ? "#147145" : "#b42318";
       context.beginPath();
       context.arc(x, y, 4, 0, Math.PI * 2);
       context.fill();

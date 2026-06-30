@@ -48,5 +48,9 @@ Phase 5
 - [x] Replace dashboard homepage with product-centered Dashboard V2.
 - [x] Add category-based readiness scoring.
 - [x] Add credential-gated AI release review command and outputs.
+- [x] Add product card icons, status coloring, and one-line status reasons.
+- [x] Add category rollups for reliability, performance, security, accessibility, visual, and AI.
+- [x] Add latest-vs-previous release comparison data.
+- [x] Add local daily engineering report output.
 - [x] Ignore generated `reports/ai` artifacts.
 - [ ] Expand release-suite category coverage as product credentials become available.

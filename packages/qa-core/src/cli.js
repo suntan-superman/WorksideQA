@@ -16,6 +16,8 @@ async function main() {
     log(`AI release review: ${result.review.status}`);
     log(`Markdown: ${result.markdownPath}`);
     log(`JSON: ${result.jsonPath}`);
+    log(`Comparison: ${result.comparisonPath}`);
+    log(`Daily report: ${result.dailyMarkdownPath}`);
     return;
   }
 
