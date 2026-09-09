@@ -21,9 +21,42 @@
     "demoUserEnvKey": "SAGESET_DEMO_EMAIL",
     "demoPasswordEnvKey": "SAGESET_DEMO_PASSWORD"
   },
+  "browserWorkflows": {
+    "workflow": {
+      "path": "products/sageset/workflows/workflow.js",
+      "dashboardRoute": "/",
+      "dashboardSelectors": ["text=SageSet", "text=Today", "text=Workout"],
+      "safeScreenshot": {
+        "fullPage": false
+      },
+      "areas": [
+        {
+          "name": "today workout",
+          "routes": ["/", "/today"],
+          "selectors": ["text=Today", "text=Workout", "text=Exercise"]
+        },
+        {
+          "name": "calendar",
+          "routes": ["/calendar", "/"],
+          "selectors": ["text=Calendar", "text=Today", "text=Workout"]
+        },
+        {
+          "name": "plan",
+          "routes": ["/plan", "/"],
+          "selectors": ["text=Plan", "text=Weekly", "text=Workout"]
+        },
+        {
+          "name": "nutrition",
+          "routes": ["/nutrition", "/"],
+          "selectors": ["text=Nutrition", "text=Meal", "text=Today"]
+        }
+      ]
+    }
+  },
   "firebase": {
     "enabled": true,
-    "projectId": "sageset-prod"
+    "projectId": "sageset-prod",
+    "credentialFile": "sageset.json"
   },
   "api": {
     "enabled": true,
@@ -82,6 +115,7 @@
   },
   "suites": {
     "smoke": ["load", "login", "dashboard", "basic-navigation"],
+    "workflow": ["workflow", "performance"],
     "regression": ["login", "dashboard", "weekly-review", "coaching-memory"],
     "release": ["smoke", "api", "firebase", "accessibility", "performance", "ai", "mobile"]
   },

@@ -22,9 +22,39 @@
     "demoUserEnvKey": "ANYRYDE_DEMO_EMAIL",
     "demoPasswordEnvKey": "ANYRYDE_DEMO_PASSWORD"
   },
+  "browserWorkflows": {
+    "workflow": {
+      "path": "products/anyryde/workflows/workflow.js",
+      "publicRoute": "/",
+      "publicSelectors": ["text=AnyRyde", "text=Compare Rides"],
+      "dashboardRoute": "/",
+      "dashboardSelectors": ["text=AnyRyde", "text=Compare Rides"],
+      "safeScreenshot": {
+        "fullPage": false
+      },
+      "areas": [
+        {
+          "name": "ride comparison",
+          "routes": ["/compare", "/"],
+          "selectors": ["text=Compare Rides", "text=Smart Ride Comparisons", "text=Compare"]
+        },
+        {
+          "name": "driver information",
+          "routes": ["/drive", "/"],
+          "selectors": ["text=Drive with Us", "text=Driver", "text=Drive"]
+        },
+        {
+          "name": "contact",
+          "routes": ["/contact", "/"],
+          "selectors": ["text=Contact", "text=Get Started", "text=Sign Up"]
+        }
+      ]
+    }
+  },
   "firebase": {
     "enabled": true,
-    "projectId": "anyryde-prod"
+    "projectId": "anyryde-prod",
+    "credentialFile": "anyryde.json"
   },
   "api": {
     "enabled": true,
@@ -69,6 +99,7 @@
   },
   "suites": {
     "smoke": ["load", "login", "trip-list", "basic-navigation"],
+    "workflow": ["workflow", "performance"],
     "regression": ["login", "trip-list", "booking-flow", "notifications"],
     "release": ["smoke", "api", "firebase", "accessibility", "performance", "mobile"]
   },

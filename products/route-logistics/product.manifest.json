@@ -26,9 +26,37 @@
     "demoUserEnvKey": "ROUTE_LOGISTICS_DEMO_EMAIL",
     "demoPasswordEnvKey": "ROUTE_LOGISTICS_DEMO_PASSWORD"
   },
+  "browserWorkflows": {
+    "workflow": {
+      "path": "products/route-logistics/workflows/workflow.js",
+      "dashboardRoute": "/",
+      "dashboardSelectors": ["text=Route", "text=Logistics", "text=Dispatch"],
+      "safeScreenshot": {
+        "fullPage": false
+      },
+      "areas": [
+        {
+          "name": "routes",
+          "routes": ["/routes", "/"],
+          "selectors": ["text=Routes", "text=Route", "text=Dispatch"]
+        },
+        {
+          "name": "drivers",
+          "routes": ["/drivers", "/"],
+          "selectors": ["text=Drivers", "text=Driver", "text=Dispatch"]
+        },
+        {
+          "name": "dispatch",
+          "routes": ["/dispatch", "/"],
+          "selectors": ["text=Dispatch", "text=Status", "text=Route"]
+        }
+      ]
+    }
+  },
   "firebase": {
     "enabled": true,
-    "projectId": "route-logistics-prod"
+    "projectId": "route-logistics-prod",
+    "credentialFile": "route-logistics.json"
   },
   "api": {
     "enabled": true,
@@ -73,6 +101,7 @@
   },
   "suites": {
     "smoke": ["load", "login", "route-list", "basic-navigation"],
+    "workflow": ["workflow", "performance"],
     "regression": ["login", "route-list", "driver-map", "dispatch-status"],
     "release": ["smoke", "api", "firebase", "accessibility", "performance", "mobile"]
   },

@@ -9,6 +9,7 @@ function reviewPayload(data) {
     platformVersion: data.platformVersion,
     generatedAt: data.generatedAt,
     overallReadiness: data.overallReadiness,
+    releaseAdvisor: data.releaseAdvisor,
     releaseComparison: data.releaseComparison,
     products: data.products.map((product) => ({
       productKey: product.productKey,
@@ -24,6 +25,8 @@ function reviewPayload(data) {
       skippedChecks: product.skippedChecks,
       categoryScores: product.categoryScores,
       categoryRollup: product.categoryRollup,
+      workflowMaturity: product.workflowMaturity,
+      failureExplanation: product.failureExplanation,
     })),
     recentRuns: data.recentRuns.slice(0, 30).map((run) => ({
       productKey: run.productKey,
@@ -36,12 +39,51 @@ function reviewPayload(data) {
   };
 }
 
+function advisorFromData(data) {
+  const products = data.products || [];
+  const failing = products.filter((product) => product.latestStatus === "FAIL");
+  const warnings = products.filter((product) => product.warningChecks > 0);
+  const newFailures = data.releaseComparison?.summary?.newFailures || 0;
+  const regressed = data.releaseComparison?.summary?.regressed || 0;
+  const readiness = data.overallReadiness || 0;
+  const workflowFailures = products.filter((product) => product.workflowMaturity?.status === "failed");
+  const riskScore = Math.max(
+    0,
+    Math.min(100, 100 - readiness + failing.length * 12 + newFailures * 10 + regressed * 8 + workflowFailures.length * 8 + warnings.length * 3)
+  );
+  const recommendation =
+    failing.length > 0 || newFailures > 0 || workflowFailures.length > 0
+      ? "hold"
+      : riskScore >= 35 || readiness < 90
+        ? "investigate"
+        : "deploy";
+  return {
+    generatedAt: new Date().toISOString(),
+    recommendation,
+    riskScore,
+    readiness,
+    cleanProducts: products.filter((product) => product.latestStatus === "PASS").length,
+    failingProducts: failing.map((product) => product.productKey),
+    workflowFailures: workflowFailures.map((product) => product.productKey),
+    newFailures,
+    regressed,
+    summary:
+      recommendation === "deploy"
+        ? "Release is low risk based on current indexed QA data."
+        : recommendation === "hold"
+          ? "Release should be held until failing or regressed product checks are resolved."
+          : "Release needs engineering review before deployment.",
+  };
+}
+
 function skippedReview(reason, data) {
+  const advisor = advisorFromData(data);
   return {
     platformVersion: platformVersion(),
     generatedAt: new Date().toISOString(),
     status: "skipped",
-    recommendation: "not evaluated",
+    recommendation: advisor.recommendation,
+    advisor,
     summary: reason,
     model: null,
     input: reviewPayload(data),
@@ -56,6 +98,7 @@ function markdownForReview(review) {
     `Generated: ${review.generatedAt}`,
     `Status: ${review.status}`,
     `Recommendation: ${review.recommendation}`,
+    review.advisor ? `Risk score: ${review.advisor.riskScore}` : "",
     "",
     "## Summary",
     "",
@@ -71,6 +114,7 @@ function markdownForDailyReport(report) {
     `Version: ${report.platformVersion}`,
     `Generated: ${report.generatedAt}`,
     `Recommendation: ${report.recommendation}`,
+    report.advisor ? `Risk score: ${report.advisor.riskScore}` : "",
     "",
     report.summary || "No daily summary was generated.",
     "",
@@ -92,80 +136,113 @@ async function generateReleaseReview(options = {}) {
   const comparisonPath = path.join(outputDir, "latest-release-comparison.json");
   const dailyJsonPath = path.join(outputDir, "daily-engineering-report.json");
   const dailyMarkdownPath = path.join(outputDir, "daily-engineering-report.md");
+  const advisorPath = path.join(outputDir, "latest-release-advisor.json");
+  const advisor = advisorFromData(data);
 
   let review;
   let dailyReport;
-  if (!openAiApiKey()) {
+  if (options.deterministicOnly || !openAiApiKey()) {
     review = skippedReview("Set OPENAI_API_KEY or OPENAI_KEY to run the credential-gated AI release review.", data);
+    if (options.deterministicOnly) review.summary = "Deterministic release advisor completed; AI prose generation was skipped for this run.";
     dailyReport = {
       platformVersion: platformVersion(),
       generatedAt: review.generatedAt,
       status: "skipped",
-      recommendation: "not evaluated",
+      recommendation: advisor.recommendation,
+      advisor,
       summary: review.summary,
       model: null,
     };
   } else {
     const model = process.env.WORKSIDEQA_OPENAI_MODEL || "gpt-5.4-mini";
     const input = sanitizeForAi(reviewPayload(data));
-    const response = await createResponse({
-      model,
-      input: [
-        {
-          role: "developer",
-          content:
-            "You are the executive QA reviewer for WorksideQA. Be concise. Do not reveal secrets. Return: current release readiness, clean products, failing products, major regressions, warnings, score deltas, next actions, and a deploy/no-deploy recommendation.",
-        },
-        {
-          role: "user",
-          content: input,
-        },
-      ],
-    });
-    const summary = sanitizeForAi(response.output_text || JSON.stringify(response.output || []));
-    review = {
-      platformVersion: platformVersion(),
-      generatedAt: new Date().toISOString(),
-      status: "generated",
-      recommendation: recommendationFromText(summary),
-      model,
-      summary,
-      input: JSON.parse(input),
-    };
+    try {
+      const response = await createResponse({
+        model,
+        input: [
+          {
+            role: "developer",
+            content:
+              "You are the executive QA reviewer for WorksideQA. Be concise. Do not reveal secrets. Return: current release readiness, clean products, failing products, major regressions, warnings, score deltas, next actions, and a deploy/no-deploy recommendation.",
+          },
+          {
+            role: "user",
+            content: input,
+          },
+        ],
+      });
+      const summary = sanitizeForAi(response.output_text || JSON.stringify(response.output || []));
+      review = {
+        platformVersion: platformVersion(),
+        generatedAt: new Date().toISOString(),
+        status: "generated",
+        recommendation: advisor.recommendation,
+        advisor,
+        aiRecommendation: recommendationFromText(summary),
+        model,
+        summary,
+        input: JSON.parse(input),
+      };
 
-    const dailyResponse = await createResponse({
-      model,
-      input: [
-        {
-          role: "developer",
-          content:
-            "Write a brief daily engineering report for a non-developer executive. Start with a greeting, then platform health, critical regressions, product notes, recommendation, and priority today. Do not reveal secrets.",
-        },
-        {
-          role: "user",
-          content: input,
-        },
-      ],
-    });
-    const dailySummary = sanitizeForAi(dailyResponse.output_text || JSON.stringify(dailyResponse.output || []));
-    dailyReport = {
-      platformVersion: platformVersion(),
-      generatedAt: new Date().toISOString(),
-      status: "generated",
-      recommendation: recommendationFromText(dailySummary),
-      model,
-      summary: dailySummary,
-    };
+      const dailyResponse = await createResponse({
+        model,
+        input: [
+          {
+            role: "developer",
+            content:
+              "Write a brief daily engineering report for a non-developer executive. Start with a greeting, then platform health, critical regressions, product notes, recommendation, and priority today. Do not reveal secrets.",
+          },
+          {
+            role: "user",
+            content: input,
+          },
+        ],
+      });
+      const dailySummary = sanitizeForAi(dailyResponse.output_text || JSON.stringify(dailyResponse.output || []));
+      dailyReport = {
+        platformVersion: platformVersion(),
+        generatedAt: new Date().toISOString(),
+        status: "generated",
+        recommendation: advisor.recommendation,
+        advisor,
+        aiRecommendation: recommendationFromText(dailySummary),
+        model,
+        summary: dailySummary,
+      };
+    } catch (error) {
+      const summary = `AI release prose unavailable: ${sanitizeForAi(error.message)}. Deterministic release advisor still completed.`;
+      review = {
+        platformVersion: platformVersion(),
+        generatedAt: new Date().toISOString(),
+        status: "error",
+        recommendation: advisor.recommendation,
+        advisor,
+        model,
+        summary,
+        input: JSON.parse(input),
+      };
+      dailyReport = {
+        platformVersion: platformVersion(),
+        generatedAt: review.generatedAt,
+        status: "error",
+        recommendation: advisor.recommendation,
+        advisor,
+        model,
+        summary,
+      };
+    }
   }
 
   writeJson(comparisonPath, data.releaseComparison);
+  writeJson(advisorPath, advisor);
   writeJson(jsonPath, review);
   writeText(markdownPath, markdownForReview(review));
   writeJson(dailyJsonPath, dailyReport);
   writeText(dailyMarkdownPath, markdownForDailyReport(dailyReport));
-  return { jsonPath, markdownPath, comparisonPath, dailyJsonPath, dailyMarkdownPath, review, dailyReport };
+  return { jsonPath, markdownPath, comparisonPath, dailyJsonPath, dailyMarkdownPath, advisorPath, review, dailyReport, advisor };
 }
 
 module.exports = {
+  advisorFromData,
   generateReleaseReview,
 };

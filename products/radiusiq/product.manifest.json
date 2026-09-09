@@ -4,16 +4,16 @@
   "type": "react-vite",
   "status": "active",
   "baseUrl": {
-    "local": "http://127.0.0.1:5173",
+    "local": "http://localhost:5173",
     "staging": "https://radiusiq-staging.netlify.app",
     "production": "https://radiusiq.ai"
   },
   "devServer": {
     "enabled": true,
-    "workingDirectory": "C:/Users/sjroy/Source/RadiusIQ/apps/web",
-    "command": "npm run dev -- --host 127.0.0.1 --port 5173",
+    "workingDirectory": "C:/Users/sjroy/Source/RadiusIQ",
+    "command": "node C:/Users/sjroy/Source/WorksideQA/products/radiusiq/workflows/start-local-dev.js",
     "port": 5173,
-    "healthUrl": "http://127.0.0.1:5173",
+    "healthUrl": "http://localhost:5173",
     "healthTimeoutMs": 60000
   },
   "auth": {
@@ -24,12 +24,50 @@
     "selectors": {
       "mode": "button:has-text(\"Demo email\")",
       "email": "input[autocomplete=\"email\"], input[inputmode=\"email\"]",
-      "submit": "button:has-text(\"Send code\")"
+      "code": "input[autocomplete=\"one-time-code\"], input[inputmode=\"numeric\"]",
+      "submit": "button:has-text(\"Send code\"), button:has-text(\"Verify\")"
     }
+  },
+  "browserWorkflows": {
+    "workflow": {
+      "path": "products/radiusiq/workflows/workflow.js",
+      "apiHealthUrl": "http://localhost:8080/health",
+      "apiHealthTimeoutMs": 60000,
+      "publicRoute": "/",
+      "publicSelectors": ["text=Know Your Market.", "text=RadiusIQ Market Intelligence"],
+      "dashboardRoute": "/app",
+      "dashboardSelectors": ["text=Dashboard", "text=Market Feed", "a[href=\"/app/competitors\"]"],
+      "safeScreenshot": {
+        "fullPage": false
+      },
+      "areas": [
+        {
+          "name": "competitor",
+          "routes": ["/app/competitors"],
+          "selectors": ["text=Competitors", "text=Competitor discovery", ".competitorEmptyState", ".table"]
+        },
+        {
+          "name": "scan",
+          "routes": ["/app/scan"],
+          "selectors": ["text=Scan console", "text=Run Watchlist Scan", "text=Run Demo Scan"]
+        },
+        {
+          "name": "alerts",
+          "routes": ["/app/alerts"],
+          "selectors": ["text=Alerts", "text=No alerts yet.", "text=Alert"]
+        }
+      ]
+    }
+  },
+  "browser": {
+    "ignoreNetworkFailurePatterns": [
+      "/api/onboarding/profile"
+    ]
   },
   "firebase": {
     "enabled": true,
-    "projectId": "radiusiq-prod"
+    "projectId": "radiusiq-prod",
+    "credentialFile": "radiusiq.json"
   },
   "api": {
     "enabled": true,
@@ -63,6 +101,7 @@
   },
   "suites": {
     "smoke": ["load", "login", "dashboard", "basic-navigation"],
+    "workflow": ["workflow", "performance"],
     "regression": ["login", "dashboard", "competitor-scan", "alerts"],
     "release": ["smoke", "api", "firebase", "accessibility", "performance"]
   },

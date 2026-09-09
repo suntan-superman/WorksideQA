@@ -1,0 +1,23 @@
+{
+  "backendDirectory": "C:/Users/sjroy/Source/Merxus/merxus-ai-backend",
+  "defaultTenantId": "merxus-review-qa",
+  "isolationTenantId": "merxus-review-qa-isolation",
+  "commands": {
+    "smoke": ["suite", "--provider", "google", "--group", "smoke"],
+    "google": ["suite", "--provider", "google", "--group", "google"],
+    "errors": ["suite", "--provider", "google", "--group", "errors"],
+    "full": ["suite", "--provider", "google"]
+  },
+  "liveCertificationCandidates": [
+    {
+      "label": "Agave & Oak",
+      "tenantIdEnvKey": "AGAVE_OAK_TENANT_ID",
+      "websiteProject": "C:/Users/sjroy/Source/Merxus/agave-oak-web"
+    },
+    {
+      "label": "Legends Event Center",
+      "tenantIdEnvKey": "LEGENDS_TENANT_ID",
+      "websiteProject": "C:/Users/sjroy/Source/Merxus/legends-venue-web"
+    }
+  ]
+}

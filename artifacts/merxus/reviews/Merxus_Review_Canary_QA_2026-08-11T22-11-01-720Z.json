@@ -1,0 +1,149 @@
+{
+  "createdAt": "2026-08-11T22:11:01.722Z",
+  "environment": "not-set",
+  "suite": "smoke",
+  "execute": false,
+  "backendDirectory": "C:/Users/sjroy/Source/Merxus/merxus-ai-backend",
+  "commandArgs": [
+    "suite",
+    "--provider",
+    "google",
+    "--group",
+    "smoke"
+  ],
+  "exitCode": 0,
+  "providerWritesAllowed": false,
+  "externalNotificationsAllowed": false,
+  "results": [
+    {
+      "dryRun": true,
+      "runId": "review-qa-20260811221101-89b640",
+      "scenarioId": "google-duplicate-poll",
+      "provider": "google",
+      "tenantIds": [
+        "merxus-review-qa"
+      ],
+      "fixtureVersion": 1,
+      "environment": "not-set",
+      "providerWritesAllowed": false,
+      "externalNotificationsAllowed": false,
+      "phases": [
+        "first-poll",
+        "second-poll"
+      ],
+      "assertionsPassed": 0,
+      "assertionsFailed": 0
+    },
+    {
+      "dryRun": true,
+      "runId": "review-qa-20260811221101-9ca4a8",
+      "scenarioId": "google-existing-reply",
+      "provider": "google",
+      "tenantIds": [
+        "merxus-review-qa"
+      ],
+      "fixtureVersion": 1,
+      "environment": "not-set",
+      "providerWritesAllowed": false,
+      "externalNotificationsAllowed": false,
+      "phases": [
+        "initial"
+      ],
+      "assertionsPassed": 0,
+      "assertionsFailed": 0
+    },
+    {
+      "dryRun": true,
+      "runId": "review-qa-20260811221101-9dae57",
+      "scenarioId": "google-negative-new",
+      "provider": "google",
+      "tenantIds": [
+        "merxus-review-qa"
+      ],
+      "fixtureVersion": 1,
+      "environment": "not-set",
+      "providerWritesAllowed": false,
+      "externalNotificationsAllowed": false,
+      "phases": [
+        "initial"
+      ],
+      "assertionsPassed": 0,
+      "assertionsFailed": 0
+    },
+    {
+      "dryRun": true,
+      "runId": "review-qa-20260811221101-78bc20",
+      "scenarioId": "google-positive-new",
+      "provider": "google",
+      "tenantIds": [
+        "merxus-review-qa"
+      ],
+      "fixtureVersion": 1,
+      "environment": "not-set",
+      "providerWritesAllowed": false,
+      "externalNotificationsAllowed": false,
+      "phases": [
+        "initial"
+      ],
+      "assertionsPassed": 0,
+      "assertionsFailed": 0
+    },
+    {
+      "dryRun": true,
+      "runId": "review-qa-20260811221101-b63c2a",
+      "scenarioId": "provider-401",
+      "provider": "google",
+      "tenantIds": [
+        "merxus-review-qa"
+      ],
+      "fixtureVersion": 1,
+      "environment": "not-set",
+      "providerWritesAllowed": false,
+      "externalNotificationsAllowed": false,
+      "phases": [
+        "unauthorized"
+      ],
+      "assertionsPassed": 0,
+      "assertionsFailed": 0
+    },
+    {
+      "dryRun": true,
+      "runId": "review-qa-20260811221101-163729",
+      "scenarioId": "provider-429",
+      "provider": "google",
+      "tenantIds": [
+        "merxus-review-qa"
+      ],
+      "fixtureVersion": 1,
+      "environment": "not-set",
+      "providerWritesAllowed": false,
+      "externalNotificationsAllowed": false,
+      "phases": [
+        "rate-limited"
+      ],
+      "assertionsPassed": 0,
+      "assertionsFailed": 0
+    },
+    {
+      "dryRun": true,
+      "runId": "review-qa-20260811221101-412440",
+      "scenarioId": "tenant-isolation",
+      "provider": "google",
+      "tenantIds": [
+        "merxus-review-qa",
+        "merxus-review-qa-isolation"
+      ],
+      "fixtureVersion": 1,
+      "environment": "not-set",
+      "providerWritesAllowed": false,
+      "externalNotificationsAllowed": false,
+      "phases": [
+        "tenant-a",
+        "tenant-b"
+      ],
+      "assertionsPassed": 0,
+      "assertionsFailed": 0
+    }
+  ],
+  "cleanupResults": []
+}

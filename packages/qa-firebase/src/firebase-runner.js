@@ -1,14 +1,16 @@
 const crypto = require("crypto");
 const fs = require("fs");
+const { loadProductServiceAccount } = require("../../qa-config/src/firebase-credentials");
 
 function check(status, name, message) {
   return { status, name, message };
 }
 
-function credentialSource() {
+function credentialSource(config = {}) {
   if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) return "json";
   if (process.env.GOOGLE_APPLICATION_CREDENTIALS) return "application-default";
   if (process.env.FIREBASE_ACCESS_TOKEN) return "access-token";
+  if (loadProductServiceAccount(config)) return "product-service-account";
   return null;
 }
 
@@ -16,7 +18,7 @@ function base64Url(value) {
   return Buffer.from(value).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
-function loadServiceAccount() {
+function loadServiceAccount(config = {}) {
   if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
     return JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
   }
@@ -25,13 +27,13 @@ function loadServiceAccount() {
     return JSON.parse(fs.readFileSync(process.env.GOOGLE_APPLICATION_CREDENTIALS, "utf8"));
   }
 
-  return null;
+  return loadProductServiceAccount(config);
 }
 
-async function getAccessToken() {
+async function getAccessToken(config = {}) {
   if (process.env.FIREBASE_ACCESS_TOKEN) return process.env.FIREBASE_ACCESS_TOKEN;
 
-  const serviceAccount = loadServiceAccount();
+  const serviceAccount = loadServiceAccount(config);
   if (!serviceAccount?.client_email || !serviceAccount?.private_key) {
     throw new Error("Service account JSON must include client_email and private_key.");
   }
@@ -111,13 +113,13 @@ async function runFirebaseChecks(config, options = {}) {
     return { checks };
   }
 
-  if (!credentialSource()) {
-    checks.push(check("skipped", "firebase credentials", "Set FIREBASE_SERVICE_ACCOUNT_JSON or GOOGLE_APPLICATION_CREDENTIALS to run read-only Firebase checks."));
+  if (!credentialSource(config)) {
+    checks.push(check("skipped", "firebase credentials", "Set FIREBASE_SERVICE_ACCOUNT_JSON, GOOGLE_APPLICATION_CREDENTIALS, or WORKSIDEQA_FIREBASE_CREDENTIALS_DIR to run read-only Firebase checks."));
     return { checks };
   }
 
   try {
-    const accessToken = await getAccessToken();
+    const accessToken = await getAccessToken(config);
     for (const item of readOnlyChecks) {
       if (item.type === "firestoreDocument") {
         checks.push(await runFirestoreDocumentCheck(config.firebase.projectId, accessToken, item));

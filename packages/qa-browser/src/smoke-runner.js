@@ -27,6 +27,7 @@ async function tryLogin(page, config) {
 
   const emailSelector = auth.selectors?.email || 'input[type="email"], input[name="email"], input[autocomplete="email"]';
   const passwordSelector = auth.selectors?.password || 'input[type="password"], input[name="password"]';
+  const codeSelector = auth.selectors?.code || 'input[autocomplete="one-time-code"], input[inputmode="numeric"], input[name="code"]';
   const submitSelector = auth.selectors?.submit || 'button[type="submit"], button:has-text("Sign in"), button:has-text("Log in"), button:has-text("Login")';
 
   try {
@@ -44,12 +45,36 @@ async function tryLogin(page, config) {
       await page.locator(passwordSelector).first().fill(password, { timeout: 6000 });
     }
 
+    const demoCodeResponse = auth.strategy === "demo-email-code"
+      ? page.waitForResponse((response) => response.url().includes("/api/auth/demo-email/send") && response.request().method() === "POST", { timeout: 10000 }).catch(() => null)
+      : null;
+
     await Promise.all([
       page.waitForLoadState("networkidle", { timeout: 15000 }).catch(() => null),
       page.locator(submitSelector).first().click({ timeout: 6000 }),
     ]);
 
     if (auth.strategy === "demo-email-code") {
+      let oneTimeCode = password;
+      const response = demoCodeResponse ? await demoCodeResponse : null;
+      if (response?.ok()) {
+        const payload = await response.json().catch(() => null);
+        oneTimeCode = payload?.data?.debugCode || oneTimeCode;
+      }
+      try {
+        await page.locator(codeSelector).first().fill(oneTimeCode, { timeout: 8000 });
+        const verifyResponse = page.waitForResponse((response) => response.url().includes("/api/auth/demo-email/verify") && response.request().method() === "POST", { timeout: 15000 }).catch(() => null);
+        await Promise.all([
+          page.waitForLoadState("networkidle", { timeout: 15000 }).catch(() => null),
+          page.locator(submitSelector).first().click({ timeout: 6000 }),
+        ]);
+        const response = await verifyResponse;
+        if (!response) return check("failed", "login", "Demo email code verification did not return a response.");
+        if (!response.ok()) return check("failed", "login", `Demo email code verification returned ${response.status()}.`);
+        return check("passed", "login", "Demo email code verified.");
+      } catch (_error) {
+        // Some products only support sending a demo login link/code during smoke checks.
+      }
       return check("passed", "login", "Demo email login request submitted.");
     }
 
@@ -134,4 +159,6 @@ async function runBrowserSmoke(config, options = {}) {
 
 module.exports = {
   runBrowserSmoke,
+  seriousConsoleMessage,
+  tryLogin,
 };

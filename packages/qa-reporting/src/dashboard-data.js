@@ -79,6 +79,89 @@ function productReason(row) {
   return `Clean ${row.suite} run: ${row.counts.passed} checks passed.`;
 }
 
+function failureExplanation(row) {
+  if (!row) return "No indexed run is available yet.";
+  const failed = row.checks.filter((check) => check.status === "failed");
+  if (failed.length) return `${failed[0].name}: ${failed[0].message || "failed"}${failed.length > 1 ? ` (${failed.length} total failures)` : ""}`;
+  const warning = row.checks.filter((check) => check.status === "warning");
+  if (warning.length) return `${warning[0].name}: ${warning[0].message || "warning"}${warning.length > 1 ? ` (${warning.length} total warnings)` : ""}`;
+  return `Clean ${row.suite} run with ${row.counts.passed} passing checks.`;
+}
+
+function workflowMaturity(manifest, rows) {
+  const hasConfiguredWorkflow = Boolean(manifest.browserWorkflows?.workflow && manifest.suites?.workflow);
+  const workflowRows = rows.filter((run) => run.productKey === manifest.key && run.suite === "workflow");
+  const latestWorkflow = workflowRows[0] || null;
+  if (!hasConfiguredWorkflow) {
+    return {
+      level: "not configured",
+      score: 0,
+      status: "not evaluated",
+      latestStatus: null,
+      latestRunStartedAt: null,
+      summary: "No product workflow suite is configured.",
+    };
+  }
+  if (!latestWorkflow) {
+    return {
+      level: "configured",
+      score: 50,
+      status: "not evaluated",
+      latestStatus: null,
+      latestRunStartedAt: null,
+      summary: "Workflow suite is configured but has not been indexed yet.",
+    };
+  }
+  return {
+    level: latestWorkflow.status === "PASS" ? "validated" : "needs attention",
+    score: latestWorkflow.status === "PASS" ? 100 : Math.max(10, latestWorkflow.readiness || 0),
+    status: latestWorkflow.status === "PASS" ? "passed" : "failed",
+    latestStatus: latestWorkflow.status,
+    latestRunStartedAt: latestWorkflow.startedAt,
+    summary: failureExplanation(latestWorkflow),
+  };
+}
+
+function startupTrend(rows) {
+  const startupRuns = rows
+    .filter((run) => run.checks.some((check) => String(check.name || "").includes("dev server")))
+    .slice(0, 10);
+  if (!startupRuns.length) return { status: "not evaluated", samples: [] };
+  return {
+    status: startupRuns[0].checks.some((check) => check.name === "dev server" && check.status === "failed") ? "failed" : "passed",
+    samples: startupRuns.map((run) => ({
+      startedAt: run.startedAt,
+      status: run.status,
+      durationMs: run.durationMs,
+      message: (run.checks.find((check) => String(check.name || "").includes("dev server")) || {}).message || null,
+    })),
+  };
+}
+
+function productTimeline(row, comparison) {
+  if (!row) return [];
+  return [
+    {
+      name: "Suite",
+      status: row.status,
+      at: row.startedAt,
+      detail: `${row.suite} suite completed with ${row.counts.passed} passed and ${row.counts.failed} failed.`,
+    },
+    {
+      name: "Change",
+      status: comparison?.statusAfter || row.status,
+      at: comparison?.latestStartedAt || row.startedAt,
+      detail: comparison?.summary || "No previous run comparison available.",
+    },
+    {
+      name: "Failures",
+      status: row.counts.failed > 0 ? "FAIL" : "PASS",
+      at: row.startedAt,
+      detail: failureExplanation(row),
+    },
+  ];
+}
+
 function combineCategoryScores(scores = {}, names = []) {
   const evaluated = names
     .map((name) => scores[name])
@@ -184,6 +267,10 @@ function buildProductSummary(productKey, rows) {
     reportLinks: latest?.reportLinks || {},
     categoryScores: scores,
     categoryRollup: categoryRollup(scores),
+    failureExplanation: failureExplanation(latest),
+    workflowMaturity: workflowMaturity(manifest, rows),
+    startupTrend: startupTrend(productRows),
+    timeline: productTimeline(latest, null),
     latestArtifacts: safeLatestArtifacts(latest),
     recentRuns: productRows.slice(0, 10),
   };
@@ -245,15 +332,59 @@ function buildReleaseComparison(products, recentRuns) {
   };
 }
 
+function buildReleaseAdvisor(products, releaseComparison, overallReadiness) {
+  const failing = products.filter((product) => product.latestStatus === "FAIL");
+  const warnings = products.filter((product) => product.warningChecks > 0);
+  const workflowFailures = products.filter((product) => product.workflowMaturity?.status === "failed");
+  const newFailures = releaseComparison?.summary?.newFailures || 0;
+  const regressed = releaseComparison?.summary?.regressed || 0;
+  const riskScore = Math.max(
+    0,
+    Math.min(100, 100 - overallReadiness + failing.length * 12 + warnings.length * 3 + workflowFailures.length * 8 + newFailures * 10 + regressed * 8)
+  );
+  const recommendation =
+    failing.length || workflowFailures.length || newFailures
+      ? "hold"
+      : riskScore >= 35 || overallReadiness < 90
+        ? "investigate"
+        : "deploy";
+  return {
+    generatedAt: new Date().toISOString(),
+    recommendation,
+    riskScore,
+    readiness: overallReadiness,
+    cleanProducts: products.filter((product) => product.latestStatus === "PASS").length,
+    failingProducts: failing.map((product) => product.productKey),
+    workflowFailures: workflowFailures.map((product) => product.productKey),
+    warningProducts: warnings.map((product) => product.productKey),
+    newFailures,
+    regressed,
+    summary:
+      recommendation === "deploy"
+        ? "Release is low risk based on current indexed QA data."
+        : recommendation === "hold"
+          ? "Release should be held until failing or regressed checks are resolved."
+          : "Release needs engineering review before deployment.",
+  };
+}
+
 function buildDashboardData(limit = 100) {
   const reports = readJsonReports(limit);
   const recentRuns = reportRunRows(reports).sort((a, b) => String(b.startedAt).localeCompare(String(a.startedAt)));
-  const products = listProductKeys().map((productKey) => buildProductSummary(productKey, recentRuns));
+  let products = listProductKeys().map((productKey) => buildProductSummary(productKey, recentRuns));
   const releaseComparison = buildReleaseComparison(products, recentRuns);
+  products = products.map((product) => ({
+    ...product,
+    timeline: productTimeline(
+      recentRuns.find((run) => run.productKey === product.productKey),
+      releaseComparison.products.find((item) => item.productKey === product.productKey)
+    ),
+  }));
   const evaluated = products.filter((product) => product.latestReadiness !== null);
   const overallReadiness = evaluated.length
     ? Math.round(evaluated.reduce((sum, product) => sum + product.latestReadiness, 0) / evaluated.length)
     : 0;
+  const releaseAdvisor = buildReleaseAdvisor(products, releaseComparison, overallReadiness);
 
   return {
     platformVersion: platformVersion(),
@@ -262,6 +393,7 @@ function buildDashboardData(limit = 100) {
     products,
     recentRuns: recentRuns.slice(0, limit),
     releaseComparison,
+    releaseAdvisor,
     runs: readHistoryFiles(limit),
     aiReview: readLatestAiReview(),
   };

@@ -2,6 +2,7 @@
 const path = require("path");
 const { spawn } = require("child_process");
 const { generateReleaseReview } = require("../../qa-openai/src");
+const { sendExecutiveEmail, writeExecutiveEmail } = require("../../qa-reporting/src/executive-email");
 const { writeDashboardData } = require("../../qa-reporting/src/dashboard-data");
 const { fromRoot, log } = require("../../qa-utils/src");
 const { runAllProducts } = require("./runner");
@@ -19,6 +20,7 @@ function parseArgs(argv) {
     else if (arg === "--dry-run") options.dryRun = true;
     else if (arg === "--no-open") options.openDashboard = false;
     else if (arg === "--open") options.openDashboard = true;
+    else if (arg === "--send-executive-email") options.sendExecutiveEmail = true;
     else if (arg === "--help" || arg === "-h") options.help = true;
     else throw new Error(`Unknown argument: ${arg}`);
   }
@@ -40,6 +42,8 @@ Options:
   --dry-run        Validate orchestration without launching product apps
   --no-open        Do not open dashboard after the workflow
   --open           Open dashboard after the workflow
+  --send-executive-email
+                 Send the executive email through the configured provider
 `;
 }
 
@@ -60,17 +64,22 @@ function openDashboardFile(dashboardPath) {
   return true;
 }
 
-function printSummary({ report, dashboardData, aiReview, dashboardPath }) {
+function printSummary({ report, dashboardData, aiReview, executiveEmail, emailDelivery, dashboardPath }) {
   const { clean, failing } = productCounts(dashboardData.products || []);
   log("");
   log("WorksideQA Release Summary");
   log(`Overall status: ${report.status}`);
   log(`Readiness score: ${dashboardData.overallReadiness}%`);
+  if (dashboardData.releaseAdvisor) {
+    log(`Release advisor: ${dashboardData.releaseAdvisor.recommendation} (risk ${dashboardData.releaseAdvisor.riskScore})`);
+  }
   log(`Clean products: ${clean.length}`);
   log(`Failing products: ${failing.length}`);
   if (failing.length) log(`Failing product keys: ${failing.map((product) => product.productKey).join(", ")}`);
   log(`Dashboard: ${dashboardPath}`);
   log(`AI review: ${aiReview.markdownPath}`);
+  log(`Executive email: ${executiveEmail.markdownPath}`);
+  if (emailDelivery) log(`Executive email delivery: ${emailDelivery.status}`);
 }
 
 async function runReleaseWorkflow(options = {}) {
@@ -85,16 +94,18 @@ async function runReleaseWorkflow(options = {}) {
   writeDashboardData();
   const aiReview = await generateReleaseReview();
   const { data: dashboardData } = writeDashboardData();
+  const executiveEmail = writeExecutiveEmail(dashboardData);
+  const emailDelivery = options.sendExecutiveEmail ? await sendExecutiveEmail(dashboardData) : null;
   const dashboardPath = fromRoot("dashboard", "index.html");
 
-  printSummary({ report, dashboardData, aiReview, dashboardPath });
+  printSummary({ report, dashboardData, aiReview, executiveEmail, emailDelivery, dashboardPath });
 
   if (options.openDashboard) {
     const opened = openDashboardFile(dashboardPath);
     if (opened) log("Dashboard opened in your default browser.");
   }
 
-  return { report, dashboardData, aiReview, dashboardPath };
+  return { report, dashboardData, aiReview, executiveEmail, emailDelivery, dashboardPath };
 }
 
 async function main() {

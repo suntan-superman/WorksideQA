@@ -113,6 +113,9 @@
       <tbody id="runs"></tbody>
     </table>
 
+    <h2>Release Advisor</h2>
+    <section class="panel ai" id="release-advisor"></section>
+
     <h2>AI Review</h2>
     <section class="panel ai" id="ai-review"></section>
   </main>
@@ -159,6 +162,8 @@
           <div class="stack meta">
             <div>Last run: ${value(product.latestRunStartedAt)}</div>
             <div>Last clean run: ${value(product.lastCleanRunStartedAt)}</div>
+            <div>Workflow maturity: ${value(product.workflowMaturity?.level)}</div>
+            <div>Startup trend: ${value(product.startupTrend?.status)}</div>
           </div>
           <div class="actions">${reportLink(product.reportLinks)}</div>
         </article>
@@ -167,16 +172,10 @@
 
     document.getElementById("details").innerHTML = data.products.map((product) => {
       const diff = comparisonFor(product.productKey);
-      const timeline = [
-        ["Run", product.latestStatus, product.statusReason],
-        ["Change", diff?.statusAfter || product.latestStatus, diff?.summary || "No comparison available."],
-        ["Smoke", product.categoryScores?.browser?.status || "not evaluated", `${percent(product.categoryScores?.browser?.score)} reliability`],
-        ["Visual", product.categoryScores?.visual?.status || "not evaluated", `${percent(product.categoryScores?.visual?.score)} visual`],
-        ["Accessibility", product.categoryScores?.accessibility?.status || "not evaluated", `${percent(product.categoryScores?.accessibility?.score)} accessibility`],
-        ["Performance", product.categoryScores?.performance?.status || "not evaluated", `${percent(product.categoryScores?.performance?.score)} performance`],
-        ["AI Review", product.categoryScores?.ai?.status || "not evaluated", `${percent(product.categoryScores?.ai?.score)} AI`],
-        ["Outcome", product.latestStatus, product.latestStatus === "PASS" ? "Ready for this suite." : "Needs attention before release."],
-      ];
+      const timeline = (product.timeline || []).map((item) => [item.name, item.status, item.detail]);
+      timeline.push(["Workflow", product.workflowMaturity?.status || "not evaluated", product.workflowMaturity?.summary || "No workflow data available."]);
+      timeline.push(["Startup", product.startupTrend?.status || "not evaluated", product.startupTrend?.samples?.[0]?.message || "No startup trend data available."]);
+      timeline.push(["Outcome", product.latestStatus, product.latestStatus === "PASS" ? "Ready for this suite." : "Needs attention before release."]);
       return `
         <details>
           <summary><div class="row"><div class="product-title"><span class="icon">${escapeHtml(product.icon || "")}</span><strong>${escapeHtml(product.productName)}</strong></div>${badge(product.latestStatus)}</div></summary>
@@ -215,6 +214,13 @@
         <td>${reportLink(run.reportLinks)}</td>
       </tr>
     `).join("") || `<tr><td colspan="7">No runs indexed.</td></tr>`;
+
+    const advisor = data.releaseAdvisor;
+    document.getElementById("release-advisor").innerHTML = advisor ? `
+      <div class="row"><strong>${escapeHtml(advisor.recommendation)}</strong><span class="badge ${advisor.recommendation === "deploy" ? "pass" : advisor.recommendation === "hold" ? "fail" : "warn"}">Risk ${escapeHtml(advisor.riskScore)}</span></div>
+      <p>${escapeHtml(advisor.summary)}</p>
+      <p>Clean products: ${escapeHtml(advisor.cleanProducts)} | Failing products: ${escapeHtml((advisor.failingProducts || []).length)} | New failures: ${escapeHtml(advisor.newFailures || 0)}</p>
+    ` : `<p>No release advisor data has been generated.</p>`;
 
     const review = data.aiReview;
     document.getElementById("ai-review").innerHTML = review ? `

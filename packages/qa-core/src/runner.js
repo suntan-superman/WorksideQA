@@ -1,6 +1,6 @@
-const { listProductKeys, loadEnvFile, loadProductManifest, resolveProductConfig } = require("../../qa-config/src");
+const { listProductKeys, loadEnvFile, loadProductManifest, productEnvironmentHealth, resolveProductConfig } = require("../../qa-config/src");
 const { runApiChecks } = require("../../qa-api/src");
-const { runBrowserSmoke, runVisualRegression } = require("../../qa-browser/src");
+const { runBrowserSmoke, runBrowserWorkflow, runVisualRegression } = require("../../qa-browser/src");
 const { runFirebaseChecks } = require("../../qa-firebase/src");
 const { runPerformanceChecks } = require("../../qa-performance/src");
 const { runAccessibilityChecks } = require("../../qa-accessibility/src");
@@ -24,8 +24,20 @@ async function runProductSuite(productKey, suiteName = "smoke", options = {}) {
   const manifest = loadProductManifest(productKey);
   const config = resolveProductConfig(manifest, options.environment || "local");
   const startedAt = Date.now();
-  const devServer = await startDevServer(config, options);
   const checks = [];
+  if (!options.skipPreflight) {
+    const envHealth = await productEnvironmentHealth(productKey, {
+      environment: options.environment || "local",
+      suite: suiteName,
+      checkNetwork: false,
+    });
+    checks.push(
+      ...envHealth.checks
+        .filter((item) => item.status === "failed")
+        .map((item) => check("failed", `preflight ${item.name}`, item.message))
+    );
+  }
+  const devServer = await startDevServer(config, options);
   let browserResult = { checks: [], consoleErrors: [], networkFailures: [], screenshots: [] };
 
   try {
@@ -36,10 +48,15 @@ async function runProductSuite(productKey, suiteName = "smoke", options = {}) {
     }
     if (devServer?.checks?.length) checks.push(...devServer.checks);
 
-    browserResult = await runBrowserSmoke(config, {
-      ...options,
-      collectAccessibility: suiteHas(config, suiteName, "accessibility"),
-    });
+    browserResult = suiteHas(config, suiteName, "workflow")
+      ? await runBrowserWorkflow(config, {
+          ...options,
+          suite: suiteName,
+        })
+      : await runBrowserSmoke(config, {
+          ...options,
+          collectAccessibility: suiteHas(config, suiteName, "accessibility"),
+        });
     checks.push(...browserResult.checks);
     if (suiteHas(config, suiteName, "visual")) {
       const visualResult = runVisualRegression(config, browserResult.screenshots, options);

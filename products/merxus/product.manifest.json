@@ -27,9 +27,49 @@
       "submit": "button[type=\"submit\"]:has-text(\"Sign in\")"
     }
   },
+  "browserWorkflows": {
+    "workflow": {
+      "path": "products/merxus/workflows/workflow.js",
+      "publicRoute": "/",
+      "publicSelectors": ["text=Merxus", "text=AI communication"],
+      "dashboardRoute": "/merxus",
+      "dashboardSelectors": ["text=Merxus AI", "text=Dashboard", "text=All Tenants"],
+      "safeScreenshot": {
+        "fullPage": false
+      },
+      "areas": [
+        {
+          "name": "tenant",
+          "routes": ["/merxus/tenants"],
+          "selectors": ["text=All Tenants", "text=Tenants", "text=Tenant"]
+        },
+        {
+          "name": "calls",
+          "routes": ["/voice/calls", "/restaurant/calls", "/estate/calls", "/merxus/voices"],
+          "selectors": ["text=Calls & Messages", "text=Calls", "text=Voice Services"]
+        },
+        {
+          "name": "transcripts",
+          "routes": ["/voice/calls", "/restaurant/calls", "/estate/calls", "/merxus/voices"],
+          "selectors": ["text=Transcript", "text=transcript", "text=Speech", "text=Voice Services"]
+        },
+        {
+          "name": "leads",
+          "routes": ["/estate/leads", "/merxus/real-estate", "/merxus/analytics"],
+          "selectors": ["text=Leads", "text=Real Estate", "text=Analytics"]
+        },
+        {
+          "name": "reviews",
+          "routes": ["/voice/reviews", "/restaurant/reviews", "/estate/reviews"],
+          "selectors": ["[data-testid=\"review-workspace\"]", "text=Reviews", "text=Review Feed"]
+        }
+      ]
+    }
+  },
   "firebase": {
     "enabled": true,
-    "projectId": "merxus-prod"
+    "projectId": "merxus-prod",
+    "credentialFile": "merxus.json"
   },
   "api": {
     "enabled": true,
@@ -75,8 +115,15 @@
   "mobile": {
     "enabled": false
   },
+  "reviewCanary": {
+    "enabled": true,
+    "runner": "products/merxus/reviews/review-canary-runner.js",
+    "groups": ["smoke", "google", "errors", "full"],
+    "externalProviderWrites": false
+  },
   "suites": {
     "smoke": ["load", "login", "dashboard", "basic-navigation"],
+    "workflow": ["workflow", "performance"],
     "regression": ["login", "dashboard", "call-handling", "transcripts"],
     "release": ["smoke", "api", "firebase", "accessibility", "performance", "ai"]
   },

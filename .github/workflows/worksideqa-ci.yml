@@ -1,0 +1,45 @@
+name: WorksideQA CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  qa-platform:
+    name: QA platform validation
+    runs-on: ubuntu-latest
+    env:
+      WORKSIDEQA_ENVIRONMENT: local
+      WORKSIDEQA_HEADLESS: "true"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run CI-safe WorksideQA profile
+        run: npm run qa:ci
+
+      - name: Upload generated QA summaries
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: worksideqa-ci-summaries
+          path: |
+            reports/html/*.html
+            reports/json/*.json
+            reports/junit/*.xml
+            reports/ai/*.md
+            reports/ai/*.json
+            dashboard/data/*.json
+          if-no-files-found: ignore

@@ -1,0 +1,5030 @@
+{
+  "createdAt": "2026-08-11T22:19:33.274Z",
+  "environment": "staging",
+  "suite": "smoke",
+  "execute": true,
+  "backendDirectory": "C:/Users/sjroy/Source/Merxus/merxus-ai-backend",
+  "commandArgs": [
+    "suite",
+    "--provider",
+    "google",
+    "--group",
+    "smoke",
+    "--execute"
+  ],
+  "exitCode": 1,
+  "providerWritesAllowed": false,
+  "externalNotificationsAllowed": false,
+  "results": [
+    {
+      "dryRun": false,
+      "runId": "review-qa-20260811221845-ed5e38",
+      "scenarioId": "google-duplicate-poll",
+      "provider": "google",
+      "tenantIds": [
+        "merxus-review-qa"
+      ],
+      "status": "passed",
+      "assertionsPassed": 32,
+      "assertionsFailed": 0,
+      "assertions": [
+        {
+          "name": "phase outcome",
+          "passed": true,
+          "actual": "success",
+          "expected": "success"
+        },
+        {
+          "name": "reviewsFetched",
+          "passed": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "reviewsCreated",
+          "passed": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "reviewsUpdated",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "reviewsUnchanged",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "run review record count",
+          "passed": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "negative review alert count",
+          "passed": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "review spike alert count",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "production provider adapter boundary",
+          "passed": true,
+          "actual": [
+            "GET https://mybusinessaccountmanagement.googleapis.com/v1/accounts",
+            "GET https://mybusiness.googleapis.com/v4/accounts/qa-account/locations?pageSize=100",
+            "GET https://mybusiness.googleapis.com/v4/accounts/qa-account/locations/qa-location/reviews?pageSize=50&orderBy=updateTime+desc"
+          ],
+          "expected": "Google provider request"
+        },
+        {
+          "name": "provider writes",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "canary metadata",
+          "passed": true,
+          "actual": [
+            {
+              "isCanary": true,
+              "runId": "review-qa-20260811221845-ed5e38",
+              "scenarioId": "google-duplicate-poll",
+              "fixtureVersion": 1
+            }
+          ],
+          "expected": {
+            "isCanary": true,
+            "runId": "review-qa-20260811221845-ed5e38",
+            "scenarioId": "google-duplicate-poll",
+            "fixtureVersion": 1
+          }
+        },
+        {
+          "name": "tenant scope",
+          "passed": true,
+          "actual": [
+            "merxus-review-qa"
+          ],
+          "expected": "workspace tenant matches"
+        },
+        {
+          "name": "no false automatic publish state",
+          "passed": true,
+          "actual": [
+            {
+              "replyState": "none",
+              "providerReplyStatus": "not_observed"
+            }
+          ],
+          "expected": "posted only when provider verified"
+        },
+        {
+          "name": "web/mobile review read model",
+          "passed": true,
+          "actual": 0,
+          "expected": 1
+        },
+        {
+          "name": "sync ledger",
+          "passed": true,
+          "actual": {
+            "status": "success",
+            "requestContext": {
+              "mode": "review_canary",
+              "reviewQaRunId": "review-qa-20260811221845-ed5e38",
+              "scenarioId": "google-duplicate-poll",
+              "phaseId": "first-poll"
+            }
+          },
+          "expected": {
+            "status": "success",
+            "reviewQaRunId": "review-qa-20260811221845-ed5e38"
+          }
+        },
+        {
+          "name": "external notifications suppressed",
+          "passed": true,
+          "actual": [
+            {
+              "channel": "email",
+              "recipient": "blocked-customer@example.com",
+              "success": null,
+              "suppressed": true,
+              "reason": "review_qa_external_notifications_disabled"
+            },
+            {
+              "channel": "push",
+              "recipient": "blocked-customer",
+              "success": null,
+              "suppressed": true,
+              "reason": "review_qa_external_notifications_disabled"
+            },
+            {
+              "channel": "sms",
+              "recipient": "+15555550199",
+              "success": null,
+              "suppressed": true,
+              "reason": "review_qa_external_notifications_disabled"
+            }
+          ],
+          "expected": "all suppressed"
+        },
+        {
+          "name": "phase outcome",
+          "passed": true,
+          "actual": "success",
+          "expected": "success"
+        },
+        {
+          "name": "reviewsFetched",
+          "passed": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "reviewsCreated",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "reviewsUpdated",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "reviewsUnchanged",
+          "passed": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "run review record count",
+          "passed": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "negative review alert count",
+          "passed": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "review spike alert count",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "production provider adapter boundary",
+          "passed": true,
+          "actual": [
+            "GET https://mybusinessaccountmanagement.googleapis.com/v1/accounts",
+            "GET https://mybusiness.googleapis.com/v4/accounts/qa-account/locations?pageSize=100",
+            "GET https://mybusiness.googleapis.com/v4/accounts/qa-account/locations/qa-location/reviews?pageSize=50&orderBy=updateTime+desc"
+          ],
+          "expected": "Google provider request"
+        },
+        {
+          "name": "provider writes",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "canary metadata",
+          "passed": true,
+          "actual": [
+            {
+              "isCanary": true,
+              "runId": "review-qa-20260811221845-ed5e38",
+              "scenarioId": "google-duplicate-poll",
+              "fixtureVersion": 1
+            }
+          ],
+          "expected": {
+            "isCanary": true,
+            "runId": "review-qa-20260811221845-ed5e38",
+            "scenarioId": "google-duplicate-poll",
+            "fixtureVersion": 1
+          }
+        },
+        {
+          "name": "tenant scope",
+          "passed": true,
+          "actual": [
+            "merxus-review-qa"
+          ],
+          "expected": "workspace tenant matches"
+        },
+        {
+          "name": "no false automatic publish state",
+          "passed": true,
+          "actual": [
+            {
+              "replyState": "none",
+              "providerReplyStatus": "not_observed"
+            }
+          ],
+          "expected": "posted only when provider verified"
+        },
+        {
+          "name": "web/mobile review read model",
+          "passed": true,
+          "actual": 0,
+          "expected": 1
+        },
+        {
+          "name": "sync ledger",
+          "passed": true,
+          "actual": {
+            "status": "success",
+            "requestContext": {
+              "mode": "review_canary",
+              "reviewQaRunId": "review-qa-20260811221845-ed5e38",
+              "scenarioId": "google-duplicate-poll",
+              "phaseId": "second-poll"
+            }
+          },
+          "expected": {
+            "status": "success",
+            "reviewQaRunId": "review-qa-20260811221845-ed5e38"
+          }
+        },
+        {
+          "name": "external notifications suppressed",
+          "passed": true,
+          "actual": [
+            {
+              "channel": "email",
+              "recipient": "blocked-customer@example.com",
+              "success": null,
+              "suppressed": true,
+              "reason": "review_qa_external_notifications_disabled"
+            },
+            {
+              "channel": "push",
+              "recipient": "blocked-customer",
+              "success": null,
+              "suppressed": true,
+              "reason": "review_qa_external_notifications_disabled"
+            },
+            {
+              "channel": "sms",
+              "recipient": "+15555550199",
+              "success": null,
+              "suppressed": true,
+              "reason": "review_qa_external_notifications_disabled"
+            }
+          ],
+          "expected": "all suppressed"
+        }
+      ],
+      "phases": [
+        {
+          "phaseId": "first-poll",
+          "tenantId": "merxus-review-qa",
+          "syncRunId": "o58dO9mBdC0UrK45Dwuj",
+          "result": {
+            "platform": "google",
+            "integration": {
+              "key": "google",
+              "label": "Google",
+              "description": "Google Business Profile reviews and local-search reputation.",
+              "status": "connected",
+              "supportsLiveOAuth": true,
+              "supportsLiveSync": true,
+              "health": "attention",
+              "healthLabel": "Invite Link Missing",
+              "actionRequired": "Add a public review link so positive feedback can be turned into review invites.",
+              "syncedReviewCount": 1,
+              "latestRunAt": null,
+              "latestRunStatus": null,
+              "lastSuccessfulSyncAt": "2026-08-11T22:18:48.183Z",
+              "latestSyncFailure": null,
+              "latestSyncFailureAt": null,
+              "recentSyncFailureCount": 0,
+              "consecutiveSyncFailures": 0,
+              "pendingRetryCount": 0,
+              "accountLabel": "Merxus Review QA",
+              "connectedAt": "2026-08-11T22:18:48.904Z",
+              "disconnectedAt": null,
+              "lastSyncAt": "2026-08-11T22:18:48.183Z",
+              "lastUpdatedAt": "2026-08-11T22:18:48.904Z",
+              "lastUpdatedBy": {
+                "uid": "system:review-qa",
+                "email": null,
+                "name": "Merxus Review Canary"
+              },
+              "mode": "oauth",
+              "reviewLink": null,
+              "reviewLinkPresent": false,
+              "lastSyncStatus": "success",
+              "lastSyncFailure": null,
+              "lastSyncAttemptAt": "2026-08-11T22:18:48.183Z",
+              "nextScheduledSyncAt": null,
+              "syncRetryCount": 0,
+              "syncSummary": {
+                "reviewsFetched": 1,
+                "reviewsCreated": 1,
+                "reviewsUpdated": 0,
+                "locationsSynced": 1,
+                "reviewsUnchanged": 0,
+                "alertsCreated": 1,
+                "alertFailureCount": 0,
+                "ratedReviews": 1,
+                "positiveCount": 0,
+                "neutralCount": 0,
+                "needsAttentionCount": 1,
+                "averageRating": 1
+              },
+              "oauthConnection": {
+                "provider": "google",
+                "connected": true,
+                "connectedAt": "2026-08-11T22:18:46.261Z",
+                "accountEmail": "review-qa@merxus.ai",
+                "accountName": "Merxus Review QA",
+                "locationCount": 1,
+                "scopes": [
+                  "https://www.googleapis.com/auth/business.manage"
+                ],
+                "installationId": "voice__merxus-review-qa__google",
+                "syncReady": true
+              },
+              "history": [
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:18:48.904Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": null,
+                  "mode": "oauth",
+                  "previousMode": null,
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                }
+              ]
+            },
+            "accountCount": 1,
+            "locationsSynced": 1,
+            "reviewsFetched": 1,
+            "reviewsCreated": 1,
+            "reviewsUpdated": 0,
+            "reviewsUnchanged": 0,
+            "alertsCreated": 1,
+            "alertFailureCount": 0,
+            "ratingSummary": {
+              "ratedReviews": 1,
+              "averageRating": 1,
+              "positiveCount": 0,
+              "neutralCount": 0,
+              "needsAttentionCount": 1
+            }
+          },
+          "error": null,
+          "retry": null,
+          "assertions": [
+            {
+              "name": "phase outcome",
+              "passed": true,
+              "actual": "success",
+              "expected": "success"
+            },
+            {
+              "name": "reviewsFetched",
+              "passed": true,
+              "actual": 1,
+              "expected": 1
+            },
+            {
+              "name": "reviewsCreated",
+              "passed": true,
+              "actual": 1,
+              "expected": 1
+            },
+            {
+              "name": "reviewsUpdated",
+              "passed": true,
+              "actual": 0,
+              "expected": 0
+            },
+            {
+              "name": "reviewsUnchanged",
+              "passed": true,
+              "actual": 0,
+              "expected": 0
+            },
+            {
+              "name": "run review record count",
+              "passed": true,
+              "actual": 1,
+              "expected": 1
+            },
+            {
+              "name": "negative review alert count",
+              "passed": true,
+              "actual": 1,
+              "expected": 1
+            },
+            {
+              "name": "review spike alert count",
+              "passed": true,
+              "actual": 0,
+              "expected": 0
+            },
+            {
+              "name": "production provider adapter boundary",
+              "passed": true,
+              "actual": [
+                "GET https://mybusinessaccountmanagement.googleapis.com/v1/accounts",
+                "GET https://mybusiness.googleapis.com/v4/accounts/qa-account/locations?pageSize=100",
+                "GET https://mybusiness.googleapis.com/v4/accounts/qa-account/locations/qa-location/reviews?pageSize=50&orderBy=updateTime+desc"
+              ],
+              "expected": "Google provider request"
+            },
+            {
+              "name": "provider writes",
+              "passed": true,
+              "actual": 0,
+              "expected": 0
+            },
+            {
+              "name": "canary metadata",
+              "passed": true,
+              "actual": [
+                {
+                  "isCanary": true,
+                  "runId": "review-qa-20260811221845-ed5e38",
+                  "scenarioId": "google-duplicate-poll",
+                  "fixtureVersion": 1
+                }
+              ],
+              "expected": {
+                "isCanary": true,
+                "runId": "review-qa-20260811221845-ed5e38",
+                "scenarioId": "google-duplicate-poll",
+                "fixtureVersion": 1
+              }
+            },
+            {
+              "name": "tenant scope",
+              "passed": true,
+              "actual": [
+                "merxus-review-qa"
+              ],
+              "expected": "workspace tenant matches"
+            },
+            {
+              "name": "no false automatic publish state",
+              "passed": true,
+              "actual": [
+                {
+                  "replyState": "none",
+                  "providerReplyStatus": "not_observed"
+                }
+              ],
+              "expected": "posted only when provider verified"
+            },
+            {
+              "name": "web/mobile review read model",
+              "passed": true,
+              "actual": 0,
+              "expected": 1
+            },
+            {
+              "name": "sync ledger",
+              "passed": true,
+              "actual": {
+                "status": "success",
+                "requestContext": {
+                  "mode": "review_canary",
+                  "reviewQaRunId": "review-qa-20260811221845-ed5e38",
+                  "scenarioId": "google-duplicate-poll",
+                  "phaseId": "first-poll"
+                }
+              },
+              "expected": {
+                "status": "success",
+                "reviewQaRunId": "review-qa-20260811221845-ed5e38"
+              }
+            },
+            {
+              "name": "external notifications suppressed",
+              "passed": true,
+              "actual": [
+                {
+                  "channel": "email",
+                  "recipient": "blocked-customer@example.com",
+                  "success": null,
+                  "suppressed": true,
+                  "reason": "review_qa_external_notifications_disabled"
+                },
+                {
+                  "channel": "push",
+                  "recipient": "blocked-customer",
+                  "success": null,
+                  "suppressed": true,
+                  "reason": "review_qa_external_notifications_disabled"
+                },
+                {
+                  "channel": "sms",
+                  "recipient": "+15555550199",
+                  "success": null,
+                  "suppressed": true,
+                  "reason": "review_qa_external_notifications_disabled"
+                }
+              ],
+              "expected": "all suppressed"
+            }
+          ]
+        },
+        {
+          "phaseId": "second-poll",
+          "tenantId": "merxus-review-qa",
+          "syncRunId": "NPDy7kiKNom41nXIyMcX",
+          "result": {
+            "platform": "google",
+            "integration": {
+              "key": "google",
+              "label": "Google",
+              "description": "Google Business Profile reviews and local-search reputation.",
+              "status": "connected",
+              "supportsLiveOAuth": true,
+              "supportsLiveSync": true,
+              "health": "attention",
+              "healthLabel": "Invite Link Missing",
+              "actionRequired": "Add a public review link so positive feedback can be turned into review invites.",
+              "syncedReviewCount": 1,
+              "latestRunAt": null,
+              "latestRunStatus": null,
+              "lastSuccessfulSyncAt": "2026-08-11T22:18:51.861Z",
+              "latestSyncFailure": null,
+              "latestSyncFailureAt": null,
+              "recentSyncFailureCount": 0,
+              "consecutiveSyncFailures": 0,
+              "pendingRetryCount": 0,
+              "accountLabel": "Merxus Review QA",
+              "connectedAt": "2026-08-11T22:18:48.904Z",
+              "disconnectedAt": null,
+              "lastSyncAt": "2026-08-11T22:18:51.861Z",
+              "lastUpdatedAt": "2026-08-11T22:18:52.586Z",
+              "lastUpdatedBy": {
+                "uid": "system:review-qa",
+                "email": null,
+                "name": "Merxus Review Canary"
+              },
+              "mode": "oauth",
+              "reviewLink": null,
+              "reviewLinkPresent": false,
+              "lastSyncStatus": "success",
+              "lastSyncFailure": null,
+              "lastSyncAttemptAt": "2026-08-11T22:18:51.861Z",
+              "nextScheduledSyncAt": null,
+              "syncRetryCount": 0,
+              "syncSummary": {
+                "reviewsFetched": 1,
+                "reviewsCreated": 0,
+                "reviewsUpdated": 0,
+                "locationsSynced": 1,
+                "reviewsUnchanged": 1,
+                "alertsCreated": 0,
+                "alertFailureCount": 0,
+                "ratedReviews": 1,
+                "positiveCount": 0,
+                "neutralCount": 0,
+                "needsAttentionCount": 1,
+                "averageRating": 1
+              },
+              "oauthConnection": {
+                "provider": "google",
+                "connected": true,
+                "connectedAt": "2026-08-11T22:18:50.759Z",
+                "accountEmail": "review-qa@merxus.ai",
+                "accountName": "Merxus Review QA",
+                "locationCount": 1,
+                "scopes": [
+                  "https://www.googleapis.com/auth/business.manage"
+                ],
+                "installationId": "voice__merxus-review-qa__google",
+                "syncReady": true
+              },
+              "history": [
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:18:48.904Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": null,
+                  "mode": "oauth",
+                  "previousMode": null,
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:18:52.586Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                }
+              ]
+            },
+            "accountCount": 1,
+            "locationsSynced": 1,
+            "reviewsFetched": 1,
+            "reviewsCreated": 0,
+            "reviewsUpdated": 0,
+            "reviewsUnchanged": 1,
+            "alertsCreated": 0,
+            "alertFailureCount": 0,
+            "ratingSummary": {
+              "ratedReviews": 1,
+              "averageRating": 1,
+              "positiveCount": 0,
+              "neutralCount": 0,
+              "needsAttentionCount": 1
+            }
+          },
+          "error": null,
+          "retry": null,
+          "assertions": [
+            {
+              "name": "phase outcome",
+              "passed": true,
+              "actual": "success",
+              "expected": "success"
+            },
+            {
+              "name": "reviewsFetched",
+              "passed": true,
+              "actual": 1,
+              "expected": 1
+            },
+            {
+              "name": "reviewsCreated",
+              "passed": true,
+              "actual": 0,
+              "expected": 0
+            },
+            {
+              "name": "reviewsUpdated",
+              "passed": true,
+              "actual": 0,
+              "expected": 0
+            },
+            {
+              "name": "reviewsUnchanged",
+              "passed": true,
+              "actual": 1,
+              "expected": 1
+            },
+            {
+              "name": "run review record count",
+              "passed": true,
+              "actual": 1,
+              "expected": 1
+            },
+            {
+              "name": "negative review alert count",
+              "passed": true,
+              "actual": 1,
+              "expected": 1
+            },
+            {
+              "name": "review spike alert count",
+              "passed": true,
+              "actual": 0,
+              "expected": 0
+            },
+            {
+              "name": "production provider adapter boundary",
+              "passed": true,
+              "actual": [
+                "GET https://mybusinessaccountmanagement.googleapis.com/v1/accounts",
+                "GET https://mybusiness.googleapis.com/v4/accounts/qa-account/locations?pageSize=100",
+                "GET https://mybusiness.googleapis.com/v4/accounts/qa-account/locations/qa-location/reviews?pageSize=50&orderBy=updateTime+desc"
+              ],
+              "expected": "Google provider request"
+            },
+            {
+              "name": "provider writes",
+              "passed": true,
+              "actual": 0,
+              "expected": 0
+            },
+            {
+              "name": "canary metadata",
+              "passed": true,
+              "actual": [
+                {
+                  "isCanary": true,
+                  "runId": "review-qa-20260811221845-ed5e38",
+                  "scenarioId": "google-duplicate-poll",
+                  "fixtureVersion": 1
+                }
+              ],
+              "expected": {
+                "isCanary": true,
+                "runId": "review-qa-20260811221845-ed5e38",
+                "scenarioId": "google-duplicate-poll",
+                "fixtureVersion": 1
+              }
+            },
+            {
+              "name": "tenant scope",
+              "passed": true,
+              "actual": [
+                "merxus-review-qa"
+              ],
+              "expected": "workspace tenant matches"
+            },
+            {
+              "name": "no false automatic publish state",
+              "passed": true,
+              "actual": [
+                {
+                  "replyState": "none",
+                  "providerReplyStatus": "not_observed"
+                }
+              ],
+              "expected": "posted only when provider verified"
+            },
+            {
+              "name": "web/mobile review read model",
+              "passed": true,
+              "actual": 0,
+              "expected": 1
+            },
+            {
+              "name": "sync ledger",
+              "passed": true,
+              "actual": {
+                "status": "success",
+                "requestContext": {
+                  "mode": "review_canary",
+                  "reviewQaRunId": "review-qa-20260811221845-ed5e38",
+                  "scenarioId": "google-duplicate-poll",
+                  "phaseId": "second-poll"
+                }
+              },
+              "expected": {
+                "status": "success",
+                "reviewQaRunId": "review-qa-20260811221845-ed5e38"
+              }
+            },
+            {
+              "name": "external notifications suppressed",
+              "passed": true,
+              "actual": [
+                {
+                  "channel": "email",
+                  "recipient": "blocked-customer@example.com",
+                  "success": null,
+                  "suppressed": true,
+                  "reason": "review_qa_external_notifications_disabled"
+                },
+                {
+                  "channel": "push",
+                  "recipient": "blocked-customer",
+                  "success": null,
+                  "suppressed": true,
+                  "reason": "review_qa_external_notifications_disabled"
+                },
+                {
+                  "channel": "sms",
+                  "recipient": "+15555550199",
+                  "success": null,
+                  "suppressed": true,
+                  "reason": "review_qa_external_notifications_disabled"
+                }
+              ],
+              "expected": "all suppressed"
+            }
+          ]
+        }
+      ],
+      "createdReviewIds": [
+        "google_merxus-review-qa_b7636470651b00e80b535077d6d6ab09b16bee13"
+      ],
+      "createdAlertIds": [
+        "1wVk5NkaSI8oKNaAL7Xs"
+      ],
+      "syncRunIds": [
+        "o58dO9mBdC0UrK45Dwuj",
+        "NPDy7kiKNom41nXIyMcX"
+      ]
+    },
+    {
+      "dryRun": false,
+      "runId": "review-qa-20260811221853-ae8fc4",
+      "scenarioId": "google-existing-reply",
+      "provider": "google",
+      "tenantIds": [
+        "merxus-review-qa"
+      ],
+      "status": "passed",
+      "assertionsPassed": 15,
+      "assertionsFailed": 0,
+      "assertions": [
+        {
+          "name": "phase outcome",
+          "passed": true,
+          "actual": "success",
+          "expected": "success"
+        },
+        {
+          "name": "reviewsFetched",
+          "passed": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "reviewsCreated",
+          "passed": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "reviewsUpdated",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "run review record count",
+          "passed": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "negative review alert count",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "review spike alert count",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "normalized review -existing-reply",
+          "passed": true,
+          "actual": [
+            {
+              "externalReviewId": "accounts/qa-account/locations/qa-location/reviews/review-qa-20260811221853-ae8fc4-existing-reply",
+              "rating": 5,
+              "sentiment": "positive",
+              "providerReplyStatus": "verified_posted"
+            }
+          ],
+          "expected": {
+            "externalIdIncludes": "-existing-reply",
+            "rating": 5,
+            "sentiment": "positive",
+            "providerReplyStatus": "verified_posted",
+            "providerReplyText": "We appreciate your feedback."
+          }
+        },
+        {
+          "name": "production provider adapter boundary",
+          "passed": true,
+          "actual": [
+            "GET https://mybusinessaccountmanagement.googleapis.com/v1/accounts",
+            "GET https://mybusiness.googleapis.com/v4/accounts/qa-account/locations?pageSize=100",
+            "GET https://mybusiness.googleapis.com/v4/accounts/qa-account/locations/qa-location/reviews?pageSize=50&orderBy=updateTime+desc"
+          ],
+          "expected": "Google provider request"
+        },
+        {
+          "name": "provider writes",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "canary metadata",
+          "passed": true,
+          "actual": [
+            {
+              "isCanary": true,
+              "runId": "review-qa-20260811221853-ae8fc4",
+              "scenarioId": "google-existing-reply",
+              "fixtureVersion": 1
+            }
+          ],
+          "expected": {
+            "isCanary": true,
+            "runId": "review-qa-20260811221853-ae8fc4",
+            "scenarioId": "google-existing-reply",
+            "fixtureVersion": 1
+          }
+        },
+        {
+          "name": "tenant scope",
+          "passed": true,
+          "actual": [
+            "merxus-review-qa"
+          ],
+          "expected": "workspace tenant matches"
+        },
+        {
+          "name": "no false automatic publish state",
+          "passed": true,
+          "actual": [
+            {
+              "replyState": "posted",
+              "providerReplyStatus": "verified_posted"
+            }
+          ],
+          "expected": "posted only when provider verified"
+        },
+        {
+          "name": "web/mobile review read model",
+          "passed": true,
+          "actual": 0,
+          "expected": 1
+        },
+        {
+          "name": "sync ledger",
+          "passed": true,
+          "actual": {
+            "status": "success",
+            "requestContext": {
+              "mode": "review_canary",
+              "reviewQaRunId": "review-qa-20260811221853-ae8fc4",
+              "scenarioId": "google-existing-reply",
+              "phaseId": "initial"
+            }
+          },
+          "expected": {
+            "status": "success",
+            "reviewQaRunId": "review-qa-20260811221853-ae8fc4"
+          }
+        }
+      ],
+      "phases": [
+        {
+          "phaseId": "initial",
+          "tenantId": "merxus-review-qa",
+          "syncRunId": "HOU6PJToeHqlsLJGnTSr",
+          "result": {
+            "platform": "google",
+            "integration": {
+              "key": "google",
+              "label": "Google",
+              "description": "Google Business Profile reviews and local-search reputation.",
+              "status": "connected",
+              "supportsLiveOAuth": true,
+              "supportsLiveSync": true,
+              "health": "attention",
+              "healthLabel": "Invite Link Missing",
+              "actionRequired": "Add a public review link so positive feedback can be turned into review invites.",
+              "syncedReviewCount": 2,
+              "latestRunAt": null,
+              "latestRunStatus": null,
+              "lastSuccessfulSyncAt": "2026-08-11T22:18:55.088Z",
+              "latestSyncFailure": null,
+              "latestSyncFailureAt": null,
+              "recentSyncFailureCount": 0,
+              "consecutiveSyncFailures": 0,
+              "pendingRetryCount": 0,
+              "accountLabel": "Merxus Review QA",
+              "connectedAt": "2026-08-11T22:18:48.904Z",
+              "disconnectedAt": null,
+              "lastSyncAt": "2026-08-11T22:18:55.088Z",
+              "lastUpdatedAt": "2026-08-11T22:18:55.526Z",
+              "lastUpdatedBy": {
+                "uid": "system:review-qa",
+                "email": null,
+                "name": "Merxus Review Canary"
+              },
+              "mode": "oauth",
+              "reviewLink": null,
+              "reviewLinkPresent": false,
+              "lastSyncStatus": "success",
+              "lastSyncFailure": null,
+              "lastSyncAttemptAt": "2026-08-11T22:18:55.088Z",
+              "nextScheduledSyncAt": null,
+              "syncRetryCount": 0,
+              "syncSummary": {
+                "reviewsFetched": 1,
+                "reviewsCreated": 1,
+                "reviewsUpdated": 0,
+                "locationsSynced": 1,
+                "reviewsUnchanged": 0,
+                "alertsCreated": 0,
+                "alertFailureCount": 0,
+                "ratedReviews": 1,
+                "positiveCount": 1,
+                "neutralCount": 0,
+                "needsAttentionCount": 0,
+                "averageRating": 5
+              },
+              "oauthConnection": {
+                "provider": "google",
+                "connected": true,
+                "connectedAt": "2026-08-11T22:18:54.454Z",
+                "accountEmail": "review-qa@merxus.ai",
+                "accountName": "Merxus Review QA",
+                "locationCount": 1,
+                "scopes": [
+                  "https://www.googleapis.com/auth/business.manage"
+                ],
+                "installationId": "voice__merxus-review-qa__google",
+                "syncReady": true
+              },
+              "history": [
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:18:48.904Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": null,
+                  "mode": "oauth",
+                  "previousMode": null,
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:18:52.586Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:18:55.526Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                }
+              ]
+            },
+            "accountCount": 1,
+            "locationsSynced": 1,
+            "reviewsFetched": 1,
+            "reviewsCreated": 1,
+            "reviewsUpdated": 0,
+            "reviewsUnchanged": 0,
+            "alertsCreated": 0,
+            "alertFailureCount": 0,
+            "ratingSummary": {
+              "ratedReviews": 1,
+              "averageRating": 5,
+              "positiveCount": 1,
+              "neutralCount": 0,
+              "needsAttentionCount": 0
+            }
+          },
+          "error": null,
+          "retry": null,
+          "assertions": [
+            {
+              "name": "phase outcome",
+              "passed": true,
+              "actual": "success",
+              "expected": "success"
+            },
+            {
+              "name": "reviewsFetched",
+              "passed": true,
+              "actual": 1,
+              "expected": 1
+            },
+            {
+              "name": "reviewsCreated",
+              "passed": true,
+              "actual": 1,
+              "expected": 1
+            },
+            {
+              "name": "reviewsUpdated",
+              "passed": true,
+              "actual": 0,
+              "expected": 0
+            },
+            {
+              "name": "run review record count",
+              "passed": true,
+              "actual": 1,
+              "expected": 1
+            },
+            {
+              "name": "negative review alert count",
+              "passed": true,
+              "actual": 0,
+              "expected": 0
+            },
+            {
+              "name": "review spike alert count",
+              "passed": true,
+              "actual": 0,
+              "expected": 0
+            },
+            {
+              "name": "normalized review -existing-reply",
+              "passed": true,
+              "actual": [
+                {
+                  "externalReviewId": "accounts/qa-account/locations/qa-location/reviews/review-qa-20260811221853-ae8fc4-existing-reply",
+                  "rating": 5,
+                  "sentiment": "positive",
+                  "providerReplyStatus": "verified_posted"
+                }
+              ],
+              "expected": {
+                "externalIdIncludes": "-existing-reply",
+                "rating": 5,
+                "sentiment": "positive",
+                "providerReplyStatus": "verified_posted",
+                "providerReplyText": "We appreciate your feedback."
+              }
+            },
+            {
+              "name": "production provider adapter boundary",
+              "passed": true,
+              "actual": [
+                "GET https://mybusinessaccountmanagement.googleapis.com/v1/accounts",
+                "GET https://mybusiness.googleapis.com/v4/accounts/qa-account/locations?pageSize=100",
+                "GET https://mybusiness.googleapis.com/v4/accounts/qa-account/locations/qa-location/reviews?pageSize=50&orderBy=updateTime+desc"
+              ],
+              "expected": "Google provider request"
+            },
+            {
+              "name": "provider writes",
+              "passed": true,
+              "actual": 0,
+              "expected": 0
+            },
+            {
+              "name": "canary metadata",
+              "passed": true,
+              "actual": [
+                {
+                  "isCanary": true,
+                  "runId": "review-qa-20260811221853-ae8fc4",
+                  "scenarioId": "google-existing-reply",
+                  "fixtureVersion": 1
+                }
+              ],
+              "expected": {
+                "isCanary": true,
+                "runId": "review-qa-20260811221853-ae8fc4",
+                "scenarioId": "google-existing-reply",
+                "fixtureVersion": 1
+              }
+            },
+            {
+              "name": "tenant scope",
+              "passed": true,
+              "actual": [
+                "merxus-review-qa"
+              ],
+              "expected": "workspace tenant matches"
+            },
+            {
+              "name": "no false automatic publish state",
+              "passed": true,
+              "actual": [
+                {
+                  "replyState": "posted",
+                  "providerReplyStatus": "verified_posted"
+                }
+              ],
+              "expected": "posted only when provider verified"
+            },
+            {
+              "name": "web/mobile review read model",
+              "passed": true,
+              "actual": 0,
+              "expected": 1
+            },
+            {
+              "name": "sync ledger",
+              "passed": true,
+              "actual": {
+                "status": "success",
+                "requestContext": {
+                  "mode": "review_canary",
+                  "reviewQaRunId": "review-qa-20260811221853-ae8fc4",
+                  "scenarioId": "google-existing-reply",
+                  "phaseId": "initial"
+                }
+              },
+              "expected": {
+                "status": "success",
+                "reviewQaRunId": "review-qa-20260811221853-ae8fc4"
+              }
+            }
+          ]
+        }
+      ],
+      "createdReviewIds": [
+        "google_merxus-review-qa_942d0044c893b771ceaa28f5c950f35e5b13d6d0"
+      ],
+      "createdAlertIds": [],
+      "syncRunIds": [
+        "HOU6PJToeHqlsLJGnTSr"
+      ]
+    },
+    {
+      "dryRun": false,
+      "runId": "review-qa-20260811221856-3067be",
+      "scenarioId": "google-negative-new",
+      "provider": "google",
+      "tenantIds": [
+        "merxus-review-qa"
+      ],
+      "status": "passed",
+      "assertionsPassed": 17,
+      "assertionsFailed": 0,
+      "assertions": [
+        {
+          "name": "phase outcome",
+          "passed": true,
+          "actual": "success",
+          "expected": "success"
+        },
+        {
+          "name": "reviewsFetched",
+          "passed": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "reviewsCreated",
+          "passed": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "reviewsUpdated",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "reviewsUnchanged",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "run review record count",
+          "passed": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "negative review alert count",
+          "passed": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "review spike alert count",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "normalized review -g03",
+          "passed": true,
+          "actual": [
+            {
+              "externalReviewId": "accounts/qa-account/locations/qa-location/reviews/review-qa-20260811221856-3067be-g03",
+              "rating": 1,
+              "sentiment": "negative",
+              "providerReplyStatus": "not_observed"
+            }
+          ],
+          "expected": {
+            "externalIdIncludes": "-g03",
+            "rating": 1,
+            "sentiment": "negative",
+            "reviewerName": "QA Customer Negative",
+            "reviewText": "Called twice and nobody returned my call."
+          }
+        },
+        {
+          "name": "production provider adapter boundary",
+          "passed": true,
+          "actual": [
+            "GET https://mybusinessaccountmanagement.googleapis.com/v1/accounts",
+            "GET https://mybusiness.googleapis.com/v4/accounts/qa-account/locations?pageSize=100",
+            "GET https://mybusiness.googleapis.com/v4/accounts/qa-account/locations/qa-location/reviews?pageSize=50&orderBy=updateTime+desc"
+          ],
+          "expected": "Google provider request"
+        },
+        {
+          "name": "provider writes",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "canary metadata",
+          "passed": true,
+          "actual": [
+            {
+              "isCanary": true,
+              "runId": "review-qa-20260811221856-3067be",
+              "scenarioId": "google-negative-new",
+              "fixtureVersion": 1
+            }
+          ],
+          "expected": {
+            "isCanary": true,
+            "runId": "review-qa-20260811221856-3067be",
+            "scenarioId": "google-negative-new",
+            "fixtureVersion": 1
+          }
+        },
+        {
+          "name": "tenant scope",
+          "passed": true,
+          "actual": [
+            "merxus-review-qa"
+          ],
+          "expected": "workspace tenant matches"
+        },
+        {
+          "name": "no false automatic publish state",
+          "passed": true,
+          "actual": [
+            {
+              "replyState": "none",
+              "providerReplyStatus": "not_observed"
+            }
+          ],
+          "expected": "posted only when provider verified"
+        },
+        {
+          "name": "web/mobile review read model",
+          "passed": true,
+          "actual": 0,
+          "expected": 1
+        },
+        {
+          "name": "sync ledger",
+          "passed": true,
+          "actual": {
+            "status": "success",
+            "requestContext": {
+              "mode": "review_canary",
+              "reviewQaRunId": "review-qa-20260811221856-3067be",
+              "scenarioId": "google-negative-new",
+              "phaseId": "initial"
+            }
+          },
+          "expected": {
+            "status": "success",
+            "reviewQaRunId": "review-qa-20260811221856-3067be"
+          }
+        },
+        {
+          "name": "external notifications suppressed",
+          "passed": true,
+          "actual": [
+            {
+              "channel": "email",
+              "recipient": "blocked-customer@example.com",
+              "success": null,
+              "suppressed": true,
+              "reason": "review_qa_external_notifications_disabled"
+            },
+            {
+              "channel": "push",
+              "recipient": "blocked-customer",
+              "success": null,
+              "suppressed": true,
+              "reason": "review_qa_external_notifications_disabled"
+            },
+            {
+              "channel": "sms",
+              "recipient": "+15555550199",
+              "success": null,
+              "suppressed": true,
+              "reason": "review_qa_external_notifications_disabled"
+            }
+          ],
+          "expected": "all suppressed"
+        }
+      ],
+      "phases": [
+        {
+          "phaseId": "initial",
+          "tenantId": "merxus-review-qa",
+          "syncRunId": "FRbLK2aQsE9PaJ4dQE2c",
+          "result": {
+            "platform": "google",
+            "integration": {
+              "key": "google",
+              "label": "Google",
+              "description": "Google Business Profile reviews and local-search reputation.",
+              "status": "connected",
+              "supportsLiveOAuth": true,
+              "supportsLiveSync": true,
+              "health": "attention",
+              "healthLabel": "Invite Link Missing",
+              "actionRequired": "Add a public review link so positive feedback can be turned into review invites.",
+              "syncedReviewCount": 3,
+              "latestRunAt": null,
+              "latestRunStatus": null,
+              "lastSuccessfulSyncAt": "2026-08-11T22:18:57.858Z",
+              "latestSyncFailure": null,
+              "latestSyncFailureAt": null,
+              "recentSyncFailureCount": 0,
+              "consecutiveSyncFailures": 0,
+              "pendingRetryCount": 0,
+              "accountLabel": "Merxus Review QA",
+              "connectedAt": "2026-08-11T22:18:48.904Z",
+              "disconnectedAt": null,
+              "lastSyncAt": "2026-08-11T22:18:57.858Z",
+              "lastUpdatedAt": "2026-08-11T22:18:58.364Z",
+              "lastUpdatedBy": {
+                "uid": "system:review-qa",
+                "email": null,
+                "name": "Merxus Review Canary"
+              },
+              "mode": "oauth",
+              "reviewLink": null,
+              "reviewLinkPresent": false,
+              "lastSyncStatus": "success",
+              "lastSyncFailure": null,
+              "lastSyncAttemptAt": "2026-08-11T22:18:57.858Z",
+              "nextScheduledSyncAt": null,
+              "syncRetryCount": 0,
+              "syncSummary": {
+                "reviewsFetched": 1,
+                "reviewsCreated": 1,
+                "reviewsUpdated": 0,
+                "locationsSynced": 1,
+                "reviewsUnchanged": 0,
+                "alertsCreated": 1,
+                "alertFailureCount": 0,
+                "ratedReviews": 1,
+                "positiveCount": 0,
+                "neutralCount": 0,
+                "needsAttentionCount": 1,
+                "averageRating": 1
+              },
+              "oauthConnection": {
+                "provider": "google",
+                "connected": true,
+                "connectedAt": "2026-08-11T22:18:56.836Z",
+                "accountEmail": "review-qa@merxus.ai",
+                "accountName": "Merxus Review QA",
+                "locationCount": 1,
+                "scopes": [
+                  "https://www.googleapis.com/auth/business.manage"
+                ],
+                "installationId": "voice__merxus-review-qa__google",
+                "syncReady": true
+              },
+              "history": [
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:18:48.904Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": null,
+                  "mode": "oauth",
+                  "previousMode": null,
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:18:52.586Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:18:55.526Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:18:58.364Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                }
+              ]
+            },
+            "accountCount": 1,
+            "locationsSynced": 1,
+            "reviewsFetched": 1,
+            "reviewsCreated": 1,
+            "reviewsUpdated": 0,
+            "reviewsUnchanged": 0,
+            "alertsCreated": 1,
+            "alertFailureCount": 0,
+            "ratingSummary": {
+              "ratedReviews": 1,
+              "averageRating": 1,
+              "positiveCount": 0,
+              "neutralCount": 0,
+              "needsAttentionCount": 1
+            }
+          },
+          "error": null,
+          "retry": null,
+          "assertions": [
+            {
+              "name": "phase outcome",
+              "passed": true,
+              "actual": "success",
+              "expected": "success"
+            },
+            {
+              "name": "reviewsFetched",
+              "passed": true,
+              "actual": 1,
+              "expected": 1
+            },
+            {
+              "name": "reviewsCreated",
+              "passed": true,
+              "actual": 1,
+              "expected": 1
+            },
+            {
+              "name": "reviewsUpdated",
+              "passed": true,
+              "actual": 0,
+              "expected": 0
+            },
+            {
+              "name": "reviewsUnchanged",
+              "passed": true,
+              "actual": 0,
+              "expected": 0
+            },
+            {
+              "name": "run review record count",
+              "passed": true,
+              "actual": 1,
+              "expected": 1
+            },
+            {
+              "name": "negative review alert count",
+              "passed": true,
+              "actual": 1,
+              "expected": 1
+            },
+            {
+              "name": "review spike alert count",
+              "passed": true,
+              "actual": 0,
+              "expected": 0
+            },
+            {
+              "name": "normalized review -g03",
+              "passed": true,
+              "actual": [
+                {
+                  "externalReviewId": "accounts/qa-account/locations/qa-location/reviews/review-qa-20260811221856-3067be-g03",
+                  "rating": 1,
+                  "sentiment": "negative",
+                  "providerReplyStatus": "not_observed"
+                }
+              ],
+              "expected": {
+                "externalIdIncludes": "-g03",
+                "rating": 1,
+                "sentiment": "negative",
+                "reviewerName": "QA Customer Negative",
+                "reviewText": "Called twice and nobody returned my call."
+              }
+            },
+            {
+              "name": "production provider adapter boundary",
+              "passed": true,
+              "actual": [
+                "GET https://mybusinessaccountmanagement.googleapis.com/v1/accounts",
+                "GET https://mybusiness.googleapis.com/v4/accounts/qa-account/locations?pageSize=100",
+                "GET https://mybusiness.googleapis.com/v4/accounts/qa-account/locations/qa-location/reviews?pageSize=50&orderBy=updateTime+desc"
+              ],
+              "expected": "Google provider request"
+            },
+            {
+              "name": "provider writes",
+              "passed": true,
+              "actual": 0,
+              "expected": 0
+            },
+            {
+              "name": "canary metadata",
+              "passed": true,
+              "actual": [
+                {
+                  "isCanary": true,
+                  "runId": "review-qa-20260811221856-3067be",
+                  "scenarioId": "google-negative-new",
+                  "fixtureVersion": 1
+                }
+              ],
+              "expected": {
+                "isCanary": true,
+                "runId": "review-qa-20260811221856-3067be",
+                "scenarioId": "google-negative-new",
+                "fixtureVersion": 1
+              }
+            },
+            {
+              "name": "tenant scope",
+              "passed": true,
+              "actual": [
+                "merxus-review-qa"
+              ],
+              "expected": "workspace tenant matches"
+            },
+            {
+              "name": "no false automatic publish state",
+              "passed": true,
+              "actual": [
+                {
+                  "replyState": "none",
+                  "providerReplyStatus": "not_observed"
+                }
+              ],
+              "expected": "posted only when provider verified"
+            },
+            {
+              "name": "web/mobile review read model",
+              "passed": true,
+              "actual": 0,
+              "expected": 1
+            },
+            {
+              "name": "sync ledger",
+              "passed": true,
+              "actual": {
+                "status": "success",
+                "requestContext": {
+                  "mode": "review_canary",
+                  "reviewQaRunId": "review-qa-20260811221856-3067be",
+                  "scenarioId": "google-negative-new",
+                  "phaseId": "initial"
+                }
+              },
+              "expected": {
+                "status": "success",
+                "reviewQaRunId": "review-qa-20260811221856-3067be"
+              }
+            },
+            {
+              "name": "external notifications suppressed",
+              "passed": true,
+              "actual": [
+                {
+                  "channel": "email",
+                  "recipient": "blocked-customer@example.com",
+                  "success": null,
+                  "suppressed": true,
+                  "reason": "review_qa_external_notifications_disabled"
+                },
+                {
+                  "channel": "push",
+                  "recipient": "blocked-customer",
+                  "success": null,
+                  "suppressed": true,
+                  "reason": "review_qa_external_notifications_disabled"
+                },
+                {
+                  "channel": "sms",
+                  "recipient": "+15555550199",
+                  "success": null,
+                  "suppressed": true,
+                  "reason": "review_qa_external_notifications_disabled"
+                }
+              ],
+              "expected": "all suppressed"
+            }
+          ]
+        }
+      ],
+      "createdReviewIds": [
+        "google_merxus-review-qa_447c014a3ae2f8fe8d20f140386f96cec1652ccc"
+      ],
+      "createdAlertIds": [
+        "r2TvPSwDrTbPbLtVz9du"
+      ],
+      "syncRunIds": [
+        "FRbLK2aQsE9PaJ4dQE2c"
+      ]
+    },
+    {
+      "dryRun": false,
+      "runId": "review-qa-20260811221859-e0dc95",
+      "scenarioId": "google-positive-new",
+      "provider": "google",
+      "tenantIds": [
+        "merxus-review-qa"
+      ],
+      "status": "passed",
+      "assertionsPassed": 16,
+      "assertionsFailed": 0,
+      "assertions": [
+        {
+          "name": "phase outcome",
+          "passed": true,
+          "actual": "success",
+          "expected": "success"
+        },
+        {
+          "name": "reviewsFetched",
+          "passed": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "reviewsCreated",
+          "passed": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "reviewsUpdated",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "reviewsUnchanged",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "run review record count",
+          "passed": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "negative review alert count",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "review spike alert count",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "normalized review -g01",
+          "passed": true,
+          "actual": [
+            {
+              "externalReviewId": "accounts/qa-account/locations/qa-location/reviews/review-qa-20260811221859-e0dc95-g01",
+              "rating": 5,
+              "sentiment": "positive",
+              "providerReplyStatus": "not_observed"
+            }
+          ],
+          "expected": {
+            "externalIdIncludes": "-g01",
+            "rating": 5,
+            "sentiment": "positive",
+            "reviewerName": "QA Customer Positive",
+            "reviewText": "Excellent service and a fast response."
+          }
+        },
+        {
+          "name": "production provider adapter boundary",
+          "passed": true,
+          "actual": [
+            "GET https://mybusinessaccountmanagement.googleapis.com/v1/accounts",
+            "GET https://mybusiness.googleapis.com/v4/accounts/qa-account/locations?pageSize=100",
+            "GET https://mybusiness.googleapis.com/v4/accounts/qa-account/locations/qa-location/reviews?pageSize=50&orderBy=updateTime+desc"
+          ],
+          "expected": "Google provider request"
+        },
+        {
+          "name": "provider writes",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "canary metadata",
+          "passed": true,
+          "actual": [
+            {
+              "isCanary": true,
+              "runId": "review-qa-20260811221859-e0dc95",
+              "scenarioId": "google-positive-new",
+              "fixtureVersion": 1
+            }
+          ],
+          "expected": {
+            "isCanary": true,
+            "runId": "review-qa-20260811221859-e0dc95",
+            "scenarioId": "google-positive-new",
+            "fixtureVersion": 1
+          }
+        },
+        {
+          "name": "tenant scope",
+          "passed": true,
+          "actual": [
+            "merxus-review-qa"
+          ],
+          "expected": "workspace tenant matches"
+        },
+        {
+          "name": "no false automatic publish state",
+          "passed": true,
+          "actual": [
+            {
+              "replyState": "none",
+              "providerReplyStatus": "not_observed"
+            }
+          ],
+          "expected": "posted only when provider verified"
+        },
+        {
+          "name": "web/mobile review read model",
+          "passed": true,
+          "actual": 0,
+          "expected": 1
+        },
+        {
+          "name": "sync ledger",
+          "passed": true,
+          "actual": {
+            "status": "success",
+            "requestContext": {
+              "mode": "review_canary",
+              "reviewQaRunId": "review-qa-20260811221859-e0dc95",
+              "scenarioId": "google-positive-new",
+              "phaseId": "initial"
+            }
+          },
+          "expected": {
+            "status": "success",
+            "reviewQaRunId": "review-qa-20260811221859-e0dc95"
+          }
+        }
+      ],
+      "phases": [
+        {
+          "phaseId": "initial",
+          "tenantId": "merxus-review-qa",
+          "syncRunId": "eytxQ5mecrI0ICTtzxUa",
+          "result": {
+            "platform": "google",
+            "integration": {
+              "key": "google",
+              "label": "Google",
+              "description": "Google Business Profile reviews and local-search reputation.",
+              "status": "connected",
+              "supportsLiveOAuth": true,
+              "supportsLiveSync": true,
+              "health": "attention",
+              "healthLabel": "Invite Link Missing",
+              "actionRequired": "Add a public review link so positive feedback can be turned into review invites.",
+              "syncedReviewCount": 4,
+              "latestRunAt": null,
+              "latestRunStatus": null,
+              "lastSuccessfulSyncAt": "2026-08-11T22:19:00.282Z",
+              "latestSyncFailure": null,
+              "latestSyncFailureAt": null,
+              "recentSyncFailureCount": 0,
+              "consecutiveSyncFailures": 0,
+              "pendingRetryCount": 0,
+              "accountLabel": "Merxus Review QA",
+              "connectedAt": "2026-08-11T22:18:48.904Z",
+              "disconnectedAt": null,
+              "lastSyncAt": "2026-08-11T22:19:00.282Z",
+              "lastUpdatedAt": "2026-08-11T22:19:00.862Z",
+              "lastUpdatedBy": {
+                "uid": "system:review-qa",
+                "email": null,
+                "name": "Merxus Review Canary"
+              },
+              "mode": "oauth",
+              "reviewLink": null,
+              "reviewLinkPresent": false,
+              "lastSyncStatus": "success",
+              "lastSyncFailure": null,
+              "lastSyncAttemptAt": "2026-08-11T22:19:00.282Z",
+              "nextScheduledSyncAt": null,
+              "syncRetryCount": 0,
+              "syncSummary": {
+                "reviewsFetched": 1,
+                "reviewsCreated": 1,
+                "reviewsUpdated": 0,
+                "locationsSynced": 1,
+                "reviewsUnchanged": 0,
+                "alertsCreated": 0,
+                "alertFailureCount": 0,
+                "ratedReviews": 1,
+                "positiveCount": 1,
+                "neutralCount": 0,
+                "needsAttentionCount": 0,
+                "averageRating": 5
+              },
+              "oauthConnection": {
+                "provider": "google",
+                "connected": true,
+                "connectedAt": "2026-08-11T22:18:59.694Z",
+                "accountEmail": "review-qa@merxus.ai",
+                "accountName": "Merxus Review QA",
+                "locationCount": 1,
+                "scopes": [
+                  "https://www.googleapis.com/auth/business.manage"
+                ],
+                "installationId": "voice__merxus-review-qa__google",
+                "syncReady": true
+              },
+              "history": [
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:18:48.904Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": null,
+                  "mode": "oauth",
+                  "previousMode": null,
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:18:52.586Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:18:55.526Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:18:58.364Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:19:00.862Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                }
+              ]
+            },
+            "accountCount": 1,
+            "locationsSynced": 1,
+            "reviewsFetched": 1,
+            "reviewsCreated": 1,
+            "reviewsUpdated": 0,
+            "reviewsUnchanged": 0,
+            "alertsCreated": 0,
+            "alertFailureCount": 0,
+            "ratingSummary": {
+              "ratedReviews": 1,
+              "averageRating": 5,
+              "positiveCount": 1,
+              "neutralCount": 0,
+              "needsAttentionCount": 0
+            }
+          },
+          "error": null,
+          "retry": null,
+          "assertions": [
+            {
+              "name": "phase outcome",
+              "passed": true,
+              "actual": "success",
+              "expected": "success"
+            },
+            {
+              "name": "reviewsFetched",
+              "passed": true,
+              "actual": 1,
+              "expected": 1
+            },
+            {
+              "name": "reviewsCreated",
+              "passed": true,
+              "actual": 1,
+              "expected": 1
+            },
+            {
+              "name": "reviewsUpdated",
+              "passed": true,
+              "actual": 0,
+              "expected": 0
+            },
+            {
+              "name": "reviewsUnchanged",
+              "passed": true,
+              "actual": 0,
+              "expected": 0
+            },
+            {
+              "name": "run review record count",
+              "passed": true,
+              "actual": 1,
+              "expected": 1
+            },
+            {
+              "name": "negative review alert count",
+              "passed": true,
+              "actual": 0,
+              "expected": 0
+            },
+            {
+              "name": "review spike alert count",
+              "passed": true,
+              "actual": 0,
+              "expected": 0
+            },
+            {
+              "name": "normalized review -g01",
+              "passed": true,
+              "actual": [
+                {
+                  "externalReviewId": "accounts/qa-account/locations/qa-location/reviews/review-qa-20260811221859-e0dc95-g01",
+                  "rating": 5,
+                  "sentiment": "positive",
+                  "providerReplyStatus": "not_observed"
+                }
+              ],
+              "expected": {
+                "externalIdIncludes": "-g01",
+                "rating": 5,
+                "sentiment": "positive",
+                "reviewerName": "QA Customer Positive",
+                "reviewText": "Excellent service and a fast response."
+              }
+            },
+            {
+              "name": "production provider adapter boundary",
+              "passed": true,
+              "actual": [
+                "GET https://mybusinessaccountmanagement.googleapis.com/v1/accounts",
+                "GET https://mybusiness.googleapis.com/v4/accounts/qa-account/locations?pageSize=100",
+                "GET https://mybusiness.googleapis.com/v4/accounts/qa-account/locations/qa-location/reviews?pageSize=50&orderBy=updateTime+desc"
+              ],
+              "expected": "Google provider request"
+            },
+            {
+              "name": "provider writes",
+              "passed": true,
+              "actual": 0,
+              "expected": 0
+            },
+            {
+              "name": "canary metadata",
+              "passed": true,
+              "actual": [
+                {
+                  "isCanary": true,
+                  "runId": "review-qa-20260811221859-e0dc95",
+                  "scenarioId": "google-positive-new",
+                  "fixtureVersion": 1
+                }
+              ],
+              "expected": {
+                "isCanary": true,
+                "runId": "review-qa-20260811221859-e0dc95",
+                "scenarioId": "google-positive-new",
+                "fixtureVersion": 1
+              }
+            },
+            {
+              "name": "tenant scope",
+              "passed": true,
+              "actual": [
+                "merxus-review-qa"
+              ],
+              "expected": "workspace tenant matches"
+            },
+            {
+              "name": "no false automatic publish state",
+              "passed": true,
+              "actual": [
+                {
+                  "replyState": "none",
+                  "providerReplyStatus": "not_observed"
+                }
+              ],
+              "expected": "posted only when provider verified"
+            },
+            {
+              "name": "web/mobile review read model",
+              "passed": true,
+              "actual": 0,
+              "expected": 1
+            },
+            {
+              "name": "sync ledger",
+              "passed": true,
+              "actual": {
+                "status": "success",
+                "requestContext": {
+                  "mode": "review_canary",
+                  "reviewQaRunId": "review-qa-20260811221859-e0dc95",
+                  "scenarioId": "google-positive-new",
+                  "phaseId": "initial"
+                }
+              },
+              "expected": {
+                "status": "success",
+                "reviewQaRunId": "review-qa-20260811221859-e0dc95"
+              }
+            }
+          ]
+        }
+      ],
+      "createdReviewIds": [
+        "google_merxus-review-qa_87d7ad6bd8d695e776f9ee16e06fb900408070b7"
+      ],
+      "createdAlertIds": [],
+      "syncRunIds": [
+        "eytxQ5mecrI0ICTtzxUa"
+      ]
+    },
+    {
+      "dryRun": false,
+      "runId": "review-qa-20260811221901-50fe77",
+      "scenarioId": "provider-401",
+      "provider": "google",
+      "tenantIds": [
+        "merxus-review-qa"
+      ],
+      "status": "passed",
+      "assertionsPassed": 13,
+      "assertionsFailed": 0,
+      "assertions": [
+        {
+          "name": "phase outcome",
+          "passed": true,
+          "actual": "failure",
+          "expected": "failure"
+        },
+        {
+          "name": "provider error status",
+          "passed": true,
+          "actual": 401,
+          "expected": 401
+        },
+        {
+          "name": "provider error classification",
+          "passed": true,
+          "actual": "QA provider unauthorized",
+          "expected": "unauthorized"
+        },
+        {
+          "name": "retry/backoff recorded",
+          "passed": true,
+          "actual": {
+            "integration": {
+              "key": "google",
+              "label": "Google",
+              "description": "Google Business Profile reviews and local-search reputation.",
+              "status": "connected",
+              "supportsLiveOAuth": true,
+              "supportsLiveSync": true,
+              "health": "attention",
+              "healthLabel": "Sync Failed",
+              "actionRequired": "QA provider unauthorized",
+              "syncedReviewCount": 4,
+              "latestRunAt": null,
+              "latestRunStatus": null,
+              "lastSuccessfulSyncAt": "2026-08-11T22:19:00.282Z",
+              "latestSyncFailure": null,
+              "latestSyncFailureAt": null,
+              "recentSyncFailureCount": 0,
+              "consecutiveSyncFailures": 0,
+              "pendingRetryCount": 0,
+              "accountLabel": "Merxus Review QA",
+              "connectedAt": "2026-08-11T22:18:48.904Z",
+              "disconnectedAt": null,
+              "lastSyncAt": "2026-08-11T22:19:00.282Z",
+              "lastUpdatedAt": "2026-08-11T22:19:02.882Z",
+              "lastUpdatedBy": {
+                "uid": "system:review-qa",
+                "email": null,
+                "name": "Merxus Review Canary"
+              },
+              "mode": "oauth",
+              "reviewLink": null,
+              "reviewLinkPresent": false,
+              "lastSyncStatus": "failed",
+              "lastSyncFailure": "QA provider unauthorized",
+              "lastSyncAttemptAt": "2026-08-11T22:19:02.770Z",
+              "nextScheduledSyncAt": "2026-08-11T22:49:02.770Z",
+              "syncRetryCount": 1,
+              "syncSummary": {
+                "reviewsFetched": 1,
+                "reviewsCreated": 1,
+                "reviewsUpdated": 0,
+                "locationsSynced": 1,
+                "reviewsUnchanged": 0,
+                "alertsCreated": 0,
+                "alertFailureCount": 0,
+                "ratedReviews": 1,
+                "positiveCount": 1,
+                "neutralCount": 0,
+                "needsAttentionCount": 0,
+                "averageRating": 5
+              },
+              "oauthConnection": {
+                "provider": "google",
+                "connected": true,
+                "connectedAt": "2026-08-11T22:18:59.694Z",
+                "accountEmail": "review-qa@merxus.ai",
+                "accountName": "Merxus Review QA",
+                "locationCount": 1,
+                "scopes": [
+                  "https://www.googleapis.com/auth/business.manage"
+                ],
+                "installationId": "voice__merxus-review-qa__google",
+                "syncReady": true
+              },
+              "history": [
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:18:48.904Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": null,
+                  "mode": "oauth",
+                  "previousMode": null,
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:18:52.586Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:18:55.526Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:18:58.364Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:19:00.862Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "updated",
+                  "createdAt": "2026-08-11T22:19:02.882Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Review sync failed and was queued for retry (1)."
+                }
+              ]
+            },
+            "retryCount": 1,
+            "retryAt": "2026-08-11T22:49:02.770Z"
+          },
+          "expected": "retryCount >= 1 and retryAt"
+        },
+        {
+          "name": "run review record count",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "negative review alert count",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "review spike alert count",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "sync failure alert count",
+          "passed": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "production provider adapter boundary",
+          "passed": true,
+          "actual": [
+            "GET https://mybusinessaccountmanagement.googleapis.com/v1/accounts"
+          ],
+          "expected": "Google provider request"
+        },
+        {
+          "name": "provider writes",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "web/mobile review read model",
+          "passed": true,
+          "actual": 4,
+          "expected": 0
+        },
+        {
+          "name": "sync ledger",
+          "passed": true,
+          "actual": {
+            "status": "failed",
+            "requestContext": {
+              "mode": "review_canary",
+              "reviewQaRunId": "review-qa-20260811221901-50fe77",
+              "scenarioId": "provider-401",
+              "phaseId": "unauthorized"
+            }
+          },
+          "expected": {
+            "status": "failed",
+            "reviewQaRunId": "review-qa-20260811221901-50fe77"
+          }
+        },
+        {
+          "name": "external notifications suppressed",
+          "passed": true,
+          "actual": [
+            {
+              "channel": "email",
+              "recipient": "blocked-customer@example.com",
+              "success": null,
+              "suppressed": true,
+              "reason": "review_qa_external_notifications_disabled"
+            },
+            {
+              "channel": "push",
+              "recipient": "blocked-customer",
+              "success": null,
+              "suppressed": true,
+              "reason": "review_qa_external_notifications_disabled"
+            },
+            {
+              "channel": "sms",
+              "recipient": "+15555550199",
+              "success": null,
+              "suppressed": true,
+              "reason": "review_qa_external_notifications_disabled"
+            }
+          ],
+          "expected": "all suppressed"
+        }
+      ],
+      "phases": [
+        {
+          "phaseId": "unauthorized",
+          "tenantId": "merxus-review-qa",
+          "syncRunId": "angpBuN6QLwsBX38fd93",
+          "result": null,
+          "error": {
+            "message": "QA provider unauthorized",
+            "code": "google_provider_http_401",
+            "status": 401
+          },
+          "retry": {
+            "integration": {
+              "key": "google",
+              "label": "Google",
+              "description": "Google Business Profile reviews and local-search reputation.",
+              "status": "connected",
+              "supportsLiveOAuth": true,
+              "supportsLiveSync": true,
+              "health": "attention",
+              "healthLabel": "Sync Failed",
+              "actionRequired": "QA provider unauthorized",
+              "syncedReviewCount": 4,
+              "latestRunAt": null,
+              "latestRunStatus": null,
+              "lastSuccessfulSyncAt": "2026-08-11T22:19:00.282Z",
+              "latestSyncFailure": null,
+              "latestSyncFailureAt": null,
+              "recentSyncFailureCount": 0,
+              "consecutiveSyncFailures": 0,
+              "pendingRetryCount": 0,
+              "accountLabel": "Merxus Review QA",
+              "connectedAt": "2026-08-11T22:18:48.904Z",
+              "disconnectedAt": null,
+              "lastSyncAt": "2026-08-11T22:19:00.282Z",
+              "lastUpdatedAt": "2026-08-11T22:19:02.882Z",
+              "lastUpdatedBy": {
+                "uid": "system:review-qa",
+                "email": null,
+                "name": "Merxus Review Canary"
+              },
+              "mode": "oauth",
+              "reviewLink": null,
+              "reviewLinkPresent": false,
+              "lastSyncStatus": "failed",
+              "lastSyncFailure": "QA provider unauthorized",
+              "lastSyncAttemptAt": "2026-08-11T22:19:02.770Z",
+              "nextScheduledSyncAt": "2026-08-11T22:49:02.770Z",
+              "syncRetryCount": 1,
+              "syncSummary": {
+                "reviewsFetched": 1,
+                "reviewsCreated": 1,
+                "reviewsUpdated": 0,
+                "locationsSynced": 1,
+                "reviewsUnchanged": 0,
+                "alertsCreated": 0,
+                "alertFailureCount": 0,
+                "ratedReviews": 1,
+                "positiveCount": 1,
+                "neutralCount": 0,
+                "needsAttentionCount": 0,
+                "averageRating": 5
+              },
+              "oauthConnection": {
+                "provider": "google",
+                "connected": true,
+                "connectedAt": "2026-08-11T22:18:59.694Z",
+                "accountEmail": "review-qa@merxus.ai",
+                "accountName": "Merxus Review QA",
+                "locationCount": 1,
+                "scopes": [
+                  "https://www.googleapis.com/auth/business.manage"
+                ],
+                "installationId": "voice__merxus-review-qa__google",
+                "syncReady": true
+              },
+              "history": [
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:18:48.904Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": null,
+                  "mode": "oauth",
+                  "previousMode": null,
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:18:52.586Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:18:55.526Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:18:58.364Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:19:00.862Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "updated",
+                  "createdAt": "2026-08-11T22:19:02.882Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Review sync failed and was queued for retry (1)."
+                }
+              ]
+            },
+            "retryCount": 1,
+            "retryAt": "2026-08-11T22:49:02.770Z"
+          },
+          "assertions": [
+            {
+              "name": "phase outcome",
+              "passed": true,
+              "actual": "failure",
+              "expected": "failure"
+            },
+            {
+              "name": "provider error status",
+              "passed": true,
+              "actual": 401,
+              "expected": 401
+            },
+            {
+              "name": "provider error classification",
+              "passed": true,
+              "actual": "QA provider unauthorized",
+              "expected": "unauthorized"
+            },
+            {
+              "name": "retry/backoff recorded",
+              "passed": true,
+              "actual": {
+                "integration": {
+                  "key": "google",
+                  "label": "Google",
+                  "description": "Google Business Profile reviews and local-search reputation.",
+                  "status": "connected",
+                  "supportsLiveOAuth": true,
+                  "supportsLiveSync": true,
+                  "health": "attention",
+                  "healthLabel": "Sync Failed",
+                  "actionRequired": "QA provider unauthorized",
+                  "syncedReviewCount": 4,
+                  "latestRunAt": null,
+                  "latestRunStatus": null,
+                  "lastSuccessfulSyncAt": "2026-08-11T22:19:00.282Z",
+                  "latestSyncFailure": null,
+                  "latestSyncFailureAt": null,
+                  "recentSyncFailureCount": 0,
+                  "consecutiveSyncFailures": 0,
+                  "pendingRetryCount": 0,
+                  "accountLabel": "Merxus Review QA",
+                  "connectedAt": "2026-08-11T22:18:48.904Z",
+                  "disconnectedAt": null,
+                  "lastSyncAt": "2026-08-11T22:19:00.282Z",
+                  "lastUpdatedAt": "2026-08-11T22:19:02.882Z",
+                  "lastUpdatedBy": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "mode": "oauth",
+                  "reviewLink": null,
+                  "reviewLinkPresent": false,
+                  "lastSyncStatus": "failed",
+                  "lastSyncFailure": "QA provider unauthorized",
+                  "lastSyncAttemptAt": "2026-08-11T22:19:02.770Z",
+                  "nextScheduledSyncAt": "2026-08-11T22:49:02.770Z",
+                  "syncRetryCount": 1,
+                  "syncSummary": {
+                    "reviewsFetched": 1,
+                    "reviewsCreated": 1,
+                    "reviewsUpdated": 0,
+                    "locationsSynced": 1,
+                    "reviewsUnchanged": 0,
+                    "alertsCreated": 0,
+                    "alertFailureCount": 0,
+                    "ratedReviews": 1,
+                    "positiveCount": 1,
+                    "neutralCount": 0,
+                    "needsAttentionCount": 0,
+                    "averageRating": 5
+                  },
+                  "oauthConnection": {
+                    "provider": "google",
+                    "connected": true,
+                    "connectedAt": "2026-08-11T22:18:59.694Z",
+                    "accountEmail": "review-qa@merxus.ai",
+                    "accountName": "Merxus Review QA",
+                    "locationCount": 1,
+                    "scopes": [
+                      "https://www.googleapis.com/auth/business.manage"
+                    ],
+                    "installationId": "voice__merxus-review-qa__google",
+                    "syncReady": true
+                  },
+                  "history": [
+                    {
+                      "action": "sync_confirmed",
+                      "createdAt": "2026-08-11T22:18:48.904Z",
+                      "actor": {
+                        "uid": "system:review-qa",
+                        "email": null,
+                        "name": "Merxus Review Canary"
+                      },
+                      "status": "connected",
+                      "previousStatus": null,
+                      "mode": "oauth",
+                      "previousMode": null,
+                      "accountLabel": "Merxus Review QA",
+                      "reviewLinkPresent": false,
+                      "previousReviewLinkPresent": false,
+                      "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                    },
+                    {
+                      "action": "sync_confirmed",
+                      "createdAt": "2026-08-11T22:18:52.586Z",
+                      "actor": {
+                        "uid": "system:review-qa",
+                        "email": null,
+                        "name": "Merxus Review Canary"
+                      },
+                      "status": "connected",
+                      "previousStatus": "connected",
+                      "mode": "oauth",
+                      "previousMode": "oauth",
+                      "accountLabel": "Merxus Review QA",
+                      "reviewLinkPresent": false,
+                      "previousReviewLinkPresent": false,
+                      "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                    },
+                    {
+                      "action": "sync_confirmed",
+                      "createdAt": "2026-08-11T22:18:55.526Z",
+                      "actor": {
+                        "uid": "system:review-qa",
+                        "email": null,
+                        "name": "Merxus Review Canary"
+                      },
+                      "status": "connected",
+                      "previousStatus": "connected",
+                      "mode": "oauth",
+                      "previousMode": "oauth",
+                      "accountLabel": "Merxus Review QA",
+                      "reviewLinkPresent": false,
+                      "previousReviewLinkPresent": false,
+                      "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                    },
+                    {
+                      "action": "sync_confirmed",
+                      "createdAt": "2026-08-11T22:18:58.364Z",
+                      "actor": {
+                        "uid": "system:review-qa",
+                        "email": null,
+                        "name": "Merxus Review Canary"
+                      },
+                      "status": "connected",
+                      "previousStatus": "connected",
+                      "mode": "oauth",
+                      "previousMode": "oauth",
+                      "accountLabel": "Merxus Review QA",
+                      "reviewLinkPresent": false,
+                      "previousReviewLinkPresent": false,
+                      "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                    },
+                    {
+                      "action": "sync_confirmed",
+                      "createdAt": "2026-08-11T22:19:00.862Z",
+                      "actor": {
+                        "uid": "system:review-qa",
+                        "email": null,
+                        "name": "Merxus Review Canary"
+                      },
+                      "status": "connected",
+                      "previousStatus": "connected",
+                      "mode": "oauth",
+                      "previousMode": "oauth",
+                      "accountLabel": "Merxus Review QA",
+                      "reviewLinkPresent": false,
+                      "previousReviewLinkPresent": false,
+                      "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                    },
+                    {
+                      "action": "updated",
+                      "createdAt": "2026-08-11T22:19:02.882Z",
+                      "actor": {
+                        "uid": "system:review-qa",
+                        "email": null,
+                        "name": "Merxus Review Canary"
+                      },
+                      "status": "connected",
+                      "previousStatus": "connected",
+                      "mode": "oauth",
+                      "previousMode": "oauth",
+                      "accountLabel": "Merxus Review QA",
+                      "reviewLinkPresent": false,
+                      "previousReviewLinkPresent": false,
+                      "notes": "Review sync failed and was queued for retry (1)."
+                    }
+                  ]
+                },
+                "retryCount": 1,
+                "retryAt": "2026-08-11T22:49:02.770Z"
+              },
+              "expected": "retryCount >= 1 and retryAt"
+            },
+            {
+              "name": "run review record count",
+              "passed": true,
+              "actual": 0,
+              "expected": 0
+            },
+            {
+              "name": "negative review alert count",
+              "passed": true,
+              "actual": 0,
+              "expected": 0
+            },
+            {
+              "name": "review spike alert count",
+              "passed": true,
+              "actual": 0,
+              "expected": 0
+            },
+            {
+              "name": "sync failure alert count",
+              "passed": true,
+              "actual": 1,
+              "expected": 1
+            },
+            {
+              "name": "production provider adapter boundary",
+              "passed": true,
+              "actual": [
+                "GET https://mybusinessaccountmanagement.googleapis.com/v1/accounts"
+              ],
+              "expected": "Google provider request"
+            },
+            {
+              "name": "provider writes",
+              "passed": true,
+              "actual": 0,
+              "expected": 0
+            },
+            {
+              "name": "web/mobile review read model",
+              "passed": true,
+              "actual": 4,
+              "expected": 0
+            },
+            {
+              "name": "sync ledger",
+              "passed": true,
+              "actual": {
+                "status": "failed",
+                "requestContext": {
+                  "mode": "review_canary",
+                  "reviewQaRunId": "review-qa-20260811221901-50fe77",
+                  "scenarioId": "provider-401",
+                  "phaseId": "unauthorized"
+                }
+              },
+              "expected": {
+                "status": "failed",
+                "reviewQaRunId": "review-qa-20260811221901-50fe77"
+              }
+            },
+            {
+              "name": "external notifications suppressed",
+              "passed": true,
+              "actual": [
+                {
+                  "channel": "email",
+                  "recipient": "blocked-customer@example.com",
+                  "success": null,
+                  "suppressed": true,
+                  "reason": "review_qa_external_notifications_disabled"
+                },
+                {
+                  "channel": "push",
+                  "recipient": "blocked-customer",
+                  "success": null,
+                  "suppressed": true,
+                  "reason": "review_qa_external_notifications_disabled"
+                },
+                {
+                  "channel": "sms",
+                  "recipient": "+15555550199",
+                  "success": null,
+                  "suppressed": true,
+                  "reason": "review_qa_external_notifications_disabled"
+                }
+              ],
+              "expected": "all suppressed"
+            }
+          ]
+        }
+      ],
+      "createdReviewIds": [],
+      "createdAlertIds": [
+        "YcCIEy80q9ZX4hhnJZEx"
+      ],
+      "syncRunIds": [
+        "angpBuN6QLwsBX38fd93"
+      ]
+    },
+    {
+      "dryRun": false,
+      "runId": "review-qa-20260811221904-3bbe0e",
+      "scenarioId": "provider-429",
+      "provider": "google",
+      "tenantIds": [
+        "merxus-review-qa"
+      ],
+      "status": "failed",
+      "assertionsPassed": 11,
+      "assertionsFailed": 1,
+      "assertions": [
+        {
+          "name": "phase outcome",
+          "passed": true,
+          "actual": "failure",
+          "expected": "failure"
+        },
+        {
+          "name": "provider error status",
+          "passed": true,
+          "actual": 429,
+          "expected": 429
+        },
+        {
+          "name": "provider error classification",
+          "passed": true,
+          "actual": "QA provider rate limited",
+          "expected": "rate limited"
+        },
+        {
+          "name": "retry/backoff recorded",
+          "passed": true,
+          "actual": {
+            "integration": {
+              "key": "google",
+              "label": "Google",
+              "description": "Google Business Profile reviews and local-search reputation.",
+              "status": "connected",
+              "supportsLiveOAuth": true,
+              "supportsLiveSync": true,
+              "health": "attention",
+              "healthLabel": "Sync Failed",
+              "actionRequired": "QA provider rate limited",
+              "syncedReviewCount": 4,
+              "latestRunAt": null,
+              "latestRunStatus": null,
+              "lastSuccessfulSyncAt": "2026-08-11T22:19:00.282Z",
+              "latestSyncFailure": null,
+              "latestSyncFailureAt": null,
+              "recentSyncFailureCount": 0,
+              "consecutiveSyncFailures": 0,
+              "pendingRetryCount": 0,
+              "accountLabel": "Merxus Review QA",
+              "connectedAt": "2026-08-11T22:18:48.904Z",
+              "disconnectedAt": null,
+              "lastSyncAt": "2026-08-11T22:19:00.282Z",
+              "lastUpdatedAt": "2026-08-11T22:19:05.301Z",
+              "lastUpdatedBy": {
+                "uid": "system:review-qa",
+                "email": null,
+                "name": "Merxus Review Canary"
+              },
+              "mode": "oauth",
+              "reviewLink": null,
+              "reviewLinkPresent": false,
+              "lastSyncStatus": "failed",
+              "lastSyncFailure": "QA provider rate limited",
+              "lastSyncAttemptAt": "2026-08-11T22:19:05.206Z",
+              "nextScheduledSyncAt": "2026-08-12T00:19:05.206Z",
+              "syncRetryCount": 2,
+              "syncSummary": {
+                "reviewsFetched": 1,
+                "reviewsCreated": 1,
+                "reviewsUpdated": 0,
+                "locationsSynced": 1,
+                "reviewsUnchanged": 0,
+                "alertsCreated": 0,
+                "alertFailureCount": 0,
+                "ratedReviews": 1,
+                "positiveCount": 1,
+                "neutralCount": 0,
+                "needsAttentionCount": 0,
+                "averageRating": 5
+              },
+              "oauthConnection": {
+                "provider": "google",
+                "connected": true,
+                "connectedAt": "2026-08-11T22:18:59.694Z",
+                "accountEmail": "review-qa@merxus.ai",
+                "accountName": "Merxus Review QA",
+                "locationCount": 1,
+                "scopes": [
+                  "https://www.googleapis.com/auth/business.manage"
+                ],
+                "installationId": "voice__merxus-review-qa__google",
+                "syncReady": true
+              },
+              "history": [
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:18:48.904Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": null,
+                  "mode": "oauth",
+                  "previousMode": null,
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:18:52.586Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:18:55.526Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:18:58.364Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:19:00.862Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "updated",
+                  "createdAt": "2026-08-11T22:19:02.882Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Review sync failed and was queued for retry (1)."
+                },
+                {
+                  "action": "updated",
+                  "createdAt": "2026-08-11T22:19:05.301Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Review sync failed and was queued for retry (2)."
+                }
+              ]
+            },
+            "retryCount": 2,
+            "retryAt": "2026-08-12T00:19:05.206Z"
+          },
+          "expected": "retryCount >= 1 and retryAt"
+        },
+        {
+          "name": "run review record count",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "negative review alert count",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "review spike alert count",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "sync failure alert count",
+          "passed": false,
+          "actual": 0,
+          "expected": 1
+        },
+        {
+          "name": "production provider adapter boundary",
+          "passed": true,
+          "actual": [
+            "GET https://mybusinessaccountmanagement.googleapis.com/v1/accounts"
+          ],
+          "expected": "Google provider request"
+        },
+        {
+          "name": "provider writes",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "web/mobile review read model",
+          "passed": true,
+          "actual": 4,
+          "expected": 0
+        },
+        {
+          "name": "sync ledger",
+          "passed": true,
+          "actual": {
+            "status": "failed",
+            "requestContext": {
+              "mode": "review_canary",
+              "reviewQaRunId": "review-qa-20260811221904-3bbe0e",
+              "scenarioId": "provider-429",
+              "phaseId": "rate-limited"
+            }
+          },
+          "expected": {
+            "status": "failed",
+            "reviewQaRunId": "review-qa-20260811221904-3bbe0e"
+          }
+        }
+      ],
+      "phases": [
+        {
+          "phaseId": "rate-limited",
+          "tenantId": "merxus-review-qa",
+          "syncRunId": "0VlryaFXfXoUXmC5H8kc",
+          "result": null,
+          "error": {
+            "message": "QA provider rate limited",
+            "code": "google_provider_http_429",
+            "status": 429
+          },
+          "retry": {
+            "integration": {
+              "key": "google",
+              "label": "Google",
+              "description": "Google Business Profile reviews and local-search reputation.",
+              "status": "connected",
+              "supportsLiveOAuth": true,
+              "supportsLiveSync": true,
+              "health": "attention",
+              "healthLabel": "Sync Failed",
+              "actionRequired": "QA provider rate limited",
+              "syncedReviewCount": 4,
+              "latestRunAt": null,
+              "latestRunStatus": null,
+              "lastSuccessfulSyncAt": "2026-08-11T22:19:00.282Z",
+              "latestSyncFailure": null,
+              "latestSyncFailureAt": null,
+              "recentSyncFailureCount": 0,
+              "consecutiveSyncFailures": 0,
+              "pendingRetryCount": 0,
+              "accountLabel": "Merxus Review QA",
+              "connectedAt": "2026-08-11T22:18:48.904Z",
+              "disconnectedAt": null,
+              "lastSyncAt": "2026-08-11T22:19:00.282Z",
+              "lastUpdatedAt": "2026-08-11T22:19:05.301Z",
+              "lastUpdatedBy": {
+                "uid": "system:review-qa",
+                "email": null,
+                "name": "Merxus Review Canary"
+              },
+              "mode": "oauth",
+              "reviewLink": null,
+              "reviewLinkPresent": false,
+              "lastSyncStatus": "failed",
+              "lastSyncFailure": "QA provider rate limited",
+              "lastSyncAttemptAt": "2026-08-11T22:19:05.206Z",
+              "nextScheduledSyncAt": "2026-08-12T00:19:05.206Z",
+              "syncRetryCount": 2,
+              "syncSummary": {
+                "reviewsFetched": 1,
+                "reviewsCreated": 1,
+                "reviewsUpdated": 0,
+                "locationsSynced": 1,
+                "reviewsUnchanged": 0,
+                "alertsCreated": 0,
+                "alertFailureCount": 0,
+                "ratedReviews": 1,
+                "positiveCount": 1,
+                "neutralCount": 0,
+                "needsAttentionCount": 0,
+                "averageRating": 5
+              },
+              "oauthConnection": {
+                "provider": "google",
+                "connected": true,
+                "connectedAt": "2026-08-11T22:18:59.694Z",
+                "accountEmail": "review-qa@merxus.ai",
+                "accountName": "Merxus Review QA",
+                "locationCount": 1,
+                "scopes": [
+                  "https://www.googleapis.com/auth/business.manage"
+                ],
+                "installationId": "voice__merxus-review-qa__google",
+                "syncReady": true
+              },
+              "history": [
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:18:48.904Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": null,
+                  "mode": "oauth",
+                  "previousMode": null,
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:18:52.586Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:18:55.526Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:18:58.364Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:19:00.862Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "updated",
+                  "createdAt": "2026-08-11T22:19:02.882Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Review sync failed and was queued for retry (1)."
+                },
+                {
+                  "action": "updated",
+                  "createdAt": "2026-08-11T22:19:05.301Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Review sync failed and was queued for retry (2)."
+                }
+              ]
+            },
+            "retryCount": 2,
+            "retryAt": "2026-08-12T00:19:05.206Z"
+          },
+          "assertions": [
+            {
+              "name": "phase outcome",
+              "passed": true,
+              "actual": "failure",
+              "expected": "failure"
+            },
+            {
+              "name": "provider error status",
+              "passed": true,
+              "actual": 429,
+              "expected": 429
+            },
+            {
+              "name": "provider error classification",
+              "passed": true,
+              "actual": "QA provider rate limited",
+              "expected": "rate limited"
+            },
+            {
+              "name": "retry/backoff recorded",
+              "passed": true,
+              "actual": {
+                "integration": {
+                  "key": "google",
+                  "label": "Google",
+                  "description": "Google Business Profile reviews and local-search reputation.",
+                  "status": "connected",
+                  "supportsLiveOAuth": true,
+                  "supportsLiveSync": true,
+                  "health": "attention",
+                  "healthLabel": "Sync Failed",
+                  "actionRequired": "QA provider rate limited",
+                  "syncedReviewCount": 4,
+                  "latestRunAt": null,
+                  "latestRunStatus": null,
+                  "lastSuccessfulSyncAt": "2026-08-11T22:19:00.282Z",
+                  "latestSyncFailure": null,
+                  "latestSyncFailureAt": null,
+                  "recentSyncFailureCount": 0,
+                  "consecutiveSyncFailures": 0,
+                  "pendingRetryCount": 0,
+                  "accountLabel": "Merxus Review QA",
+                  "connectedAt": "2026-08-11T22:18:48.904Z",
+                  "disconnectedAt": null,
+                  "lastSyncAt": "2026-08-11T22:19:00.282Z",
+                  "lastUpdatedAt": "2026-08-11T22:19:05.301Z",
+                  "lastUpdatedBy": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "mode": "oauth",
+                  "reviewLink": null,
+                  "reviewLinkPresent": false,
+                  "lastSyncStatus": "failed",
+                  "lastSyncFailure": "QA provider rate limited",
+                  "lastSyncAttemptAt": "2026-08-11T22:19:05.206Z",
+                  "nextScheduledSyncAt": "2026-08-12T00:19:05.206Z",
+                  "syncRetryCount": 2,
+                  "syncSummary": {
+                    "reviewsFetched": 1,
+                    "reviewsCreated": 1,
+                    "reviewsUpdated": 0,
+                    "locationsSynced": 1,
+                    "reviewsUnchanged": 0,
+                    "alertsCreated": 0,
+                    "alertFailureCount": 0,
+                    "ratedReviews": 1,
+                    "positiveCount": 1,
+                    "neutralCount": 0,
+                    "needsAttentionCount": 0,
+                    "averageRating": 5
+                  },
+                  "oauthConnection": {
+                    "provider": "google",
+                    "connected": true,
+                    "connectedAt": "2026-08-11T22:18:59.694Z",
+                    "accountEmail": "review-qa@merxus.ai",
+                    "accountName": "Merxus Review QA",
+                    "locationCount": 1,
+                    "scopes": [
+                      "https://www.googleapis.com/auth/business.manage"
+                    ],
+                    "installationId": "voice__merxus-review-qa__google",
+                    "syncReady": true
+                  },
+                  "history": [
+                    {
+                      "action": "sync_confirmed",
+                      "createdAt": "2026-08-11T22:18:48.904Z",
+                      "actor": {
+                        "uid": "system:review-qa",
+                        "email": null,
+                        "name": "Merxus Review Canary"
+                      },
+                      "status": "connected",
+                      "previousStatus": null,
+                      "mode": "oauth",
+                      "previousMode": null,
+                      "accountLabel": "Merxus Review QA",
+                      "reviewLinkPresent": false,
+                      "previousReviewLinkPresent": false,
+                      "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                    },
+                    {
+                      "action": "sync_confirmed",
+                      "createdAt": "2026-08-11T22:18:52.586Z",
+                      "actor": {
+                        "uid": "system:review-qa",
+                        "email": null,
+                        "name": "Merxus Review Canary"
+                      },
+                      "status": "connected",
+                      "previousStatus": "connected",
+                      "mode": "oauth",
+                      "previousMode": "oauth",
+                      "accountLabel": "Merxus Review QA",
+                      "reviewLinkPresent": false,
+                      "previousReviewLinkPresent": false,
+                      "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                    },
+                    {
+                      "action": "sync_confirmed",
+                      "createdAt": "2026-08-11T22:18:55.526Z",
+                      "actor": {
+                        "uid": "system:review-qa",
+                        "email": null,
+                        "name": "Merxus Review Canary"
+                      },
+                      "status": "connected",
+                      "previousStatus": "connected",
+                      "mode": "oauth",
+                      "previousMode": "oauth",
+                      "accountLabel": "Merxus Review QA",
+                      "reviewLinkPresent": false,
+                      "previousReviewLinkPresent": false,
+                      "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                    },
+                    {
+                      "action": "sync_confirmed",
+                      "createdAt": "2026-08-11T22:18:58.364Z",
+                      "actor": {
+                        "uid": "system:review-qa",
+                        "email": null,
+                        "name": "Merxus Review Canary"
+                      },
+                      "status": "connected",
+                      "previousStatus": "connected",
+                      "mode": "oauth",
+                      "previousMode": "oauth",
+                      "accountLabel": "Merxus Review QA",
+                      "reviewLinkPresent": false,
+                      "previousReviewLinkPresent": false,
+                      "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                    },
+                    {
+                      "action": "sync_confirmed",
+                      "createdAt": "2026-08-11T22:19:00.862Z",
+                      "actor": {
+                        "uid": "system:review-qa",
+                        "email": null,
+                        "name": "Merxus Review Canary"
+                      },
+                      "status": "connected",
+                      "previousStatus": "connected",
+                      "mode": "oauth",
+                      "previousMode": "oauth",
+                      "accountLabel": "Merxus Review QA",
+                      "reviewLinkPresent": false,
+                      "previousReviewLinkPresent": false,
+                      "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                    },
+                    {
+                      "action": "updated",
+                      "createdAt": "2026-08-11T22:19:02.882Z",
+                      "actor": {
+                        "uid": "system:review-qa",
+                        "email": null,
+                        "name": "Merxus Review Canary"
+                      },
+                      "status": "connected",
+                      "previousStatus": "connected",
+                      "mode": "oauth",
+                      "previousMode": "oauth",
+                      "accountLabel": "Merxus Review QA",
+                      "reviewLinkPresent": false,
+                      "previousReviewLinkPresent": false,
+                      "notes": "Review sync failed and was queued for retry (1)."
+                    },
+                    {
+                      "action": "updated",
+                      "createdAt": "2026-08-11T22:19:05.301Z",
+                      "actor": {
+                        "uid": "system:review-qa",
+                        "email": null,
+                        "name": "Merxus Review Canary"
+                      },
+                      "status": "connected",
+                      "previousStatus": "connected",
+                      "mode": "oauth",
+                      "previousMode": "oauth",
+                      "accountLabel": "Merxus Review QA",
+                      "reviewLinkPresent": false,
+                      "previousReviewLinkPresent": false,
+                      "notes": "Review sync failed and was queued for retry (2)."
+                    }
+                  ]
+                },
+                "retryCount": 2,
+                "retryAt": "2026-08-12T00:19:05.206Z"
+              },
+              "expected": "retryCount >= 1 and retryAt"
+            },
+            {
+              "name": "run review record count",
+              "passed": true,
+              "actual": 0,
+              "expected": 0
+            },
+            {
+              "name": "negative review alert count",
+              "passed": true,
+              "actual": 0,
+              "expected": 0
+            },
+            {
+              "name": "review spike alert count",
+              "passed": true,
+              "actual": 0,
+              "expected": 0
+            },
+            {
+              "name": "sync failure alert count",
+              "passed": false,
+              "actual": 0,
+              "expected": 1
+            },
+            {
+              "name": "production provider adapter boundary",
+              "passed": true,
+              "actual": [
+                "GET https://mybusinessaccountmanagement.googleapis.com/v1/accounts"
+              ],
+              "expected": "Google provider request"
+            },
+            {
+              "name": "provider writes",
+              "passed": true,
+              "actual": 0,
+              "expected": 0
+            },
+            {
+              "name": "web/mobile review read model",
+              "passed": true,
+              "actual": 4,
+              "expected": 0
+            },
+            {
+              "name": "sync ledger",
+              "passed": true,
+              "actual": {
+                "status": "failed",
+                "requestContext": {
+                  "mode": "review_canary",
+                  "reviewQaRunId": "review-qa-20260811221904-3bbe0e",
+                  "scenarioId": "provider-429",
+                  "phaseId": "rate-limited"
+                }
+              },
+              "expected": {
+                "status": "failed",
+                "reviewQaRunId": "review-qa-20260811221904-3bbe0e"
+              }
+            }
+          ]
+        }
+      ],
+      "createdReviewIds": [],
+      "createdAlertIds": [],
+      "syncRunIds": [
+        "0VlryaFXfXoUXmC5H8kc"
+      ]
+    },
+    {
+      "dryRun": false,
+      "runId": "review-qa-20260811221906-91f8dc",
+      "scenarioId": "tenant-isolation",
+      "provider": "google",
+      "tenantIds": [
+        "merxus-review-qa",
+        "merxus-review-qa-isolation"
+      ],
+      "status": "failed",
+      "assertionsPassed": 30,
+      "assertionsFailed": 1,
+      "assertions": [
+        {
+          "name": "phase outcome",
+          "passed": true,
+          "actual": "success",
+          "expected": "success"
+        },
+        {
+          "name": "reviewsFetched",
+          "passed": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "reviewsCreated",
+          "passed": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "run review record count",
+          "passed": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "negative review alert count",
+          "passed": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "review spike alert count",
+          "passed": false,
+          "actual": 1,
+          "expected": 0
+        },
+        {
+          "name": "normalized review -tenant-a",
+          "passed": true,
+          "actual": [
+            {
+              "externalReviewId": "accounts/qa-account/locations/qa-location/reviews/review-qa-20260811221906-91f8dc-tenant-a",
+              "rating": 1,
+              "sentiment": "negative",
+              "providerReplyStatus": "not_observed"
+            }
+          ],
+          "expected": {
+            "externalIdIncludes": "-tenant-a",
+            "rating": 1,
+            "sentiment": "negative"
+          }
+        },
+        {
+          "name": "production provider adapter boundary",
+          "passed": true,
+          "actual": [
+            "GET https://mybusinessaccountmanagement.googleapis.com/v1/accounts",
+            "GET https://mybusiness.googleapis.com/v4/accounts/qa-account/locations?pageSize=100",
+            "GET https://mybusiness.googleapis.com/v4/accounts/qa-account/locations/qa-location/reviews?pageSize=50&orderBy=updateTime+desc"
+          ],
+          "expected": "Google provider request"
+        },
+        {
+          "name": "provider writes",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "canary metadata",
+          "passed": true,
+          "actual": [
+            {
+              "isCanary": true,
+              "runId": "review-qa-20260811221906-91f8dc",
+              "scenarioId": "tenant-isolation",
+              "fixtureVersion": 1
+            }
+          ],
+          "expected": {
+            "isCanary": true,
+            "runId": "review-qa-20260811221906-91f8dc",
+            "scenarioId": "tenant-isolation",
+            "fixtureVersion": 1
+          }
+        },
+        {
+          "name": "tenant scope",
+          "passed": true,
+          "actual": [
+            "merxus-review-qa"
+          ],
+          "expected": "workspace tenant matches"
+        },
+        {
+          "name": "no false automatic publish state",
+          "passed": true,
+          "actual": [
+            {
+              "replyState": "none",
+              "providerReplyStatus": "not_observed"
+            }
+          ],
+          "expected": "posted only when provider verified"
+        },
+        {
+          "name": "web/mobile review read model",
+          "passed": true,
+          "actual": 0,
+          "expected": 1
+        },
+        {
+          "name": "sync ledger",
+          "passed": true,
+          "actual": {
+            "status": "success",
+            "requestContext": {
+              "mode": "review_canary",
+              "reviewQaRunId": "review-qa-20260811221906-91f8dc",
+              "scenarioId": "tenant-isolation",
+              "phaseId": "tenant-a"
+            }
+          },
+          "expected": {
+            "status": "success",
+            "reviewQaRunId": "review-qa-20260811221906-91f8dc"
+          }
+        },
+        {
+          "name": "external notifications suppressed",
+          "passed": true,
+          "actual": [
+            {
+              "channel": "email",
+              "recipient": "blocked-customer@example.com",
+              "success": null,
+              "suppressed": true,
+              "reason": "review_qa_external_notifications_disabled"
+            },
+            {
+              "channel": "push",
+              "recipient": "blocked-customer",
+              "success": null,
+              "suppressed": true,
+              "reason": "review_qa_external_notifications_disabled"
+            },
+            {
+              "channel": "sms",
+              "recipient": "+15555550199",
+              "success": null,
+              "suppressed": true,
+              "reason": "review_qa_external_notifications_disabled"
+            },
+            {
+              "channel": "email",
+              "recipient": "blocked-customer@example.com",
+              "success": null,
+              "suppressed": true,
+              "reason": "review_qa_external_notifications_disabled"
+            },
+            {
+              "channel": "push",
+              "recipient": "blocked-customer",
+              "success": null,
+              "suppressed": true,
+              "reason": "review_qa_external_notifications_disabled"
+            },
+            {
+              "channel": "sms",
+              "recipient": "+15555550199",
+              "success": null,
+              "suppressed": true,
+              "reason": "review_qa_external_notifications_disabled"
+            }
+          ],
+          "expected": "all suppressed"
+        },
+        {
+          "name": "phase outcome",
+          "passed": true,
+          "actual": "success",
+          "expected": "success"
+        },
+        {
+          "name": "reviewsFetched",
+          "passed": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "reviewsCreated",
+          "passed": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "run review record count",
+          "passed": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "negative review alert count",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "review spike alert count",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "normalized review -tenant-b",
+          "passed": true,
+          "actual": [
+            {
+              "externalReviewId": "accounts/qa-account/locations/qa-location/reviews/review-qa-20260811221906-91f8dc-tenant-b",
+              "rating": 5,
+              "sentiment": "positive",
+              "providerReplyStatus": "not_observed"
+            }
+          ],
+          "expected": {
+            "externalIdIncludes": "-tenant-b",
+            "rating": 5,
+            "sentiment": "positive"
+          }
+        },
+        {
+          "name": "production provider adapter boundary",
+          "passed": true,
+          "actual": [
+            "GET https://mybusinessaccountmanagement.googleapis.com/v1/accounts",
+            "GET https://mybusiness.googleapis.com/v4/accounts/qa-account/locations?pageSize=100",
+            "GET https://mybusiness.googleapis.com/v4/accounts/qa-account/locations/qa-location/reviews?pageSize=50&orderBy=updateTime+desc"
+          ],
+          "expected": "Google provider request"
+        },
+        {
+          "name": "provider writes",
+          "passed": true,
+          "actual": 0,
+          "expected": 0
+        },
+        {
+          "name": "canary metadata",
+          "passed": true,
+          "actual": [
+            {
+              "isCanary": true,
+              "runId": "review-qa-20260811221906-91f8dc",
+              "scenarioId": "tenant-isolation",
+              "fixtureVersion": 1
+            }
+          ],
+          "expected": {
+            "isCanary": true,
+            "runId": "review-qa-20260811221906-91f8dc",
+            "scenarioId": "tenant-isolation",
+            "fixtureVersion": 1
+          }
+        },
+        {
+          "name": "tenant scope",
+          "passed": true,
+          "actual": [
+            "merxus-review-qa-isolation"
+          ],
+          "expected": "workspace tenant matches"
+        },
+        {
+          "name": "no false automatic publish state",
+          "passed": true,
+          "actual": [
+            {
+              "replyState": "none",
+              "providerReplyStatus": "not_observed"
+            }
+          ],
+          "expected": "posted only when provider verified"
+        },
+        {
+          "name": "web/mobile review read model",
+          "passed": true,
+          "actual": 0,
+          "expected": 1
+        },
+        {
+          "name": "sync ledger",
+          "passed": true,
+          "actual": {
+            "status": "success",
+            "requestContext": {
+              "mode": "review_canary",
+              "reviewQaRunId": "review-qa-20260811221906-91f8dc",
+              "scenarioId": "tenant-isolation",
+              "phaseId": "tenant-b"
+            }
+          },
+          "expected": {
+            "status": "success",
+            "reviewQaRunId": "review-qa-20260811221906-91f8dc"
+          }
+        },
+        {
+          "name": "tenant isolation merxus-review-qa",
+          "passed": true,
+          "actual": 1,
+          "expected": 1
+        },
+        {
+          "name": "tenant isolation merxus-review-qa-isolation",
+          "passed": true,
+          "actual": 1,
+          "expected": 1
+        }
+      ],
+      "phases": [
+        {
+          "phaseId": "tenant-a",
+          "tenantId": "merxus-review-qa",
+          "syncRunId": "MCvyflYY1izegv0FICil",
+          "result": {
+            "platform": "google",
+            "integration": {
+              "key": "google",
+              "label": "Google",
+              "description": "Google Business Profile reviews and local-search reputation.",
+              "status": "connected",
+              "supportsLiveOAuth": true,
+              "supportsLiveSync": true,
+              "health": "attention",
+              "healthLabel": "Invite Link Missing",
+              "actionRequired": "Add a public review link so positive feedback can be turned into review invites.",
+              "syncedReviewCount": 5,
+              "latestRunAt": null,
+              "latestRunStatus": null,
+              "lastSuccessfulSyncAt": "2026-08-11T22:19:07.676Z",
+              "latestSyncFailure": null,
+              "latestSyncFailureAt": null,
+              "recentSyncFailureCount": 0,
+              "consecutiveSyncFailures": 0,
+              "pendingRetryCount": 0,
+              "accountLabel": "Merxus Review QA A",
+              "connectedAt": "2026-08-11T22:18:48.904Z",
+              "disconnectedAt": null,
+              "lastSyncAt": "2026-08-11T22:19:07.676Z",
+              "lastUpdatedAt": "2026-08-11T22:19:08.159Z",
+              "lastUpdatedBy": {
+                "uid": "system:review-qa",
+                "email": null,
+                "name": "Merxus Review Canary"
+              },
+              "mode": "oauth",
+              "reviewLink": null,
+              "reviewLinkPresent": false,
+              "lastSyncStatus": "success",
+              "lastSyncFailure": null,
+              "lastSyncAttemptAt": "2026-08-11T22:19:07.676Z",
+              "nextScheduledSyncAt": null,
+              "syncRetryCount": 0,
+              "syncSummary": {
+                "reviewsFetched": 1,
+                "reviewsCreated": 1,
+                "reviewsUpdated": 0,
+                "locationsSynced": 1,
+                "reviewsUnchanged": 0,
+                "alertsCreated": 2,
+                "alertFailureCount": 0,
+                "ratedReviews": 1,
+                "positiveCount": 0,
+                "neutralCount": 0,
+                "needsAttentionCount": 1,
+                "averageRating": 1
+              },
+              "oauthConnection": {
+                "provider": "google",
+                "connected": true,
+                "connectedAt": "2026-08-11T22:19:06.644Z",
+                "accountEmail": "review-qa@merxus.ai",
+                "accountName": "Merxus Review QA A",
+                "locationCount": 1,
+                "scopes": [
+                  "https://www.googleapis.com/auth/business.manage"
+                ],
+                "installationId": "voice__merxus-review-qa__google",
+                "syncReady": true
+              },
+              "history": [
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:18:48.904Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": null,
+                  "mode": "oauth",
+                  "previousMode": null,
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:18:52.586Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:18:55.526Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:18:58.364Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:19:00.862Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                },
+                {
+                  "action": "updated",
+                  "createdAt": "2026-08-11T22:19:02.882Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Review sync failed and was queued for retry (1)."
+                },
+                {
+                  "action": "updated",
+                  "createdAt": "2026-08-11T22:19:05.301Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Review sync failed and was queued for retry (2)."
+                },
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:19:08.159Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": "connected",
+                  "mode": "oauth",
+                  "previousMode": "oauth",
+                  "accountLabel": "Merxus Review QA A",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                }
+              ]
+            },
+            "accountCount": 1,
+            "locationsSynced": 1,
+            "reviewsFetched": 1,
+            "reviewsCreated": 1,
+            "reviewsUpdated": 0,
+            "reviewsUnchanged": 0,
+            "alertsCreated": 2,
+            "alertFailureCount": 0,
+            "ratingSummary": {
+              "ratedReviews": 1,
+              "averageRating": 1,
+              "positiveCount": 0,
+              "neutralCount": 0,
+              "needsAttentionCount": 1
+            }
+          },
+          "error": null,
+          "retry": null,
+          "assertions": [
+            {
+              "name": "phase outcome",
+              "passed": true,
+              "actual": "success",
+              "expected": "success"
+            },
+            {
+              "name": "reviewsFetched",
+              "passed": true,
+              "actual": 1,
+              "expected": 1
+            },
+            {
+              "name": "reviewsCreated",
+              "passed": true,
+              "actual": 1,
+              "expected": 1
+            },
+            {
+              "name": "run review record count",
+              "passed": true,
+              "actual": 1,
+              "expected": 1
+            },
+            {
+              "name": "negative review alert count",
+              "passed": true,
+              "actual": 1,
+              "expected": 1
+            },
+            {
+              "name": "review spike alert count",
+              "passed": false,
+              "actual": 1,
+              "expected": 0
+            },
+            {
+              "name": "normalized review -tenant-a",
+              "passed": true,
+              "actual": [
+                {
+                  "externalReviewId": "accounts/qa-account/locations/qa-location/reviews/review-qa-20260811221906-91f8dc-tenant-a",
+                  "rating": 1,
+                  "sentiment": "negative",
+                  "providerReplyStatus": "not_observed"
+                }
+              ],
+              "expected": {
+                "externalIdIncludes": "-tenant-a",
+                "rating": 1,
+                "sentiment": "negative"
+              }
+            },
+            {
+              "name": "production provider adapter boundary",
+              "passed": true,
+              "actual": [
+                "GET https://mybusinessaccountmanagement.googleapis.com/v1/accounts",
+                "GET https://mybusiness.googleapis.com/v4/accounts/qa-account/locations?pageSize=100",
+                "GET https://mybusiness.googleapis.com/v4/accounts/qa-account/locations/qa-location/reviews?pageSize=50&orderBy=updateTime+desc"
+              ],
+              "expected": "Google provider request"
+            },
+            {
+              "name": "provider writes",
+              "passed": true,
+              "actual": 0,
+              "expected": 0
+            },
+            {
+              "name": "canary metadata",
+              "passed": true,
+              "actual": [
+                {
+                  "isCanary": true,
+                  "runId": "review-qa-20260811221906-91f8dc",
+                  "scenarioId": "tenant-isolation",
+                  "fixtureVersion": 1
+                }
+              ],
+              "expected": {
+                "isCanary": true,
+                "runId": "review-qa-20260811221906-91f8dc",
+                "scenarioId": "tenant-isolation",
+                "fixtureVersion": 1
+              }
+            },
+            {
+              "name": "tenant scope",
+              "passed": true,
+              "actual": [
+                "merxus-review-qa"
+              ],
+              "expected": "workspace tenant matches"
+            },
+            {
+              "name": "no false automatic publish state",
+              "passed": true,
+              "actual": [
+                {
+                  "replyState": "none",
+                  "providerReplyStatus": "not_observed"
+                }
+              ],
+              "expected": "posted only when provider verified"
+            },
+            {
+              "name": "web/mobile review read model",
+              "passed": true,
+              "actual": 0,
+              "expected": 1
+            },
+            {
+              "name": "sync ledger",
+              "passed": true,
+              "actual": {
+                "status": "success",
+                "requestContext": {
+                  "mode": "review_canary",
+                  "reviewQaRunId": "review-qa-20260811221906-91f8dc",
+                  "scenarioId": "tenant-isolation",
+                  "phaseId": "tenant-a"
+                }
+              },
+              "expected": {
+                "status": "success",
+                "reviewQaRunId": "review-qa-20260811221906-91f8dc"
+              }
+            },
+            {
+              "name": "external notifications suppressed",
+              "passed": true,
+              "actual": [
+                {
+                  "channel": "email",
+                  "recipient": "blocked-customer@example.com",
+                  "success": null,
+                  "suppressed": true,
+                  "reason": "review_qa_external_notifications_disabled"
+                },
+                {
+                  "channel": "push",
+                  "recipient": "blocked-customer",
+                  "success": null,
+                  "suppressed": true,
+                  "reason": "review_qa_external_notifications_disabled"
+                },
+                {
+                  "channel": "sms",
+                  "recipient": "+15555550199",
+                  "success": null,
+                  "suppressed": true,
+                  "reason": "review_qa_external_notifications_disabled"
+                },
+                {
+                  "channel": "email",
+                  "recipient": "blocked-customer@example.com",
+                  "success": null,
+                  "suppressed": true,
+                  "reason": "review_qa_external_notifications_disabled"
+                },
+                {
+                  "channel": "push",
+                  "recipient": "blocked-customer",
+                  "success": null,
+                  "suppressed": true,
+                  "reason": "review_qa_external_notifications_disabled"
+                },
+                {
+                  "channel": "sms",
+                  "recipient": "+15555550199",
+                  "success": null,
+                  "suppressed": true,
+                  "reason": "review_qa_external_notifications_disabled"
+                }
+              ],
+              "expected": "all suppressed"
+            }
+          ]
+        },
+        {
+          "phaseId": "tenant-b",
+          "tenantId": "merxus-review-qa-isolation",
+          "syncRunId": "4HWflibX8XIC5112KXO7",
+          "result": {
+            "platform": "google",
+            "integration": {
+              "key": "google",
+              "label": "Google",
+              "description": "Google Business Profile reviews and local-search reputation.",
+              "status": "connected",
+              "supportsLiveOAuth": true,
+              "supportsLiveSync": true,
+              "health": "attention",
+              "healthLabel": "Invite Link Missing",
+              "actionRequired": "Add a public review link so positive feedback can be turned into review invites.",
+              "syncedReviewCount": 1,
+              "latestRunAt": null,
+              "latestRunStatus": null,
+              "lastSuccessfulSyncAt": "2026-08-11T22:19:10.049Z",
+              "latestSyncFailure": null,
+              "latestSyncFailureAt": null,
+              "recentSyncFailureCount": 0,
+              "consecutiveSyncFailures": 0,
+              "pendingRetryCount": 0,
+              "accountLabel": "Merxus Review QA B",
+              "connectedAt": "2026-08-11T22:19:10.575Z",
+              "disconnectedAt": null,
+              "lastSyncAt": "2026-08-11T22:19:10.049Z",
+              "lastUpdatedAt": "2026-08-11T22:19:10.575Z",
+              "lastUpdatedBy": {
+                "uid": "system:review-qa",
+                "email": null,
+                "name": "Merxus Review Canary"
+              },
+              "mode": "oauth",
+              "reviewLink": null,
+              "reviewLinkPresent": false,
+              "lastSyncStatus": "success",
+              "lastSyncFailure": null,
+              "lastSyncAttemptAt": "2026-08-11T22:19:10.049Z",
+              "nextScheduledSyncAt": null,
+              "syncRetryCount": 0,
+              "syncSummary": {
+                "reviewsFetched": 1,
+                "reviewsCreated": 1,
+                "reviewsUpdated": 0,
+                "locationsSynced": 1,
+                "reviewsUnchanged": 0,
+                "alertsCreated": 0,
+                "alertFailureCount": 0,
+                "ratedReviews": 1,
+                "positiveCount": 1,
+                "neutralCount": 0,
+                "needsAttentionCount": 0,
+                "averageRating": 5
+              },
+              "oauthConnection": {
+                "provider": "google",
+                "connected": true,
+                "connectedAt": "2026-08-11T22:19:09.306Z",
+                "accountEmail": "review-qa@merxus.ai",
+                "accountName": "Merxus Review QA B",
+                "locationCount": 1,
+                "scopes": [
+                  "https://www.googleapis.com/auth/business.manage"
+                ],
+                "installationId": "voice__merxus-review-qa-isolation__google",
+                "syncReady": true
+              },
+              "history": [
+                {
+                  "action": "sync_confirmed",
+                  "createdAt": "2026-08-11T22:19:10.575Z",
+                  "actor": {
+                    "uid": "system:review-qa",
+                    "email": null,
+                    "name": "Merxus Review Canary"
+                  },
+                  "status": "connected",
+                  "previousStatus": null,
+                  "mode": "oauth",
+                  "previousMode": null,
+                  "accountLabel": "Merxus Review QA B",
+                  "reviewLinkPresent": false,
+                  "previousReviewLinkPresent": false,
+                  "notes": "Google reviews synced successfully (1 fetched across 1 location)."
+                }
+              ]
+            },
+            "accountCount": 1,
+            "locationsSynced": 1,
+            "reviewsFetched": 1,
+            "reviewsCreated": 1,
+            "reviewsUpdated": 0,
+            "reviewsUnchanged": 0,
+            "alertsCreated": 0,
+            "alertFailureCount": 0,
+            "ratingSummary": {
+              "ratedReviews": 1,
+              "averageRating": 5,
+              "positiveCount": 1,
+              "neutralCount": 0,
+              "needsAttentionCount": 0
+            }
+          },
+          "error": null,
+          "retry": null,
+          "assertions": [
+            {
+              "name": "phase outcome",
+              "passed": true,
+              "actual": "success",
+              "expected": "success"
+            },
+            {
+              "name": "reviewsFetched",
+              "passed": true,
+              "actual": 1,
+              "expected": 1
+            },
+            {
+              "name": "reviewsCreated",
+              "passed": true,
+              "actual": 1,
+              "expected": 1
+            },
+            {
+              "name": "run review record count",
+              "passed": true,
+              "actual": 1,
+              "expected": 1
+            },
+            {
+              "name": "negative review alert count",
+              "passed": true,
+              "actual": 0,
+              "expected": 0
+            },
+            {
+              "name": "review spike alert count",
+              "passed": true,
+              "actual": 0,
+              "expected": 0
+            },
+            {
+              "name": "normalized review -tenant-b",
+              "passed": true,
+              "actual": [
+                {
+                  "externalReviewId": "accounts/qa-account/locations/qa-location/reviews/review-qa-20260811221906-91f8dc-tenant-b",
+                  "rating": 5,
+                  "sentiment": "positive",
+                  "providerReplyStatus": "not_observed"
+                }
+              ],
+              "expected": {
+                "externalIdIncludes": "-tenant-b",
+                "rating": 5,
+                "sentiment": "positive"
+              }
+            },
+            {
+              "name": "production provider adapter boundary",
+              "passed": true,
+              "actual": [
+                "GET https://mybusinessaccountmanagement.googleapis.com/v1/accounts",
+                "GET https://mybusiness.googleapis.com/v4/accounts/qa-account/locations?pageSize=100",
+                "GET https://mybusiness.googleapis.com/v4/accounts/qa-account/locations/qa-location/reviews?pageSize=50&orderBy=updateTime+desc"
+              ],
+              "expected": "Google provider request"
+            },
+            {
+              "name": "provider writes",
+              "passed": true,
+              "actual": 0,
+              "expected": 0
+            },
+            {
+              "name": "canary metadata",
+              "passed": true,
+              "actual": [
+                {
+                  "isCanary": true,
+                  "runId": "review-qa-20260811221906-91f8dc",
+                  "scenarioId": "tenant-isolation",
+                  "fixtureVersion": 1
+                }
+              ],
+              "expected": {
+                "isCanary": true,
+                "runId": "review-qa-20260811221906-91f8dc",
+                "scenarioId": "tenant-isolation",
+                "fixtureVersion": 1
+              }
+            },
+            {
+              "name": "tenant scope",
+              "passed": true,
+              "actual": [
+                "merxus-review-qa-isolation"
+              ],
+              "expected": "workspace tenant matches"
+            },
+            {
+              "name": "no false automatic publish state",
+              "passed": true,
+              "actual": [
+                {
+                  "replyState": "none",
+                  "providerReplyStatus": "not_observed"
+                }
+              ],
+              "expected": "posted only when provider verified"
+            },
+            {
+              "name": "web/mobile review read model",
+              "passed": true,
+              "actual": 0,
+              "expected": 1
+            },
+            {
+              "name": "sync ledger",
+              "passed": true,
+              "actual": {
+                "status": "success",
+                "requestContext": {
+                  "mode": "review_canary",
+                  "reviewQaRunId": "review-qa-20260811221906-91f8dc",
+                  "scenarioId": "tenant-isolation",
+                  "phaseId": "tenant-b"
+                }
+              },
+              "expected": {
+                "status": "success",
+                "reviewQaRunId": "review-qa-20260811221906-91f8dc"
+              }
+            }
+          ]
+        }
+      ],
+      "createdReviewIds": [
+        "google_merxus-review-qa-isolation_a69b5f25a3ae8895f3ac93778729abcb69d4a96c",
+        "google_merxus-review-qa_17341feabcac758331e35f84c59514ac4881dec6"
+      ],
+      "createdAlertIds": [
+        "Z0Bt4pxViusG6Oz3HMXN",
+        "nvuGaasH7zpSk7uZv3M8"
+      ],
+      "syncRunIds": [
+        "MCvyflYY1izegv0FICil",
+        "4HWflibX8XIC5112KXO7"
+      ]
+    }
+  ],
+  "cleanupResults": [
+    {
+      "dryRun": false,
+      "runId": "review-qa-20260811221845-ed5e38",
+      "deleted": 4,
+      "targets": [
+        {
+          "collection": "review_records",
+          "id": "google_merxus-review-qa_b7636470651b00e80b535077d6d6ab09b16bee13"
+        },
+        {
+          "collection": "notification_events",
+          "id": "1wVk5NkaSI8oKNaAL7Xs"
+        },
+        {
+          "collection": "review_sync_job_runs",
+          "id": "o58dO9mBdC0UrK45Dwuj"
+        },
+        {
+          "collection": "review_sync_job_runs",
+          "id": "NPDy7kiKNom41nXIyMcX"
+        }
+      ]
+    },
+    {
+      "dryRun": false,
+      "runId": "review-qa-20260811221853-ae8fc4",
+      "deleted": 2,
+      "targets": [
+        {
+          "collection": "review_records",
+          "id": "google_merxus-review-qa_942d0044c893b771ceaa28f5c950f35e5b13d6d0"
+        },
+        {
+          "collection": "review_sync_job_runs",
+          "id": "HOU6PJToeHqlsLJGnTSr"
+        }
+      ]
+    },
+    {
+      "dryRun": false,
+      "runId": "review-qa-20260811221856-3067be",
+      "deleted": 3,
+      "targets": [
+        {
+          "collection": "review_records",
+          "id": "google_merxus-review-qa_447c014a3ae2f8fe8d20f140386f96cec1652ccc"
+        },
+        {
+          "collection": "notification_events",
+          "id": "r2TvPSwDrTbPbLtVz9du"
+        },
+        {
+          "collection": "review_sync_job_runs",
+          "id": "FRbLK2aQsE9PaJ4dQE2c"
+        }
+      ]
+    },
+    {
+      "dryRun": false,
+      "runId": "review-qa-20260811221859-e0dc95",
+      "deleted": 2,
+      "targets": [
+        {
+          "collection": "review_records",
+          "id": "google_merxus-review-qa_87d7ad6bd8d695e776f9ee16e06fb900408070b7"
+        },
+        {
+          "collection": "review_sync_job_runs",
+          "id": "eytxQ5mecrI0ICTtzxUa"
+        }
+      ]
+    },
+    {
+      "dryRun": false,
+      "runId": "review-qa-20260811221901-50fe77",
+      "deleted": 2,
+      "targets": [
+        {
+          "collection": "notification_events",
+          "id": "YcCIEy80q9ZX4hhnJZEx"
+        },
+        {
+          "collection": "review_sync_job_runs",
+          "id": "angpBuN6QLwsBX38fd93"
+        }
+      ]
+    },
+    {
+      "dryRun": false,
+      "runId": "review-qa-20260811221904-3bbe0e",
+      "deleted": 1,
+      "targets": [
+        {
+          "collection": "review_sync_job_runs",
+          "id": "0VlryaFXfXoUXmC5H8kc"
+        }
+      ]
+    },
+    {
+      "dryRun": false,
+      "runId": "review-qa-20260811221906-91f8dc",
+      "deleted": 8,
+      "targets": [
+        {
+          "collection": "review_records",
+          "id": "google_merxus-review-qa-isolation_a69b5f25a3ae8895f3ac93778729abcb69d4a96c"
+        },
+        {
+          "collection": "review_records",
+          "id": "google_merxus-review-qa_17341feabcac758331e35f84c59514ac4881dec6"
+        },
+        {
+          "collection": "notification_events",
+          "id": "Z0Bt4pxViusG6Oz3HMXN"
+        },
+        {
+          "collection": "notification_events",
+          "id": "nvuGaasH7zpSk7uZv3M8"
+        },
+        {
+          "collection": "review_sync_job_runs",
+          "id": "MCvyflYY1izegv0FICil"
+        },
+        {
+          "collection": "review_sync_job_runs",
+          "id": "4HWflibX8XIC5112KXO7"
+        }
+      ]
+    }
+  ]
+}

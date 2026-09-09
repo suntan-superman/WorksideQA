@@ -1,12 +1,12 @@
 {
   "platformVersion": "0.1.0-alpha",
-  "generatedAt": "2026-06-30T15:51:03.132Z",
+  "generatedAt": "2026-07-04T02:12:03.988Z",
   "products": [
     {
       "productKey": "anyryde",
       "productName": "AnyRyde",
-      "latestStartedAt": "2026-06-30T15:47:50.487Z",
-      "previousStartedAt": "2026-06-30T13:42:09.510Z",
+      "latestStartedAt": "2026-07-04T02:12:03.915Z",
+      "previousStartedAt": "2026-07-04T02:12:03.856Z",
       "statusBefore": "PASS",
       "statusAfter": "PASS",
       "readinessBefore": 100,
@@ -21,8 +21,8 @@
     {
       "productKey": "merxus",
       "productName": "Merxus",
-      "latestStartedAt": "2026-06-30T15:47:50.487Z",
-      "previousStartedAt": "2026-06-30T13:42:09.510Z",
+      "latestStartedAt": "2026-07-04T02:12:03.915Z",
+      "previousStartedAt": "2026-07-04T02:12:03.856Z",
       "statusBefore": "PASS",
       "statusAfter": "PASS",
       "readinessBefore": 100,
@@ -37,8 +37,8 @@
     {
       "productKey": "radiusiq",
       "productName": "RadiusIQ",
-      "latestStartedAt": "2026-06-30T15:47:50.487Z",
-      "previousStartedAt": "2026-06-30T13:42:09.510Z",
+      "latestStartedAt": "2026-07-04T02:12:03.915Z",
+      "previousStartedAt": "2026-07-04T02:12:03.856Z",
       "statusBefore": "PASS",
       "statusAfter": "PASS",
       "readinessBefore": 100,
@@ -53,8 +53,8 @@
     {
       "productKey": "route-logistics",
       "productName": "Route Logistics",
-      "latestStartedAt": "2026-06-30T15:47:50.487Z",
-      "previousStartedAt": "2026-06-30T13:42:09.510Z",
+      "latestStartedAt": "2026-07-04T02:12:03.915Z",
+      "previousStartedAt": "2026-07-04T02:12:03.856Z",
       "statusBefore": "PASS",
       "statusAfter": "PASS",
       "readinessBefore": 100,
@@ -69,8 +69,8 @@
     {
       "productKey": "sageset",
       "productName": "SageSet",
-      "latestStartedAt": "2026-06-30T15:47:50.487Z",
-      "previousStartedAt": "2026-06-30T13:42:09.510Z",
+      "latestStartedAt": "2026-07-04T02:12:03.915Z",
+      "previousStartedAt": "2026-07-04T02:12:03.856Z",
       "statusBefore": "PASS",
       "statusAfter": "PASS",
       "readinessBefore": 100,
@@ -85,8 +85,8 @@
     {
       "productKey": "support-console",
       "productName": "Workside Support Console",
-      "latestStartedAt": "2026-06-30T15:47:50.487Z",
-      "previousStartedAt": "2026-06-30T13:42:09.510Z",
+      "latestStartedAt": "2026-07-04T02:12:03.915Z",
+      "previousStartedAt": "2026-07-04T02:12:03.856Z",
       "statusBefore": "PASS",
       "statusAfter": "PASS",
       "readinessBefore": 100,

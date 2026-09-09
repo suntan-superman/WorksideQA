@@ -27,9 +27,37 @@
       "submit": "#firebase-login-button"
     }
   },
+  "browserWorkflows": {
+    "workflow": {
+      "path": "products/support-console/workflows/workflow.js",
+      "dashboardRoute": "/",
+      "dashboardSelectors": ["text=Support", "text=Console", "text=Sessions"],
+      "safeScreenshot": {
+        "fullPage": false
+      },
+      "areas": [
+        {
+          "name": "support sessions",
+          "routes": ["/", "/sessions"],
+          "selectors": ["text=Sessions", "text=Support", "text=Console"]
+        },
+        {
+          "name": "tickets",
+          "routes": ["/tickets", "/"],
+          "selectors": ["text=Tickets", "text=Support", "text=Session"]
+        },
+        {
+          "name": "routing",
+          "routes": ["/routing", "/"],
+          "selectors": ["text=Routing", "text=Owner", "text=Support"]
+        }
+      ]
+    }
+  },
   "firebase": {
     "enabled": true,
-    "projectId": "workside-support-prod"
+    "projectId": "workside-support-prod",
+    "credentialFile": "workside.json"
   },
   "api": {
     "enabled": true,
@@ -63,6 +91,7 @@
   },
   "suites": {
     "smoke": ["load", "login", "ticket-list", "basic-navigation"],
+    "workflow": ["workflow", "performance"],
     "regression": ["login", "ticket-list", "ticket-detail", "owner-routing"],
     "release": ["smoke", "api", "firebase", "accessibility", "performance"]
   },
