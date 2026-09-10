@@ -91,4 +91,3 @@ tags:
     text: '^1\. @maestro_a\s+0$'
 - assertNotVisible:
     text: '^[0-9]+\. @maestro_b\s+[0-9]+$'
-

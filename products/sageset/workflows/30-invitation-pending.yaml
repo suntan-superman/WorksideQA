@@ -63,4 +63,3 @@ tags:
     id: social.invitation.maestro-invitation.decline
 - assertVisible:
     text: '^@maestro_a invited you to Maestro Group\.$'
-

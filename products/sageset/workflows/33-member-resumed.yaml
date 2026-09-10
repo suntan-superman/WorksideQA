@@ -55,4 +55,3 @@ tags:
     text: '^1\. @maestro_b\s+5$'
 - assertVisible:
     text: '^Eligible saved AR progress · Not SageSet Verified$'
-

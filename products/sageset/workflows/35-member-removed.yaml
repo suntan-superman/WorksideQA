@@ -61,4 +61,3 @@ tags:
     text: '^[0-9]+\. @maestro_b\s+[0-9]+$'
 - assertVisible:
     text: '^Eligible saved AR progress · Not SageSet Verified$'
-
