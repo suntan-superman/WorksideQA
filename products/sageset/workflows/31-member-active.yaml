@@ -85,6 +85,12 @@ tags:
     text: '^Group: Maestro Group$'
 - assertVisible:
     text: '^0 / 20 reps$'
+- scrollUntilVisible:
+    element:
+      text: '^Eligible saved AR progress · Not SageSet Verified$'
+    direction: DOWN
+    timeout: 30000
+    visibilityPercentage: 80
 - assertVisible:
     text: '^Eligible saved AR progress · Not SageSet Verified$'
 - assertVisible:
