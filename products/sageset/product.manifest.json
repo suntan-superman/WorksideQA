@@ -101,6 +101,42 @@
   },
   "mobile": {
     "enabled": true,
+    "orchestrationAuthority": "worksideqa",
+    "appId": "com.workside.sageset",
+    "applicationSourceEnvKey": "SAGESET_MOBILE_REPO",
+    "environment": {
+      "name": "maestro",
+      "firebaseProjectId": "sageset-maestro-local",
+      "backend": "firebase-emulators",
+      "externalNotificationsAllowed": false,
+      "emulators": {
+        "auth": 9099,
+        "functions": 5001,
+        "firestore": 8080,
+        "storage": 9199
+      }
+    },
+    "fixtures": {
+      "owner": "sageset",
+      "command": "npm --prefix functions run reset:maestro-fixtures --",
+      "projectId": "sageset-maestro-local",
+      "scenarios": [
+        "clean",
+        "invitation-pending",
+        "member-active",
+        "member-paused",
+        "member-resumed",
+        "progress-recorded",
+        "member-removed"
+      ],
+      "credentialEnvKeys": {
+        "userAEmail": "SAGESET_MAESTRO_USER_A_EMAIL",
+        "userAPassword": "SAGESET_MAESTRO_USER_A_PASSWORD",
+        "userBEmail": "SAGESET_MAESTRO_USER_B_EMAIL",
+        "userBPassword": "SAGESET_MAESTRO_USER_B_PASSWORD",
+        "emailAllowlist": "SAGESET_MAESTRO_QA_EMAIL_ALLOWLIST"
+      }
+    },
     "flows": [
       {
         "name": "mobile-smoke",
@@ -109,8 +145,7 @@
       }
     ],
     "pushNotifications": {
-      "enabled": true,
-      "testTokenEnvKey": "SAGESET_PUSH_TEST_TOKEN"
+      "enabled": false
     }
   },
   "suites": {
