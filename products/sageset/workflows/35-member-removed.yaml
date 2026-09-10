@@ -8,7 +8,37 @@ tags:
   - emulator-only
 ---
 - launchApp:
-    clearState: false
+    clearState: true
+    clearKeychain: true
+- extendedWaitUntil:
+    visible:
+      id: screen.auth.welcome
+    timeout: 30000
+- tapOn:
+    id: auth.welcome.login
+- extendedWaitUntil:
+    visible:
+      id: screen.auth.login
+    timeout: 15000
+- tapOn:
+    id: auth.login.email
+- inputText:
+    text: ${SAGESET_MAESTRO_USER_A_EMAIL}
+    label: Enter deterministic QA User A email
+- tapOn:
+    id: auth.login.password
+- inputText:
+    text: ${SAGESET_MAESTRO_USER_A_PASSWORD}
+    label: Enter deterministic QA User A password
+- hideKeyboard
+- tapOn:
+    id: auth.login.submit
+    enabled: true
+- runFlow:
+    when:
+      visible: "Not Now"
+    commands:
+      - tapOn: "Not Now"
 - extendedWaitUntil:
     visible:
       id: screen.today.ready
@@ -55,9 +85,21 @@ tags:
     id: social.challenge.maestro-weekly-squats
 - assertVisible:
     text: '^Group: Maestro Group$'
+- scrollUntilVisible:
+    element:
+      text: '^Eligible saved AR progress · Not SageSet Verified$'
+    direction: DOWN
+    timeout: 30000
+    visibilityPercentage: 80
+- assertVisible:
+    text: '^Eligible saved AR progress · Not SageSet Verified$'
+- scrollUntilVisible:
+    element:
+      text: '^1\. @maestro_a\s+0$'
+    direction: DOWN
+    timeout: 30000
+    visibilityPercentage: 80
 - assertVisible:
     text: '^1\. @maestro_a\s+0$'
 - assertNotVisible:
     text: '^[0-9]+\. @maestro_b\s+[0-9]+$'
-- assertVisible:
-    text: '^Eligible saved AR progress · Not SageSet Verified$'
