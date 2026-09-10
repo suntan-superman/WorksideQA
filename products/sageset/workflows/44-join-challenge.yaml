@@ -67,12 +67,12 @@ tags:
     id: social.challenge.maestro-weekly-squats.action
 - extendedWaitUntil:
     visible:
-      text: '^Challenge joined$'
+      id: social.challenge.join-result
     timeout: 30000
 - assertVisible:
-    text: '^Challenge joined$'
+    id: social.challenge.join-result.title
 - tapOn:
-    text: '^OK$'
+    id: social.challenge.join-result.ok
 - scrollUntilVisible:
     element:
       id: social.challenge.maestro-weekly-squats.action
