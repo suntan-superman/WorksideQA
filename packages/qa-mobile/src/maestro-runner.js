@@ -25,6 +25,30 @@ function configuredCredentialKeys(mobile) {
   return unique(Object.values(mobile?.fixtures?.credentialEnvKeys || {}).filter(Boolean));
 }
 
+function validateFixtureConfiguration(mobile, productKey) {
+  const fixtures = mobile?.fixtures;
+  if (!fixtures) return null;
+  if (!productKey || fixtures.owner !== productKey) {
+    throw new Error("Each product must remain the owner of its Maestro fixture/reset implementation.");
+  }
+  if (!fixtures.command || !Array.isArray(fixtures.args) || fixtures.args.length === 0) {
+    throw new Error("Product fixtures must declare a command and argument array.");
+  }
+  if (!Array.isArray(fixtures.scenarios) || fixtures.scenarios.length === 0) {
+    throw new Error("Product fixtures must declare at least one supported scenario.");
+  }
+  if (unique(fixtures.scenarios).length !== fixtures.scenarios.length) {
+    throw new Error("Product fixture scenario names must be unique.");
+  }
+  if (!mobile.applicationSourceEnvKey) {
+    throw new Error("mobile.applicationSourceEnvKey is required for fixture orchestration.");
+  }
+  if (configuredCredentialKeys(mobile).length === 0) {
+    throw new Error("Product fixture credential environment keys are required.");
+  }
+  return fixtures;
+}
+
 function collectEnvironmentReferences(source) {
   return unique([...source.matchAll(/\$\{([A-Z][A-Z0-9_]*)\}/g)].map((match) => match[1]));
 }
@@ -110,6 +134,8 @@ function validateMaestroConfiguration(config) {
     throw new Error("The Maestro Firebase project must not match the product's production Firebase project.");
   }
 
+  const fixtures = validateFixtureConfiguration(mobile, config.key);
+
   const maestro = mobile.maestro;
   if (!maestro?.reportDirectory || path.isAbsolute(maestro.reportDirectory) || maestro.reportDirectory.includes("..")) {
     throw new Error("mobile.maestro.reportDirectory must be a repository-relative path without parent traversal.");
@@ -124,6 +150,14 @@ function validateMaestroConfiguration(config) {
   const flows = (mobile.flows || []).map((flow) => validateFlowFile(flow, mobile));
   const flowNames = flows.map((flow) => flow.name);
   if (unique(flowNames).length !== flowNames.length) throw new Error("Maestro flow names must be unique.");
+  for (const flow of flows) {
+    if (flow.fixtureScenario && !fixtures) {
+      throw new Error(`Flow ${flow.name} declares a fixture scenario without product-owned fixture configuration.`);
+    }
+    if (flow.fixtureScenario && !fixtures.scenarios.includes(flow.fixtureScenario)) {
+      throw new Error(`Flow ${flow.name} references unsupported fixture scenario ${flow.fixtureScenario}.`);
+    }
+  }
 
   for (const [suiteName, suiteFlows] of Object.entries(maestro.suites || {})) {
     if (!Array.isArray(suiteFlows) || suiteFlows.length === 0) {
@@ -137,6 +171,62 @@ function validateMaestroConfiguration(config) {
   }
 
   return { mobile, maestro, flows };
+}
+
+function buildFixtureResetPlan(validated, flow, environment = process.env) {
+  if (!flow.fixtureScenario) return null;
+  const { mobile } = validated;
+  const fixtures = mobile.fixtures;
+  const sourceKey = mobile.applicationSourceEnvKey;
+  const configuredSource = String(environment[sourceKey] || "").trim();
+  if (!configuredSource) {
+    throw new Error(`Missing ${sourceKey}; set it to the local SageSet/mobile repository before running ${flow.name}.`);
+  }
+
+  let sourceDirectory;
+  try {
+    sourceDirectory = fs.realpathSync(configuredSource);
+  } catch {
+    throw new Error(`${sourceKey} does not resolve to a readable directory: ${configuredSource}`);
+  }
+  const functionsPackage = path.join(sourceDirectory, "functions", "package.json");
+  if (!fileExists(functionsPackage)) {
+    throw new Error(`${sourceKey} must point to SageSet/mobile (missing functions/package.json at ${sourceDirectory}).`);
+  }
+
+  const credentialValues = {};
+  for (const key of configuredCredentialKeys(mobile)) {
+    const value = environment[key];
+    if (!value) throw new Error(`Missing required SageSet fixture environment variable: ${key}`);
+    credentialValues[key] = value;
+  }
+
+  const emulatorPorts = mobile.environment.emulators || {};
+  const fixtureEnvironment = {
+    ...environment,
+    ...credentialValues,
+    SAGESET_MAESTRO_ENVIRONMENT: "emulator",
+    SAGESET_MAESTRO_FIREBASE_PROJECT_ID: mobile.environment.firebaseProjectId,
+    SAGESET_MAESTRO_ALLOW_EXTERNAL_NOTIFICATIONS: "false",
+    FIREBASE_AUTH_EMULATOR_HOST: `127.0.0.1:${emulatorPorts.auth}`,
+    FIRESTORE_EMULATOR_HOST: `127.0.0.1:${emulatorPorts.firestore}`,
+    FIREBASE_STORAGE_EMULATOR_HOST: `127.0.0.1:${emulatorPorts.storage}`,
+    GCLOUD_PROJECT: mobile.environment.firebaseProjectId,
+  };
+
+  return {
+    command: fixtures.command,
+    args: [
+      ...fixtures.args,
+      "--scenario",
+      flow.fixtureScenario,
+      "--apply",
+      "--confirm-reset",
+    ],
+    cwd: sourceDirectory,
+    env: fixtureEnvironment,
+    secretValues: Object.values(credentialValues).sort((left, right) => right.length - left.length),
+  };
 }
 
 function selectFlows(validated, options = {}) {
@@ -241,12 +331,22 @@ async function runMaestroFlows(config, options = {}) {
   const results = [];
   for (const flow of selected) {
     const environmentValues = requireFlowEnvironment(flow);
-    const secretValues = Object.values(environmentValues).sort((left, right) => right.length - left.length);
     const flowDirectory = ensureDir(path.join(runDirectory, flow.name));
     const artifactDirectory = ensureDir(path.join(flowDirectory, "artifacts"));
     const junitPath = path.join(flowDirectory, "junit.xml");
     const logPath = path.join(flowDirectory, "runner.log");
     const logStream = fs.createWriteStream(logPath, { flags: "a" });
+    let fixturePlan;
+    try {
+      fixturePlan = buildFixtureResetPlan(validated, flow);
+    } catch (error) {
+      logStream.end();
+      throw new Error(`FIXTURE SETUP FAILED: ${flow.name}\n${error.message}`);
+    }
+    const secretValues = unique([
+      ...Object.values(environmentValues),
+      ...(fixturePlan?.secretValues || []),
+    ]).sort((left, right) => right.length - left.length);
     const relativeArtifacts = toPosixPath(path.relative(fromRoot(), artifactDirectory));
     const relativeJunit = toPosixPath(path.relative(fromRoot(), junitPath));
     const relativeFlow = toPosixPath(path.relative(fromRoot(), flow.path));
@@ -267,6 +367,19 @@ async function runMaestroFlows(config, options = {}) {
     console.log(`\n[Maestro] Running ${flow.name}`);
     let outcome;
     try {
+      if (fixturePlan) {
+        console.log(`[Fixture] Applying ${flow.fixtureScenario}`);
+        const fixtureOutcome = await runProcess(fixturePlan.command, fixturePlan.args, {
+          cwd: fixturePlan.cwd,
+          env: fixturePlan.env,
+          logStream,
+          secretValues,
+        });
+        if (fixtureOutcome.code !== 0) {
+          throw new Error(`SageSet fixture reset exited with ${fixtureOutcome.code ?? "unknown"}.`);
+        }
+        console.log(`[Fixture] Applied ${flow.fixtureScenario}`);
+      }
       outcome = await runProcess("maestro", args, {
         cwd: fromRoot(),
         env: runnerEnv,
@@ -301,9 +414,11 @@ async function runMaestroFlows(config, options = {}) {
 }
 
 module.exports = {
+  buildFixtureResetPlan,
   collectEnvironmentReferences,
   normalizeFlowName,
   runMaestroFlows,
   selectFlows,
+  validateFixtureConfiguration,
   validateMaestroConfiguration,
 };

@@ -1,0 +1,58 @@
+appId: com.workside.sageset
+name: SageSet paused group member state
+tags:
+  - sageset
+  - phase2
+  - social
+  - member-paused
+  - emulator-only
+---
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible:
+      id: screen.today.ready
+    timeout: 45000
+- tapOn:
+    id: tab.challenges
+- extendedWaitUntil:
+    visible:
+      id: screen.challenges.ready
+    timeout: 45000
+- tapOn:
+    id: challenges.groups.open
+- extendedWaitUntil:
+    visible:
+      id: screen.social-challenges.ready
+    timeout: 45000
+- scrollUntilVisible:
+    element:
+      id: social.group.maestro-group
+    direction: DOWN
+    timeout: 30000
+    visibilityPercentage: 60
+- assertVisible:
+    id: social.group.maestro-group
+- tapOn:
+    id: social.group.maestro-group.members
+- assertVisible:
+    id: social.member.maestro_b.resume
+- assertNotVisible:
+    id: social.member.maestro_b.pause
+- assertVisible:
+    text: '^@maestro_b$'
+- scrollUntilVisible:
+    element:
+      id: social.challenge.maestro-weekly-squats
+    direction: DOWN
+    timeout: 30000
+    visibilityPercentage: 60
+- assertVisible:
+    id: social.challenge.maestro-weekly-squats
+- assertVisible:
+    text: '^Group: Maestro Group$'
+- assertVisible:
+    text: '^1\. @maestro_b\s+5$'
+- assertVisible:
+    text: '^Eligible saved AR progress · Not SageSet Verified$'
+

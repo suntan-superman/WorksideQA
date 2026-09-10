@@ -1,0 +1,44 @@
+appId: com.workside.sageset
+name: SageSet recorded social challenge progress
+tags:
+  - sageset
+  - phase2
+  - social
+  - progress-recorded
+  - emulator-only
+---
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible:
+      id: screen.today.ready
+    timeout: 45000
+- tapOn:
+    id: tab.challenges
+- extendedWaitUntil:
+    visible:
+      id: screen.challenges.ready
+    timeout: 45000
+- tapOn:
+    id: challenges.groups.open
+- extendedWaitUntil:
+    visible:
+      id: screen.social-challenges.ready
+    timeout: 45000
+- scrollUntilVisible:
+    element:
+      id: social.challenge.maestro-weekly-squats
+    direction: DOWN
+    timeout: 30000
+    visibilityPercentage: 60
+- assertVisible:
+    id: social.challenge.maestro-weekly-squats
+- assertVisible:
+    text: '^Group: Maestro Group$'
+- assertVisible:
+    text: '^1\. @maestro_b\s+10$'
+- assertVisible:
+    text: '^Eligible saved AR progress · Not SageSet Verified$'
+- assertNotVisible:
+    text: '^SageSet Verified results only$'
+

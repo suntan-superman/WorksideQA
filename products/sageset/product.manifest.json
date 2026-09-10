@@ -119,7 +119,14 @@
     },
     "fixtures": {
       "owner": "sageset",
-      "command": "npm --prefix functions run reset:maestro-fixtures --",
+      "command": "npm",
+      "args": [
+        "--prefix",
+        "functions",
+        "run",
+        "reset:maestro-fixtures",
+        "--"
+      ],
       "projectId": "sageset-maestro-local",
       "scenarios": [
         "clean",
@@ -165,6 +172,54 @@
         "path": "products/sageset/workflows/20-groups-challenges.yaml",
         "requiredEnv": [],
         "runByDefault": false
+      },
+      {
+        "name": "30-invitation-pending",
+        "path": "products/sageset/workflows/30-invitation-pending.yaml",
+        "fixtureScenario": "invitation-pending",
+        "requiredEnv": [
+          "SAGESET_MAESTRO_USER_B_EMAIL",
+          "SAGESET_MAESTRO_USER_B_PASSWORD"
+        ],
+        "runByDefault": false
+      },
+      {
+        "name": "31-member-active",
+        "path": "products/sageset/workflows/31-member-active.yaml",
+        "fixtureScenario": "member-active",
+        "requiredEnv": [
+          "SAGESET_MAESTRO_USER_A_EMAIL",
+          "SAGESET_MAESTRO_USER_A_PASSWORD"
+        ],
+        "runByDefault": false
+      },
+      {
+        "name": "32-member-paused",
+        "path": "products/sageset/workflows/32-member-paused.yaml",
+        "fixtureScenario": "member-paused",
+        "requiredEnv": [],
+        "runByDefault": false
+      },
+      {
+        "name": "33-member-resumed",
+        "path": "products/sageset/workflows/33-member-resumed.yaml",
+        "fixtureScenario": "member-resumed",
+        "requiredEnv": [],
+        "runByDefault": false
+      },
+      {
+        "name": "34-progress-recorded",
+        "path": "products/sageset/workflows/34-progress-recorded.yaml",
+        "fixtureScenario": "progress-recorded",
+        "requiredEnv": [],
+        "runByDefault": false
+      },
+      {
+        "name": "35-member-removed",
+        "path": "products/sageset/workflows/35-member-removed.yaml",
+        "fixtureScenario": "member-removed",
+        "requiredEnv": [],
+        "runByDefault": false
       }
     ],
     "maestro": {
@@ -176,6 +231,14 @@
           "01-login-smoke",
           "10-gamification-progression",
           "20-groups-challenges"
+        ],
+        "phase2": [
+          "30-invitation-pending",
+          "31-member-active",
+          "32-member-paused",
+          "33-member-resumed",
+          "34-progress-recorded",
+          "35-member-removed"
         ]
       }
     },

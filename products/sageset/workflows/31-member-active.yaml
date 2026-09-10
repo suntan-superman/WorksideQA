@@ -1,0 +1,94 @@
+appId: com.workside.sageset
+name: SageSet active group member state
+tags:
+  - sageset
+  - phase2
+  - social
+  - member-active
+  - emulator-only
+---
+- launchApp:
+    clearState: true
+    clearKeychain: true
+- extendedWaitUntil:
+    visible:
+      id: screen.auth.welcome
+    timeout: 30000
+- tapOn:
+    id: auth.welcome.login
+- extendedWaitUntil:
+    visible:
+      id: screen.auth.login
+    timeout: 15000
+- tapOn:
+    id: auth.login.email
+- inputText:
+    text: ${SAGESET_MAESTRO_USER_A_EMAIL}
+    label: Enter deterministic QA User A email
+- tapOn:
+    id: auth.login.password
+- inputText:
+    text: ${SAGESET_MAESTRO_USER_A_PASSWORD}
+    label: Enter deterministic QA User A password
+- hideKeyboard
+- tapOn:
+    id: auth.login.submit
+    enabled: true
+- runFlow:
+    when:
+      visible: "Not Now"
+    commands:
+      - tapOn: "Not Now"
+- extendedWaitUntil:
+    visible:
+      id: screen.today.ready
+    timeout: 45000
+- tapOn:
+    id: tab.challenges
+- extendedWaitUntil:
+    visible:
+      id: screen.challenges.ready
+    timeout: 45000
+- tapOn:
+    id: challenges.groups.open
+- extendedWaitUntil:
+    visible:
+      id: screen.social-challenges.ready
+    timeout: 45000
+- scrollUntilVisible:
+    element:
+      id: social.group.maestro-group
+    direction: DOWN
+    timeout: 30000
+    visibilityPercentage: 60
+- assertVisible:
+    id: social.group.maestro-group
+- tapOn:
+    id: social.group.maestro-group.members
+- assertVisible:
+    id: social.member.maestro_b.pause
+- assertNotVisible:
+    id: social.member.maestro_b.resume
+- assertVisible:
+    text: '^@maestro_a \(you\)$'
+- assertVisible:
+    text: '^@maestro_b$'
+- scrollUntilVisible:
+    element:
+      id: social.challenge.maestro-weekly-squats
+    direction: DOWN
+    timeout: 30000
+    visibilityPercentage: 60
+- assertVisible:
+    id: social.challenge.maestro-weekly-squats
+- assertVisible:
+    text: '^Group: Maestro Group$'
+- assertVisible:
+    text: '^0 / 20 reps$'
+- assertVisible:
+    text: '^Eligible saved AR progress · Not SageSet Verified$'
+- assertVisible:
+    text: '^1\. @maestro_a\s+0$'
+- assertNotVisible:
+    text: '^[0-9]+\. @maestro_b\s+[0-9]+$'
+

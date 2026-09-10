@@ -14,6 +14,8 @@
     "qa:sageset:maestro": "node packages/qa-mobile/src/maestro-cli.js --product sageset",
     "qa:sageset:maestro:phase1": "node packages/qa-mobile/src/maestro-cli.js --product sageset --suite phase1",
     "qa:sageset:maestro:validate": "node packages/qa-mobile/src/maestro-cli.js --product sageset --suite phase1 --validate",
+    "qa:sageset:maestro:phase2": "node packages/qa-mobile/src/maestro-cli.js --product sageset --suite phase2",
+    "qa:sageset:maestro:phase2:validate": "node packages/qa-mobile/src/maestro-cli.js --product sageset --suite phase2 --validate",
     "test:mobile": "node packages/qa-mobile/test/maestro-runner.test.js",
     "qa:all": "node packages/qa-core/src/cli.js --all --suite smoke",
     "qa:radiusiq:workflow": "node packages/qa-core/src/cli.js --product radiusiq --suite workflow --start-server",
