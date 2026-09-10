@@ -32,14 +32,14 @@ tags:
 - tapOn:
     id: auth.login.submit
     enabled: true
-- extendedWaitUntil:
-    visible:
-      id: screen.today.ready
-    timeout: 45000
 - runFlow:
     when:
       visible: "Not Now"
     commands:
       - tapOn: "Not Now"
+- extendedWaitUntil:
+    visible:
+      id: screen.today.ready
+    timeout: 45000
 - assertVisible:
     id: screen.today.ready
