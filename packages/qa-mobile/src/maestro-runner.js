@@ -46,6 +46,18 @@ function validateFixtureConfiguration(mobile, productKey) {
   if (configuredCredentialKeys(mobile).length === 0) {
     throw new Error("Product fixture credential environment keys are required.");
   }
+  if (fixtures.verification) {
+    const verification = fixtures.verification;
+    if (!verification.command || !Array.isArray(verification.args) || verification.args.length === 0) {
+      throw new Error("Backend verification must declare a command and argument array.");
+    }
+    if (!Array.isArray(verification.mutations) || verification.mutations.length === 0) {
+      throw new Error("Backend verification must declare supported mutations.");
+    }
+    if (unique(verification.mutations).length !== verification.mutations.length) {
+      throw new Error("Backend verification mutation names must be unique.");
+    }
+  }
   return fixtures;
 }
 
@@ -157,6 +169,25 @@ function validateMaestroConfiguration(config) {
     if (flow.fixtureScenario && !fixtures.scenarios.includes(flow.fixtureScenario)) {
       throw new Error(`Flow ${flow.name} references unsupported fixture scenario ${flow.fixtureScenario}.`);
     }
+    if (flow.backendVerification) {
+      if (!flow.fixtureScenario) {
+        throw new Error(`Flow ${flow.name} must declare a fixture scenario before backend verification.`);
+      }
+      if (!fixtures.verification?.mutations?.includes(flow.backendVerification)) {
+        throw new Error(`Flow ${flow.name} references unsupported backend verification ${flow.backendVerification}.`);
+      }
+      if (!["user-a", "user-b"].includes(flow.account)) {
+        throw new Error(`Flow ${flow.name} must declare account user-a or user-b.`);
+      }
+      const accountPrefix = flow.account === "user-a" ? "userA" : "userB";
+      const accountCredentialKeys = [
+        fixtures.credentialEnvKeys?.[`${accountPrefix}Email`],
+        fixtures.credentialEnvKeys?.[`${accountPrefix}Password`],
+      ];
+      if (accountCredentialKeys.some((key) => !key || !flow.requiredEnv?.includes(key))) {
+        throw new Error(`Flow ${flow.name} must declare the email and password environment keys for ${flow.account}.`);
+      }
+    }
   }
 
   for (const [suiteName, suiteFlows] of Object.entries(maestro.suites || {})) {
@@ -226,6 +257,21 @@ function buildFixtureResetPlan(validated, flow, environment = process.env) {
     cwd: sourceDirectory,
     env: fixtureEnvironment,
     secretValues: Object.values(credentialValues).sort((left, right) => right.length - left.length),
+  };
+}
+
+function buildBackendVerificationPlan(validated, flow, environment = process.env) {
+  if (!flow.backendVerification) return null;
+  const fixturePlan = buildFixtureResetPlan(validated, flow, environment);
+  const verification = validated.mobile.fixtures.verification;
+  return {
+    ...fixturePlan,
+    command: verification.command,
+    args: [
+      ...verification.args,
+      "--mutation",
+      flow.backendVerification,
+    ],
   };
 }
 
@@ -337,15 +383,31 @@ async function runMaestroFlows(config, options = {}) {
     const logPath = path.join(flowDirectory, "runner.log");
     const logStream = fs.createWriteStream(logPath, { flags: "a" });
     let fixturePlan;
+    let backendPlan;
     try {
       fixturePlan = buildFixtureResetPlan(validated, flow);
+      backendPlan = buildBackendVerificationPlan(validated, flow);
     } catch (error) {
+      const result = {
+        flow: flow.name,
+        status: "failed",
+        failureStage: "fixture-setup",
+        stages: {
+          fixture: { status: "failed", scenario: flow.fixtureScenario || null },
+          ui: { status: "not-run" },
+          backend: { status: "not-run", verification: flow.backendVerification || null },
+        },
+      };
+      results.push(result);
+      writeJson(path.join(flowDirectory, "result.json"), result);
+      writeJson(path.join(runDirectory, "summary.json"), { status: "failed", results });
       logStream.end();
       throw new Error(`FIXTURE SETUP FAILED: ${flow.name}\n${error.message}`);
     }
     const secretValues = unique([
       ...Object.values(environmentValues),
       ...(fixturePlan?.secretValues || []),
+      ...(backendPlan?.secretValues || []),
     ]).sort((left, right) => right.length - left.length);
     const relativeArtifacts = toPosixPath(path.relative(fromRoot(), artifactDirectory));
     const relativeJunit = toPosixPath(path.relative(fromRoot(), junitPath));
@@ -365,9 +427,9 @@ async function runMaestroFlows(config, options = {}) {
     ];
 
     console.log(`\n[Maestro] Running ${flow.name}`);
-    let outcome;
-    try {
-      if (fixturePlan) {
+    let fixtureStatus = fixturePlan ? "pending" : "skipped";
+    if (fixturePlan) {
+      try {
         console.log(`[Fixture] Applying ${flow.fixtureScenario}`);
         const fixtureOutcome = await runProcess(fixturePlan.command, fixturePlan.args, {
           cwd: fixturePlan.cwd,
@@ -378,8 +440,31 @@ async function runMaestroFlows(config, options = {}) {
         if (fixtureOutcome.code !== 0) {
           throw new Error(`SageSet fixture reset exited with ${fixtureOutcome.code ?? "unknown"}.`);
         }
+        fixtureStatus = "passed";
         console.log(`[Fixture] Applied ${flow.fixtureScenario}`);
+      } catch (error) {
+        const result = {
+          flow: flow.name,
+          status: "failed",
+          failureStage: "fixture",
+          stages: {
+            fixture: { status: "failed", scenario: flow.fixtureScenario || null },
+            ui: { status: "not-run" },
+            backend: { status: "not-run", verification: flow.backendVerification || null },
+          },
+          report: toPosixPath(path.relative(fromRoot(), junitPath)),
+          artifacts: relativeArtifacts,
+        };
+        results.push(result);
+        writeJson(path.join(flowDirectory, "result.json"), result);
+        writeJson(path.join(runDirectory, "summary.json"), { status: "failed", results });
+        logStream.end();
+        throw new Error(`FIXTURE FAILED: ${flow.name}\n${error.message}. See ${relativeArtifacts}.`);
       }
+    }
+
+    let outcome;
+    try {
       outcome = await runProcess("maestro", args, {
         cwd: fromRoot(),
         env: runnerEnv,
@@ -387,26 +472,103 @@ async function runMaestroFlows(config, options = {}) {
         secretValues,
       });
     } catch (error) {
+      const result = {
+        flow: flow.name,
+        status: "failed",
+        failureStage: "ui",
+        stages: {
+          fixture: { status: fixtureStatus, scenario: flow.fixtureScenario || null },
+          ui: { status: "failed" },
+          backend: { status: "not-run", verification: flow.backendVerification || null },
+        },
+        report: toPosixPath(path.relative(fromRoot(), junitPath)),
+        artifacts: relativeArtifacts,
+      };
+      results.push(result);
+      writeJson(path.join(flowDirectory, "result.json"), result);
+      writeJson(path.join(runDirectory, "summary.json"), { status: "failed", results });
       logStream.end();
-      throw new Error(`FAILED FLOW: ${flow.name}\n${error.message}`);
+      throw new Error(`UI FAILED: ${flow.name}\n${error.message}. See ${relativeArtifacts}.`);
     }
-    logStream.end();
+    if (outcome.code !== 0) {
+      const result = {
+        flow: flow.name,
+        status: "failed",
+        failureStage: "ui",
+        exitCode: outcome.code,
+        signal: outcome.signal || null,
+        stages: {
+          fixture: { status: fixtureStatus, scenario: flow.fixtureScenario || null },
+          ui: { status: "failed", exitCode: outcome.code },
+          backend: { status: "not-run", verification: flow.backendVerification || null },
+        },
+        report: toPosixPath(path.relative(fromRoot(), junitPath)),
+        artifacts: relativeArtifacts,
+      };
+      results.push(result);
+      writeJson(path.join(flowDirectory, "result.json"), result);
+      writeJson(path.join(runDirectory, "summary.json"), { status: "failed", results });
+      logStream.end();
+      throw new Error(`UI FAILED: ${flow.name} (exit ${outcome.code ?? "unknown"}). See ${relativeArtifacts}.`);
+    }
+
+    let backendStatus = backendPlan ? "pending" : "skipped";
+    if (backendPlan) {
+      console.log(`[Backend] Verifying ${flow.backendVerification}`);
+      let backendOutcome;
+      try {
+        backendOutcome = await runProcess(backendPlan.command, backendPlan.args, {
+          cwd: backendPlan.cwd,
+          env: backendPlan.env,
+          logStream,
+          secretValues,
+        });
+      } catch (error) {
+        backendOutcome = { code: null, signal: null, error };
+      }
+      if (backendOutcome.code !== 0) {
+        const result = {
+          flow: flow.name,
+          status: "failed",
+          failureStage: "backend",
+          exitCode: outcome.code,
+          backendExitCode: backendOutcome.code,
+          stages: {
+            fixture: { status: fixtureStatus, scenario: flow.fixtureScenario || null },
+            ui: { status: "passed", exitCode: outcome.code },
+            backend: { status: "failed", verification: flow.backendVerification, exitCode: backendOutcome.code },
+          },
+          report: toPosixPath(path.relative(fromRoot(), junitPath)),
+          artifacts: relativeArtifacts,
+        };
+        results.push(result);
+        writeJson(path.join(flowDirectory, "result.json"), result);
+        writeJson(path.join(runDirectory, "summary.json"), { status: "failed", results });
+        logStream.end();
+        const detail = backendOutcome.error ? ` ${backendOutcome.error.message}` : "";
+        throw new Error(`UI PASS / BACKEND FAIL: ${flow.name} (exit ${backendOutcome.code ?? "unknown"}).${detail} See ${relativeArtifacts}.`);
+      }
+      backendStatus = "passed";
+      console.log(`[Backend] Passed ${flow.backendVerification}`);
+    }
 
     const result = {
       flow: flow.name,
-      status: outcome.code === 0 ? "passed" : "failed",
+      status: "passed",
       exitCode: outcome.code,
       signal: outcome.signal || null,
+      stages: {
+        fixture: { status: fixtureStatus, scenario: flow.fixtureScenario || null },
+        ui: { status: "passed", exitCode: outcome.code },
+        backend: { status: backendStatus, verification: flow.backendVerification || null },
+      },
       report: toPosixPath(path.relative(fromRoot(), junitPath)),
       artifacts: relativeArtifacts,
     };
     results.push(result);
     writeJson(path.join(flowDirectory, "result.json"), result);
-    if (outcome.code !== 0) {
-      writeJson(path.join(runDirectory, "summary.json"), { status: "failed", results });
-      throw new Error(`FAILED FLOW: ${flow.name} (exit ${outcome.code ?? "unknown"}). See ${relativeArtifacts}.`);
-    }
-    console.log(`[Maestro] Passed ${flow.name}`);
+    logStream.end();
+    console.log(backendPlan ? `[Maestro] UI PASS / BACKEND PASS: ${flow.name}` : `[Maestro] Passed ${flow.name}`);
   }
 
   writeJson(path.join(runDirectory, "summary.json"), { status: "passed", results });
@@ -414,6 +576,7 @@ async function runMaestroFlows(config, options = {}) {
 }
 
 module.exports = {
+  buildBackendVerificationPlan,
   buildFixtureResetPlan,
   collectEnvironmentReferences,
   normalizeFlowName,

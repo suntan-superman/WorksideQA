@@ -127,6 +127,23 @@
         "reset:maestro-fixtures",
         "--"
       ],
+      "verification": {
+        "command": "npm",
+        "args": [
+          "--prefix",
+          "functions",
+          "run",
+          "verify:maestro-mutation",
+          "--"
+        ],
+        "mutations": [
+          "accept-invitation",
+          "pause-member",
+          "resume-member",
+          "remove-member",
+          "join-challenge"
+        ]
+      },
       "projectId": "sageset-maestro-local",
       "scenarios": [
         "clean",
@@ -232,6 +249,66 @@
           "SAGESET_MAESTRO_USER_A_PASSWORD"
         ],
         "runByDefault": false
+      },
+      {
+        "name": "40-accept-invitation",
+        "path": "products/sageset/workflows/40-accept-invitation.yaml",
+        "fixtureScenario": "invitation-pending",
+        "account": "user-b",
+        "backendVerification": "accept-invitation",
+        "requiredEnv": [
+          "SAGESET_MAESTRO_USER_B_EMAIL",
+          "SAGESET_MAESTRO_USER_B_PASSWORD"
+        ],
+        "runByDefault": false
+      },
+      {
+        "name": "41-pause-member",
+        "path": "products/sageset/workflows/41-pause-member.yaml",
+        "fixtureScenario": "member-active",
+        "account": "user-a",
+        "backendVerification": "pause-member",
+        "requiredEnv": [
+          "SAGESET_MAESTRO_USER_A_EMAIL",
+          "SAGESET_MAESTRO_USER_A_PASSWORD"
+        ],
+        "runByDefault": false
+      },
+      {
+        "name": "42-resume-member",
+        "path": "products/sageset/workflows/42-resume-member.yaml",
+        "fixtureScenario": "member-paused",
+        "account": "user-a",
+        "backendVerification": "resume-member",
+        "requiredEnv": [
+          "SAGESET_MAESTRO_USER_A_EMAIL",
+          "SAGESET_MAESTRO_USER_A_PASSWORD"
+        ],
+        "runByDefault": false
+      },
+      {
+        "name": "43-remove-member",
+        "path": "products/sageset/workflows/43-remove-member.yaml",
+        "fixtureScenario": "member-active",
+        "account": "user-a",
+        "backendVerification": "remove-member",
+        "requiredEnv": [
+          "SAGESET_MAESTRO_USER_A_EMAIL",
+          "SAGESET_MAESTRO_USER_A_PASSWORD"
+        ],
+        "runByDefault": false
+      },
+      {
+        "name": "44-join-challenge",
+        "path": "products/sageset/workflows/44-join-challenge.yaml",
+        "fixtureScenario": "member-active",
+        "account": "user-b",
+        "backendVerification": "join-challenge",
+        "requiredEnv": [
+          "SAGESET_MAESTRO_USER_B_EMAIL",
+          "SAGESET_MAESTRO_USER_B_PASSWORD"
+        ],
+        "runByDefault": false
       }
     ],
     "maestro": {
@@ -251,6 +328,13 @@
           "33-member-resumed",
           "34-progress-recorded",
           "35-member-removed"
+        ],
+        "phase3": [
+          "40-accept-invitation",
+          "41-pause-member",
+          "42-resume-member",
+          "43-remove-member",
+          "44-join-challenge"
         ]
       }
     },

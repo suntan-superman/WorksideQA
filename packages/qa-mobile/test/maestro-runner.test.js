@@ -4,6 +4,7 @@ const os = require("node:os");
 const path = require("node:path");
 const { loadProductManifest } = require("../../qa-config/src");
 const {
+  buildBackendVerificationPlan,
   buildFixtureResetPlan,
   collectEnvironmentReferences,
   selectFlows,
@@ -46,6 +47,21 @@ assert.deepEqual(
   ]
 );
 assert.deepEqual(
+  selectFlows(validated, { suite: "phase3" }).map((flow) => [
+    flow.name,
+    flow.fixtureScenario,
+    flow.account,
+    flow.backendVerification,
+  ]),
+  [
+    ["40-accept-invitation", "invitation-pending", "user-b", "accept-invitation"],
+    ["41-pause-member", "member-active", "user-a", "pause-member"],
+    ["42-resume-member", "member-paused", "user-a", "resume-member"],
+    ["43-remove-member", "member-active", "user-a", "remove-member"],
+    ["44-join-challenge", "member-active", "user-b", "join-challenge"],
+  ]
+);
+assert.deepEqual(
   collectEnvironmentReferences("${SAGESET_MAESTRO_USER_A_EMAIL} ${SAGESET_MAESTRO_USER_A_PASSWORD}"),
   ["SAGESET_MAESTRO_USER_A_EMAIL", "SAGESET_MAESTRO_USER_A_PASSWORD"]
 );
@@ -67,6 +83,14 @@ for (const mutate of [
   (value) => { value.mobile.fixtures.command = ""; },
   (value) => { value.mobile.fixtures.args = "reset:maestro-fixtures"; },
   (value) => { value.mobile.flows.find((flow) => flow.name === "30-invitation-pending").fixtureScenario = "unknown"; },
+  (value) => { value.mobile.fixtures.verification.command = ""; },
+  (value) => { value.mobile.fixtures.verification.args = "verify:maestro-mutation"; },
+  (value) => { value.mobile.fixtures.verification.mutations = []; },
+  (value) => { value.mobile.fixtures.verification.mutations.push("join-challenge"); },
+  (value) => { value.mobile.flows.find((flow) => flow.name === "40-accept-invitation").backendVerification = "unknown"; },
+  (value) => { value.mobile.flows.find((flow) => flow.name === "40-accept-invitation").fixtureScenario = undefined; },
+  (value) => { value.mobile.flows.find((flow) => flow.name === "40-accept-invitation").account = "admin"; },
+  (value) => { value.mobile.flows.find((flow) => flow.name === "40-accept-invitation").account = "user-a"; },
 ]) {
   const unsafeManifest = clone(manifest);
   mutate(unsafeManifest);
@@ -105,6 +129,25 @@ assert.equal(fixturePlan.env.SAGESET_MAESTRO_ALLOW_EXTERNAL_NOTIFICATIONS, "fals
 assert.equal(fixturePlan.env.FIREBASE_AUTH_EMULATOR_HOST, "127.0.0.1:9099");
 assert.equal(fixturePlan.env.FIRESTORE_EMULATOR_HOST, "127.0.0.1:8080");
 assert.equal(fixturePlan.env.FIREBASE_STORAGE_EMULATOR_HOST, "127.0.0.1:9199");
+const acceptFlow = selectFlows(validated, { flow: "40-accept-invitation" })[0];
+const verificationPlan = buildBackendVerificationPlan(validated, acceptFlow, fixtureEnv);
+assert.equal(verificationPlan.command, "npm");
+assert.deepEqual(verificationPlan.args, [
+  "--prefix",
+  "functions",
+  "run",
+  "verify:maestro-mutation",
+  "--",
+  "--mutation",
+  "accept-invitation",
+]);
+assert.equal(verificationPlan.cwd, fs.realpathSync(fixtureRoot));
+assert.equal(verificationPlan.env.SAGESET_MAESTRO_ENVIRONMENT, "emulator");
+assert.equal(verificationPlan.env.SAGESET_MAESTRO_FIREBASE_PROJECT_ID, "sageset-maestro-local");
+assert.equal(verificationPlan.env.SAGESET_MAESTRO_ALLOW_EXTERNAL_NOTIFICATIONS, "false");
+assert.equal(verificationPlan.env.FIREBASE_AUTH_EMULATOR_HOST, "127.0.0.1:9099");
+assert.equal(verificationPlan.env.FIRESTORE_EMULATOR_HOST, "127.0.0.1:8080");
+assert.equal(verificationPlan.env.FIREBASE_STORAGE_EMULATOR_HOST, "127.0.0.1:9199");
 assert.throws(
   () => buildFixtureResetPlan(validated, pendingFlow, { ...fixtureEnv, SAGESET_MOBILE_REPO: "" }),
   /Missing SAGESET_MOBILE_REPO/
@@ -113,7 +156,23 @@ assert.throws(
   () => buildFixtureResetPlan(validated, pendingFlow, { ...fixtureEnv, SAGESET_MAESTRO_USER_B_PASSWORD: "" }),
   /Missing required SageSet fixture environment variable/
 );
+assert.throws(
+  () => buildBackendVerificationPlan(validated, acceptFlow, { ...fixtureEnv, SAGESET_MOBILE_REPO: "" }),
+  /Missing SAGESET_MOBILE_REPO/
+);
+assert.throws(
+  () => buildBackendVerificationPlan(validated, acceptFlow, { ...fixtureEnv, SAGESET_MAESTRO_USER_A_PASSWORD: "" }),
+  /Missing required SageSet fixture environment variable/
+);
 assert.equal(buildFixtureResetPlan(validated, selectFlows(validated, { flow: "20-groups-challenges" })[0], {}), null);
+assert.equal(buildBackendVerificationPlan(validated, selectFlows(validated, { flow: "20-groups-challenges" })[0], {}), null);
+
+const runnerSource = fs.readFileSync(path.join(__dirname, "..", "src", "maestro-runner.js"), "utf8");
+assert.match(runnerSource, /failureStage: "fixture"/);
+assert.match(runnerSource, /failureStage: "ui"/);
+assert.match(runnerSource, /failureStage: "backend"/);
+assert.match(runnerSource, /UI PASS \/ BACKEND PASS/);
+assert.match(runnerSource, /UI PASS \/ BACKEND FAIL/);
 fs.rmSync(fixtureRoot, { recursive: true, force: true });
 
 console.log("SageSet Maestro runner contract verified.");

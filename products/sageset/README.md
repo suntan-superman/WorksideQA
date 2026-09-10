@@ -53,15 +53,14 @@ that state from Maestro:
 | --- | --- | --- | --- |
 | `30-invitation-pending` | `invitation-pending` | User B | Pending invitation, inviter, and group identity |
 | `31-member-active` | `member-active` | User A | Active group membership and initial challenge participants |
-| `32-member-paused` | `member-paused` | Reuses User A | Paused User B membership and retained challenge |
-| `33-member-resumed` | `member-resumed` | Reuses User A | Resumed User B membership and retained 5-rep progress |
-| `34-progress-recorded` | `progress-recorded` | Reuses User A | User B's 10 recorded reps and non-verified classification |
-| `35-member-removed` | `member-removed` | Reuses User A | User B absent while User A's group/challenge persists |
+| `32-member-paused` | `member-paused` | User A | Paused User B membership and retained challenge |
+| `33-member-resumed` | `member-resumed` | User A | Resumed User B membership and retained 5-rep progress |
+| `34-progress-recorded` | `progress-recorded` | User A | User B's 10 recorded reps and non-verified classification |
+| `35-member-removed` | `member-removed` | User A | User B absent while User A's group/challenge persists |
 
-The ordered suite intentionally logs in as User B for the incoming-invitation
-view, then clears app state and logs in as User A for the remaining lifecycle
-views. Later flows reuse User A's authenticated state. Run the complete ordered
-suite rather than an individual reuse-dependent flow on a fresh simulator.
+Every Phase 2 flow clears app state and establishes a fresh deterministic
+session after its fixture reset. No flow depends on an authentication session
+or state mutation from an earlier flow, so individual flows are safe to run.
 
 Before every Phase 2 flow, WorksideQA invokes SageSet's
 `reset:maestro-fixtures` npm script through `SAGESET_MOBILE_REPO`, passing the
@@ -107,3 +106,70 @@ Phase 2 navigation uses stable SageSet `testID` values. Exact text assertions
 are limited to deterministic fixture output (handles, group association,
 progress, leaderboard values, and the recorded/non-verified classification).
 No SageSet mobile selector change is required for this phase.
+
+## Maestro Phase 3
+
+Phase 3 performs real social actions through the SageSet QA UI and then asks a
+SageSet-owned verifier to assert the resulting Firestore emulator state:
+
+| Flow | Fixture | Account | UI mutation | Backend verification |
+| --- | --- | --- | --- | --- |
+| `40-accept-invitation` | `invitation-pending` | User B | Accept Maestro Group invitation | Invitation accepted; User B added and active; no challenge or unrelated record created |
+| `41-pause-member` | `member-active` | User A | Pause User B | User B paused but retained; group/challenge baseline preserved |
+| `42-resume-member` | `member-paused` | User A | Resume User B | User B active; membership, 5-rep progress, and prior contribution retained |
+| `43-remove-member` | `member-active` | User A | Remove User B | Membership/status/participation removed; User A and group retained |
+| `44-join-challenge` | `member-active` | User B | Join Maestro Weekly Squats | Participant created at zero; counts updated; no contribution or verified result created |
+
+The runner resets the declared fixture before every flow. Only after Maestro
+passes does it execute SageSet's `verify:maestro-mutation` command through
+`SAGESET_MOBILE_REPO`. The verifier requires the exact
+`sageset-maestro-local` project and loopback emulators and rejects external
+notifications. It never contains or accepts production fallback behavior.
+
+Each timestamped report directory contains the existing JUnit and Maestro
+artifacts plus per-flow `result.json` and a suite `summary.json`. Stage data
+distinguishes fixture setup/reset failures, Maestro UI failures, and backend
+verification failures. Successful mutation flows report
+`UI PASS / BACKEND PASS`; a mismatched emulator state reports
+`UI PASS / BACKEND FAIL` and fails the suite.
+
+Phase 3 uses stable IDs for every mutation action. SageSet adds member row and
+status IDs and, only in the fail-closed Maestro environment, an in-app member
+confirmation surface with stable confirm IDs. Normal production/device builds
+retain the native confirmation alerts and unchanged mutation behavior.
+
+Validate Phase 3 configuration, mappings, verifier contracts, and YAML on any
+platform:
+
+```sh
+npm run qa:sageset:maestro:phase3:validate
+npm run test:mobile
+```
+
+With the same fixture environment variables configured, the emulator stack
+running, and the current SageSet QA build installed, execute on macOS:
+
+```sh
+npm run qa:sageset:maestro:phase3
+```
+
+The QA app must be rebuilt and reinstalled once for the Phase 3 member row,
+status, and stable confirmation selectors to be present.
+
+### Deferred flow 45: record progress
+
+`45-record-progress` is intentionally not registered or executed. SageSet's QA
+simulator build does not compile the physical AR tracking implementation, and
+the current joined-challenge UI correctly shows `Tracking Unavailable`. There
+is no legitimate simulator-safe UI route for choosing and submitting a saved
+AR session. WorksideQA must not invent fixture mutation logic, call the backend
+directly as a substitute for a UI action, or create a fake SageSet Verified
+result.
+
+Before flow 45 can be added, SageSet must own a narrow QA-safe product seam that
+exposes a deterministic, already-saved eligible session through the normal
+record-progress UI and submits it through the production mutation contract.
+That seam must remain emulator-only, preserve recorded/not-verified
+classification, reject duplicate session submission, and keep all production
+AR behavior unchanged. WorksideQA can then orchestrate the flow and invoke a
+SageSet-owned post-mutation verifier.
