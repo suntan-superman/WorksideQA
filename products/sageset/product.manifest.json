@@ -103,6 +103,7 @@
     "enabled": true,
     "orchestrationAuthority": "worksideqa",
     "appId": "com.workside.sageset",
+    "productionAppId": "com.sageset.fitness",
     "applicationSourceEnvKey": "SAGESET_MOBILE_REPO",
     "environment": {
       "name": "maestro",
@@ -139,11 +140,45 @@
     },
     "flows": [
       {
-        "name": "mobile-smoke",
-        "path": "products/sageset/workflows/mobile-smoke.yaml",
+        "name": "00-launch-smoke",
+        "path": "products/sageset/workflows/00-launch-smoke.yaml",
+        "requiredEnv": [],
+        "runByDefault": false
+      },
+      {
+        "name": "01-login-smoke",
+        "path": "products/sageset/workflows/01-login-smoke.yaml",
+        "requiredEnv": [
+          "SAGESET_MAESTRO_USER_A_EMAIL",
+          "SAGESET_MAESTRO_USER_A_PASSWORD"
+        ],
+        "runByDefault": false
+      },
+      {
+        "name": "10-gamification-progression",
+        "path": "products/sageset/workflows/10-gamification-progression.yaml",
+        "requiredEnv": [],
+        "runByDefault": false
+      },
+      {
+        "name": "20-groups-challenges",
+        "path": "products/sageset/workflows/20-groups-challenges.yaml",
+        "requiredEnv": [],
         "runByDefault": false
       }
     ],
+    "maestro": {
+      "defaultSuite": "phase1",
+      "reportDirectory": "reports/mobile/sageset/maestro",
+      "suites": {
+        "phase1": [
+          "00-launch-smoke",
+          "01-login-smoke",
+          "10-gamification-progression",
+          "20-groups-challenges"
+        ]
+      }
+    },
     "pushNotifications": {
       "enabled": false
     }

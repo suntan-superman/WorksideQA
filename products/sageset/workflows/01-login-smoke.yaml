@@ -1,0 +1,40 @@
+appId: com.workside.sageset
+name: SageSet QA User A login smoke
+tags:
+  - sageset
+  - phase1
+  - authentication
+---
+- launchApp:
+    clearState: true
+    clearKeychain: true
+- extendedWaitUntil:
+    visible:
+      id: screen.auth.welcome
+    timeout: 30000
+- tapOn:
+    id: auth.welcome.login
+- extendedWaitUntil:
+    visible:
+      id: screen.auth.login
+    timeout: 15000
+- tapOn:
+    id: auth.login.email
+- inputText:
+    text: ${SAGESET_MAESTRO_USER_A_EMAIL}
+    label: Enter the QA User A email supplied by the runner
+- tapOn:
+    id: auth.login.password
+- inputText:
+    text: ${SAGESET_MAESTRO_USER_A_PASSWORD}
+    label: Enter the QA User A password supplied by the runner
+- hideKeyboard
+- tapOn:
+    id: auth.login.submit
+    enabled: true
+- extendedWaitUntil:
+    visible:
+      id: screen.today.ready
+    timeout: 45000
+- assertVisible:
+    id: screen.today.ready

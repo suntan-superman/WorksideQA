@@ -1,0 +1,15 @@
+appId: com.workside.sageset
+name: SageSet QA launch smoke
+tags:
+  - sageset
+  - phase1
+  - smoke
+---
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible:
+      id: 'screen\.(auth\.(welcome|login)|today\.ready)'
+    timeout: 30000
+- assertVisible:
+    id: 'screen\.(auth\.(welcome|login)|today\.ready)'

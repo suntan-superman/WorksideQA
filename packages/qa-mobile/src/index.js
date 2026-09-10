@@ -1,2 +1,4 @@
-module.exports = require("./mobile-runner");
-
+module.exports = {
+  ...require("./mobile-runner"),
+  ...require("./maestro-runner"),
+};

@@ -1,0 +1,52 @@
+appId: com.workside.sageset
+name: SageSet deterministic progression smoke
+tags:
+  - sageset
+  - phase1
+  - gamification
+---
+- launchApp:
+    clearState: false
+- extendedWaitUntil:
+    visible:
+      id: screen.today.ready
+    timeout: 45000
+- scrollUntilVisible:
+    element:
+      id: gamification.progression.open
+    direction: DOWN
+    timeout: 30000
+    speed: 40
+    visibilityPercentage: 80
+- tapOn:
+    id: gamification.progression.open
+- extendedWaitUntil:
+    visible:
+      id: gamification.progression.score
+    timeout: 45000
+- assertVisible:
+    id: screen.gamification.progression
+- assertVisible:
+    id: gamification.progression.score
+- assertVisible:
+    text: '^100$'
+- scrollUntilVisible:
+    element:
+      id: gamification.progression.xp
+    direction: DOWN
+    timeout: 20000
+    visibilityPercentage: 70
+- assertVisible:
+    id: gamification.progression.xp
+- assertVisible:
+    text: '^400 lifetime XP$'
+- scrollUntilVisible:
+    element:
+      id: gamification.progression.achievements
+    direction: DOWN
+    timeout: 30000
+    visibilityPercentage: 60
+- assertVisible:
+    id: gamification.progression.achievements
+- assertVisible:
+    text: '^First Workout$'
