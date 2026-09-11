@@ -173,3 +173,47 @@ That seam must remain emulator-only, preserve recorded/not-verified
 classification, reject duplicate session submission, and keep all production
 AR behavior unchanged. WorksideQA can then orchestrate the flow and invoke a
 SageSet-owned post-mutation verifier.
+
+## Maestro Phase 4
+
+Phase 4 proves rejected, cancelled, duplicate, and recoverable operations do
+not corrupt deterministic social/gamification state:
+
+| Flow | Fixture | Account | Negative behavior |
+| --- | --- | --- | --- |
+| `50-invalid-login-recovery` | `clean` | User A | Wrong password is rejected, then the correct login succeeds |
+| `51-cancel-member-pause` | `member-active` | User A | Cancelling pause leaves User B active |
+| `52-cancel-member-remove` | `member-active` | User A | Cancelling removal preserves User B |
+| `53-paused-member-cannot-join` | `member-paused` | User B | Paused membership exposes a disabled challenge action |
+| `54-duplicate-challenge-join` | `member-resumed` | User B | Existing participation cannot issue another join |
+| `55-duplicate-invitation-accept` | `member-active` | User B | Accepted invitation no longer exposes an Accept action |
+| `56-unauthorized-member-management` | `member-active` | User B | Non-owner cannot see owner-only member controls |
+| `57-backend-error-recovery` | `backend-error-once` | User A | One deterministic dashboard failure is recoverable by retry |
+
+Every flow receives an independent fixture reset and fresh login. After the UI
+passes, WorksideQA invokes SageSet's `verify:maestro-negative` command. A
+backend pass means the prohibited mutation did not occur and fixture ownership,
+membership, participant counts, contributions, and zero-verified-result state
+remain correct. Reports distinguish `FIXTURE FAIL`, `UI NEGATIVE-PATH FAIL`,
+and `UI PASS / BACKEND NON-MUTATION FAIL`.
+
+The `backend-error-once` fixture is the only new scenario. It creates a
+single-use dashboard failure record for User A. The Functions implementation
+will consume it only when `FUNCTIONS_EMULATOR=true` and the project is exactly
+`sageset-maestro-local`; production cannot activate this seam. The Maestro UI
+shows stable `social.dashboard.error` and `social.dashboard.retry` controls,
+while non-Maestro builds retain the existing native error alert.
+
+Validate on any platform:
+
+```sh
+npm run qa:sageset:maestro:phase4:validate
+npm run test:mobile
+```
+
+Execute on macOS with the same fixture environment, running emulator stack,
+and current SageSet QA app installed:
+
+```sh
+npm run qa:sageset:maestro:phase4
+```

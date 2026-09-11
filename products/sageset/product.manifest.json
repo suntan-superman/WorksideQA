@@ -144,6 +144,26 @@
           "join-challenge"
         ]
       },
+      "negativeVerification": {
+        "command": "npm",
+        "args": [
+          "--prefix",
+          "functions",
+          "run",
+          "verify:maestro-negative",
+          "--"
+        ],
+        "cases": [
+          "invalid-login-no-mutation",
+          "cancel-pause",
+          "cancel-remove",
+          "paused-member-no-join",
+          "duplicate-join",
+          "duplicate-invitation-accept",
+          "unauthorized-member-management",
+          "backend-error-recovery"
+        ]
+      },
       "projectId": "sageset-maestro-local",
       "scenarios": [
         "clean",
@@ -152,7 +172,8 @@
         "member-paused",
         "member-resumed",
         "progress-recorded",
-        "member-removed"
+        "member-removed",
+        "backend-error-once"
       ],
       "credentialEnvKeys": {
         "userAEmail": "SAGESET_MAESTRO_USER_A_EMAIL",
@@ -309,6 +330,110 @@
           "SAGESET_MAESTRO_USER_B_PASSWORD"
         ],
         "runByDefault": false
+      },
+      {
+        "name": "50-invalid-login-recovery",
+        "path": "products/sageset/workflows/50-invalid-login-recovery.yaml",
+        "fixtureScenario": "clean",
+        "account": "user-a",
+        "negativePath": true,
+        "backendNegativeVerification": "invalid-login-no-mutation",
+        "requiredEnv": [
+          "SAGESET_MAESTRO_USER_A_EMAIL",
+          "SAGESET_MAESTRO_USER_A_PASSWORD"
+        ],
+        "runByDefault": false
+      },
+      {
+        "name": "51-cancel-member-pause",
+        "path": "products/sageset/workflows/51-cancel-member-pause.yaml",
+        "fixtureScenario": "member-active",
+        "account": "user-a",
+        "negativePath": true,
+        "backendNegativeVerification": "cancel-pause",
+        "requiredEnv": [
+          "SAGESET_MAESTRO_USER_A_EMAIL",
+          "SAGESET_MAESTRO_USER_A_PASSWORD"
+        ],
+        "runByDefault": false
+      },
+      {
+        "name": "52-cancel-member-remove",
+        "path": "products/sageset/workflows/52-cancel-member-remove.yaml",
+        "fixtureScenario": "member-active",
+        "account": "user-a",
+        "negativePath": true,
+        "backendNegativeVerification": "cancel-remove",
+        "requiredEnv": [
+          "SAGESET_MAESTRO_USER_A_EMAIL",
+          "SAGESET_MAESTRO_USER_A_PASSWORD"
+        ],
+        "runByDefault": false
+      },
+      {
+        "name": "53-paused-member-cannot-join",
+        "path": "products/sageset/workflows/53-paused-member-cannot-join.yaml",
+        "fixtureScenario": "member-paused",
+        "account": "user-b",
+        "negativePath": true,
+        "backendNegativeVerification": "paused-member-no-join",
+        "requiredEnv": [
+          "SAGESET_MAESTRO_USER_B_EMAIL",
+          "SAGESET_MAESTRO_USER_B_PASSWORD"
+        ],
+        "runByDefault": false
+      },
+      {
+        "name": "54-duplicate-challenge-join",
+        "path": "products/sageset/workflows/54-duplicate-challenge-join.yaml",
+        "fixtureScenario": "member-resumed",
+        "account": "user-b",
+        "negativePath": true,
+        "backendNegativeVerification": "duplicate-join",
+        "requiredEnv": [
+          "SAGESET_MAESTRO_USER_B_EMAIL",
+          "SAGESET_MAESTRO_USER_B_PASSWORD"
+        ],
+        "runByDefault": false
+      },
+      {
+        "name": "55-duplicate-invitation-accept",
+        "path": "products/sageset/workflows/55-duplicate-invitation-accept.yaml",
+        "fixtureScenario": "member-active",
+        "account": "user-b",
+        "negativePath": true,
+        "backendNegativeVerification": "duplicate-invitation-accept",
+        "requiredEnv": [
+          "SAGESET_MAESTRO_USER_B_EMAIL",
+          "SAGESET_MAESTRO_USER_B_PASSWORD"
+        ],
+        "runByDefault": false
+      },
+      {
+        "name": "56-unauthorized-member-management",
+        "path": "products/sageset/workflows/56-unauthorized-member-management.yaml",
+        "fixtureScenario": "member-active",
+        "account": "user-b",
+        "negativePath": true,
+        "backendNegativeVerification": "unauthorized-member-management",
+        "requiredEnv": [
+          "SAGESET_MAESTRO_USER_B_EMAIL",
+          "SAGESET_MAESTRO_USER_B_PASSWORD"
+        ],
+        "runByDefault": false
+      },
+      {
+        "name": "57-backend-error-recovery",
+        "path": "products/sageset/workflows/57-backend-error-recovery.yaml",
+        "fixtureScenario": "backend-error-once",
+        "account": "user-a",
+        "negativePath": true,
+        "backendNegativeVerification": "backend-error-recovery",
+        "requiredEnv": [
+          "SAGESET_MAESTRO_USER_A_EMAIL",
+          "SAGESET_MAESTRO_USER_A_PASSWORD"
+        ],
+        "runByDefault": false
       }
     ],
     "maestro": {
@@ -335,6 +460,16 @@
           "42-resume-member",
           "43-remove-member",
           "44-join-challenge"
+        ],
+        "phase4": [
+          "50-invalid-login-recovery",
+          "51-cancel-member-pause",
+          "52-cancel-member-remove",
+          "53-paused-member-cannot-join",
+          "54-duplicate-challenge-join",
+          "55-duplicate-invitation-accept",
+          "56-unauthorized-member-management",
+          "57-backend-error-recovery"
         ]
       }
     },

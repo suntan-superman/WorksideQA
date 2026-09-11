@@ -58,7 +58,23 @@ function validateFixtureConfiguration(mobile, productKey) {
       throw new Error("Backend verification mutation names must be unique.");
     }
   }
+  if (fixtures.negativeVerification) {
+    const verification = fixtures.negativeVerification;
+    if (!verification.command || !Array.isArray(verification.args) || verification.args.length === 0) {
+      throw new Error("Negative-path backend verification must declare a command and argument array.");
+    }
+    if (!Array.isArray(verification.cases) || verification.cases.length === 0) {
+      throw new Error("Negative-path backend verification must declare supported cases.");
+    }
+    if (unique(verification.cases).length !== verification.cases.length) {
+      throw new Error("Negative-path backend verification case names must be unique.");
+    }
+  }
   return fixtures;
+}
+
+function backendVerificationName(flow) {
+  return flow.backendNegativeVerification || flow.backendVerification || null;
 }
 
 function collectEnvironmentReferences(source) {
@@ -169,11 +185,25 @@ function validateMaestroConfiguration(config) {
     if (flow.fixtureScenario && !fixtures.scenarios.includes(flow.fixtureScenario)) {
       throw new Error(`Flow ${flow.name} references unsupported fixture scenario ${flow.fixtureScenario}.`);
     }
-    if (flow.backendVerification) {
+    if (flow.backendVerification && flow.backendNegativeVerification) {
+      throw new Error(`Flow ${flow.name} cannot declare both mutation and negative-path backend verification.`);
+    }
+    if (flow.backendNegativeVerification) {
+      if (!flow.negativePath) {
+        throw new Error(`Flow ${flow.name} must declare negativePath for negative-path backend verification.`);
+      }
       if (!flow.fixtureScenario) {
         throw new Error(`Flow ${flow.name} must declare a fixture scenario before backend verification.`);
       }
-      if (!fixtures.verification?.mutations?.includes(flow.backendVerification)) {
+      if (!fixtures.negativeVerification?.cases?.includes(flow.backendNegativeVerification)) {
+        throw new Error(`Flow ${flow.name} references unsupported negative-path backend verification ${flow.backendNegativeVerification}.`);
+      }
+    }
+    if (backendVerificationName(flow)) {
+      if (!flow.fixtureScenario) {
+        throw new Error(`Flow ${flow.name} must declare a fixture scenario before backend verification.`);
+      }
+      if (flow.backendVerification && !fixtures.verification?.mutations?.includes(flow.backendVerification)) {
         throw new Error(`Flow ${flow.name} references unsupported backend verification ${flow.backendVerification}.`);
       }
       if (!["user-a", "user-b"].includes(flow.account)) {
@@ -261,17 +291,23 @@ function buildFixtureResetPlan(validated, flow, environment = process.env) {
 }
 
 function buildBackendVerificationPlan(validated, flow, environment = process.env) {
-  if (!flow.backendVerification) return null;
+  const verificationName = backendVerificationName(flow);
+  if (!verificationName) return null;
   const fixturePlan = buildFixtureResetPlan(validated, flow, environment);
-  const verification = validated.mobile.fixtures.verification;
+  const negativePath = Boolean(flow.backendNegativeVerification);
+  const verification = negativePath
+    ? validated.mobile.fixtures.negativeVerification
+    : validated.mobile.fixtures.verification;
   return {
     ...fixturePlan,
     command: verification.command,
     args: [
       ...verification.args,
-      "--mutation",
-      flow.backendVerification,
+      negativePath ? "--case" : "--mutation",
+      verificationName,
     ],
+    verificationName,
+    verificationKind: negativePath ? "non-mutation" : "mutation",
   };
 }
 
@@ -376,6 +412,8 @@ async function runMaestroFlows(config, options = {}) {
 
   const results = [];
   for (const flow of selected) {
+    const backendName = backendVerificationName(flow);
+    const uiFailureLabel = flow.negativePath ? "UI NEGATIVE-PATH FAIL" : "UI FAILED";
     const environmentValues = requireFlowEnvironment(flow);
     const flowDirectory = ensureDir(path.join(runDirectory, flow.name));
     const artifactDirectory = ensureDir(path.join(flowDirectory, "artifacts"));
@@ -395,7 +433,7 @@ async function runMaestroFlows(config, options = {}) {
         stages: {
           fixture: { status: "failed", scenario: flow.fixtureScenario || null },
           ui: { status: "not-run" },
-          backend: { status: "not-run", verification: flow.backendVerification || null },
+          backend: { status: "not-run", verification: backendName },
         },
       };
       results.push(result);
@@ -450,7 +488,7 @@ async function runMaestroFlows(config, options = {}) {
           stages: {
             fixture: { status: "failed", scenario: flow.fixtureScenario || null },
             ui: { status: "not-run" },
-            backend: { status: "not-run", verification: flow.backendVerification || null },
+            backend: { status: "not-run", verification: backendName },
           },
           report: toPosixPath(path.relative(fromRoot(), junitPath)),
           artifacts: relativeArtifacts,
@@ -479,7 +517,7 @@ async function runMaestroFlows(config, options = {}) {
         stages: {
           fixture: { status: fixtureStatus, scenario: flow.fixtureScenario || null },
           ui: { status: "failed" },
-          backend: { status: "not-run", verification: flow.backendVerification || null },
+          backend: { status: "not-run", verification: backendName },
         },
         report: toPosixPath(path.relative(fromRoot(), junitPath)),
         artifacts: relativeArtifacts,
@@ -488,7 +526,7 @@ async function runMaestroFlows(config, options = {}) {
       writeJson(path.join(flowDirectory, "result.json"), result);
       writeJson(path.join(runDirectory, "summary.json"), { status: "failed", results });
       logStream.end();
-      throw new Error(`UI FAILED: ${flow.name}\n${error.message}. See ${relativeArtifacts}.`);
+      throw new Error(`${uiFailureLabel}: ${flow.name}\n${error.message}. See ${relativeArtifacts}.`);
     }
     if (outcome.code !== 0) {
       const result = {
@@ -500,7 +538,7 @@ async function runMaestroFlows(config, options = {}) {
         stages: {
           fixture: { status: fixtureStatus, scenario: flow.fixtureScenario || null },
           ui: { status: "failed", exitCode: outcome.code },
-          backend: { status: "not-run", verification: flow.backendVerification || null },
+          backend: { status: "not-run", verification: backendName },
         },
         report: toPosixPath(path.relative(fromRoot(), junitPath)),
         artifacts: relativeArtifacts,
@@ -509,12 +547,12 @@ async function runMaestroFlows(config, options = {}) {
       writeJson(path.join(flowDirectory, "result.json"), result);
       writeJson(path.join(runDirectory, "summary.json"), { status: "failed", results });
       logStream.end();
-      throw new Error(`UI FAILED: ${flow.name} (exit ${outcome.code ?? "unknown"}). See ${relativeArtifacts}.`);
+      throw new Error(`${uiFailureLabel}: ${flow.name} (exit ${outcome.code ?? "unknown"}). See ${relativeArtifacts}.`);
     }
 
     let backendStatus = backendPlan ? "pending" : "skipped";
     if (backendPlan) {
-      console.log(`[Backend] Verifying ${flow.backendVerification}`);
+      console.log(`[Backend] Verifying ${backendPlan.verificationKind} ${backendPlan.verificationName}`);
       let backendOutcome;
       try {
         backendOutcome = await runProcess(backendPlan.command, backendPlan.args, {
@@ -536,7 +574,7 @@ async function runMaestroFlows(config, options = {}) {
           stages: {
             fixture: { status: fixtureStatus, scenario: flow.fixtureScenario || null },
             ui: { status: "passed", exitCode: outcome.code },
-            backend: { status: "failed", verification: flow.backendVerification, exitCode: backendOutcome.code },
+            backend: { status: "failed", verification: backendName, kind: backendPlan.verificationKind, exitCode: backendOutcome.code },
           },
           report: toPosixPath(path.relative(fromRoot(), junitPath)),
           artifacts: relativeArtifacts,
@@ -546,10 +584,13 @@ async function runMaestroFlows(config, options = {}) {
         writeJson(path.join(runDirectory, "summary.json"), { status: "failed", results });
         logStream.end();
         const detail = backendOutcome.error ? ` ${backendOutcome.error.message}` : "";
-        throw new Error(`UI PASS / BACKEND FAIL: ${flow.name} (exit ${backendOutcome.code ?? "unknown"}).${detail} See ${relativeArtifacts}.`);
+        const backendFailureLabel = backendPlan.verificationKind === "non-mutation"
+          ? "UI PASS / BACKEND NON-MUTATION FAIL"
+          : "UI PASS / BACKEND FAIL";
+        throw new Error(`${backendFailureLabel}: ${flow.name} (exit ${backendOutcome.code ?? "unknown"}).${detail} See ${relativeArtifacts}.`);
       }
       backendStatus = "passed";
-      console.log(`[Backend] Passed ${flow.backendVerification}`);
+      console.log(`[Backend] Passed ${backendPlan.verificationName}`);
     }
 
     const result = {
@@ -560,7 +601,7 @@ async function runMaestroFlows(config, options = {}) {
       stages: {
         fixture: { status: fixtureStatus, scenario: flow.fixtureScenario || null },
         ui: { status: "passed", exitCode: outcome.code },
-        backend: { status: backendStatus, verification: flow.backendVerification || null },
+        backend: { status: backendStatus, verification: backendName, kind: backendPlan?.verificationKind || null },
       },
       report: toPosixPath(path.relative(fromRoot(), junitPath)),
       artifacts: relativeArtifacts,
