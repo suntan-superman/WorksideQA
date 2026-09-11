@@ -30,7 +30,7 @@ tags: [sageset, phase5, workout-recovery, emulator-only]
 - extendedWaitUntil: { visible: { id: workout.log.set.1.weight }, timeout: 30000 }
 - assertVisible: { id: workout.log.set.1.weight, text: '^25$' }
 - assertVisible: { id: workout.log.set.1.reps, text: '^8$' }
-- assertVisible: { id: workout.log.set.1.complete, text: '^Complete$' }
+- assertVisible: { id: workout.log.set.1.complete, checked: false }
 - tapOn: { id: workout.log.close }
 - scrollUntilVisible: { element: { id: today.workout.maestro-strength-a.status }, direction: UP, timeout: 30000, visibilityPercentage: 80 }
 - assertVisible: { id: today.workout.maestro-strength-a.status, text: '^0/3 completed$' }
