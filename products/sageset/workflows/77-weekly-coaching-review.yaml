@@ -22,6 +22,11 @@ tags: [sageset, phase6, coaching, weekly-review, non-mutation, emulator-only]
 - tapOn: { id: coaching.review.details }
 - assertVisible: 'Weekly adherence was 67% \(2/3\)\.'
 - scrollUntilVisible: { element: { id: coaching.review.skip }, direction: DOWN, timeout: 30000, visibilityPercentage: 80 }
+- swipe:
+    start: "50%,75%"
+    end: "50%,35%"
+    duration: 500
+- assertVisible: { id: coaching.review.skip, enabled: true }
 - tapOn: { id: coaching.review.skip }
 - extendedWaitUntil: { visible: { id: coaching.review.confirm.dismiss }, timeout: 15000 }
 - tapOn: { id: coaching.review.confirm.dismiss }

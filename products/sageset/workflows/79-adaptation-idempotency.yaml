@@ -17,6 +17,11 @@ tags: [sageset, phase6, coaching, idempotency, emulator-only]
     commands: [{ tapOn: "Not Now" }]
 - extendedWaitUntil: { visible: { id: screen.today.ready }, timeout: 45000 }
 - scrollUntilVisible: { element: { id: coaching.review.accept }, direction: DOWN, timeout: 30000, visibilityPercentage: 80 }
+- swipe:
+    start: "50%,75%"
+    end: "50%,35%"
+    duration: 500
+- assertVisible: { id: coaching.review.accept, enabled: true }
 - tapOn: { id: coaching.review.accept }
 - extendedWaitUntil: { visible: { id: coaching.review.confirm.accept }, timeout: 15000 }
 - tapOn: { id: coaching.review.confirm.accept }
