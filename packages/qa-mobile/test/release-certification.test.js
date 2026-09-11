@@ -6,6 +6,7 @@ const { loadProductManifest } = require("../../qa-config/src");
 const {
   REQUIRED_SUITES,
   configuredSecrets,
+  normalizePhaseResult,
   runReleaseCertification,
   validateReleaseCertificationConfiguration,
   validateRuntimeEnvironment,
@@ -82,6 +83,23 @@ assert.throws(
   () => validateRuntimeEnvironment(validated, runtimeEnvironment, { commandSync: fakeCommand({ dirty: true }), platform: "darwin" }),
   /clean Git worktrees/
 );
+
+const blockedPhaseDirectory = path.join(temporaryRoot, "blocked-phase1");
+fs.mkdirSync(blockedPhaseDirectory, { recursive: true });
+fs.writeFileSync(path.join(blockedPhaseDirectory, "summary.json"), `${JSON.stringify({
+  status: "failed",
+  results: [
+    { flow: "00-launch-smoke", status: "passed", stages: { backend: { status: "skipped", verification: null } } },
+    { flow: "01-login-smoke", status: "passed", stages: { backend: { status: "skipped", verification: null } } },
+    { flow: "10-gamification-progression", status: "failed", failureStage: "ui", stages: { backend: { status: "not-run", verification: null } } },
+  ],
+})}\n`);
+const blockedPhase = normalizePhaseResult(validated, "phase1", blockedPhaseDirectory, null, new Error("flow 10 failed"));
+assert.equal(blockedPhase.flowCount, 4);
+assert.equal(blockedPhase.flowsPassed, 2);
+assert.equal(blockedPhase.flowsFailed, 1);
+assert.equal(blockedPhase.flowsNotRun, 1);
+assert.equal(blockedPhase.flows.find((flow) => flow.flow === "20-groups-challenges").status, "not-run");
 
 function phaseResult(validatedConfig, suite, failedSuite) {
   const flows = validatedConfig.maestro.suites[suite].map((flow) => ({

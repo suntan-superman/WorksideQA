@@ -53,6 +53,21 @@ assert.doesNotMatch(buildMarkdown(failed), /\*\*RELEASE CERTIFIED\*\*/);
 assert.match(buildJUnit(failed), /<failure>/);
 assert.match(buildJUnit(failed), /00-launch-smoke/);
 
+const blockedInput = input("failed");
+blockedInput.phases[0].flowCount = 2;
+blockedInput.phases[0].flows.push({
+  flow: "20-groups-challenges",
+  status: "not-run",
+  failureStage: "not-run",
+  message: "Not run after an earlier failure in this phase.",
+  stages: { backend: { status: "not-run", verification: null } },
+});
+const blocked = finalizeCertification(blockedInput);
+assert.equal(blocked.summary.flowsFailed, 1);
+assert.equal(blocked.summary.flowsNotRun, 1);
+assert.match(buildMarkdown(blocked), /20-groups-challenges \| NOT RUN \/ BLOCKED/);
+assert.match(buildJUnit(blocked), /<skipped>Not run after an earlier failure in this phase\.<\/skipped>/);
+
 const temporaryRoot = fs.mkdtempSync(path.join(os.tmpdir(), "sageset-cert-report-"));
 try {
   const output = writeCertificationArtifacts(input("failed"), temporaryRoot, ["secret-password", "qa-user@example.com"]);

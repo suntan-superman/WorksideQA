@@ -154,6 +154,12 @@ function buildMarkdown(certification) {
     const backendPassed = backend.every((flow) => flow.stages.backend.status === "passed");
     return `| ${markdownEscape(phase.label || phase.name)} | ${phase.status === "passed" ? "PASS" : "FAIL"} | ${phase.flowsPassed}/${phase.flowCount} | ${backend.length === 0 || backendPassed ? "PASS" : "FAIL"} |`;
   }).join("\n");
+  const flowRows = certification.phases.flatMap((phase) => (phase.flows || []).map((flow) => {
+    const status = flow.status === "passed"
+      ? "PASS"
+      : flow.status === "not-run" ? "NOT RUN / BLOCKED" : "FAIL";
+    return `| ${markdownEscape(phase.label || phase.name)} | ${markdownEscape(flow.flow)} | ${status} | ${markdownEscape(flow.failureStage || "—")} |`;
+  })).join("\n");
   const failureSection = certification.failures.length === 0
     ? ""
     : `\n## Failures\n\n${certification.failures.map((failure) =>
@@ -177,6 +183,12 @@ ${preflightRows}
 | Phase | Result | Flows | Backend |
 |---|---|---:|---|
 ${phaseRows}
+
+## Flow Results
+
+| Phase | Flow | Result | Stage |
+|---|---|---|---|
+${flowRows}
 ${failureSection}
 ## Scope
 

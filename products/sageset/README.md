@@ -44,6 +44,13 @@ and writes JUnit output plus failure artifacts beneath
 `reports/mobile/sageset/maestro`. Reports are ignored by Git. Actual execution
 fails closed on non-macOS hosts.
 
+The progression flow independently resets SageSet's
+`workout-ready-progress-baseline` fixture and performs a fresh User A login
+before asserting SageScore 100, 400 lifetime XP, and First Workout. The groups
+navigation flow independently resets the `clean` fixture and also performs a
+fresh login. Neither flow inherits authentication or emulator data from an
+earlier Phase 1 flow.
+
 ## Maestro Phase 2
 
 Phase 2 validates deterministic social and gamification state without mutating
@@ -320,6 +327,12 @@ gates, selector contracts, native/Expo checks, and external-provider
 isolation. The release suite discovers `phase1` through `phase6` from this
 product manifest and executes them in that order. It does not copy phase flow
 lists or SageSet verification logic.
+
+This is certification of the SageSet mobile QA build. The separate SageSet web
+checkout is not required. When a web checkout is available, set
+`SAGESET_WEB_REPO` to its repository root to include the optional web-admin
+weekly-competition assertion; an explicitly supplied invalid path fails
+validation, while an omitted path logs that the web-only check was skipped.
 
 Validate the full contract without resetting fixtures, launching Maestro,
 changing emulator data, or contacting external providers:

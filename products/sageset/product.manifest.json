@@ -253,13 +253,21 @@
       {
         "name": "10-gamification-progression",
         "path": "products/sageset/workflows/10-gamification-progression.yaml",
-        "requiredEnv": [],
+        "fixtureScenario": "workout-ready-progress-baseline",
+        "requiredEnv": [
+          "SAGESET_MAESTRO_USER_A_EMAIL",
+          "SAGESET_MAESTRO_USER_A_PASSWORD"
+        ],
         "runByDefault": false
       },
       {
         "name": "20-groups-challenges",
         "path": "products/sageset/workflows/20-groups-challenges.yaml",
-        "requiredEnv": [],
+        "fixtureScenario": "clean",
+        "requiredEnv": [
+          "SAGESET_MAESTRO_USER_A_EMAIL",
+          "SAGESET_MAESTRO_USER_A_PASSWORD"
+        ],
         "runByDefault": false
       },
       {

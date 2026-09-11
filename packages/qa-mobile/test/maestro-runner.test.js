@@ -32,6 +32,15 @@ assert.deepEqual(
   ]
 );
 assert.deepEqual(
+  selectFlows(validated, { suite: "phase1" }).map((flow) => [flow.name, flow.fixtureScenario || null]),
+  [
+    ["00-launch-smoke", null],
+    ["01-login-smoke", null],
+    ["10-gamification-progression", "workout-ready-progress-baseline"],
+    ["20-groups-challenges", "clean"],
+  ]
+);
+assert.deepEqual(
   selectFlows(validated, { flow: "00-launch-smoke.yaml" }).map((flow) => flow.name),
   ["00-launch-smoke"]
 );
@@ -206,6 +215,25 @@ assert.equal(fixturePlan.env.SAGESET_MAESTRO_ALLOW_EXTERNAL_NOTIFICATIONS, "fals
 assert.equal(fixturePlan.env.FIREBASE_AUTH_EMULATOR_HOST, "127.0.0.1:9099");
 assert.equal(fixturePlan.env.FIRESTORE_EMULATOR_HOST, "127.0.0.1:8080");
 assert.equal(fixturePlan.env.FIREBASE_STORAGE_EMULATOR_HOST, "127.0.0.1:9199");
+const progressionFlow = selectFlows(validated, { flow: "10-gamification-progression" })[0];
+const progressionFixturePlan = buildFixtureResetPlan(validated, progressionFlow, fixtureEnv);
+assert.deepEqual(progressionFixturePlan.args, [
+  "--prefix",
+  "functions",
+  "run",
+  "reset:maestro-fixtures",
+  "--",
+  "--scenario",
+  "workout-ready-progress-baseline",
+  "--apply",
+  "--confirm-reset",
+]);
+assert.deepEqual(progressionFlow.requiredEnv, [
+  "SAGESET_MAESTRO_USER_A_EMAIL",
+  "SAGESET_MAESTRO_USER_A_PASSWORD",
+]);
+const groupsFlow = selectFlows(validated, { flow: "20-groups-challenges" })[0];
+assert.equal(buildFixtureResetPlan(validated, groupsFlow, fixtureEnv).args.includes("clean"), true);
 const acceptFlow = selectFlows(validated, { flow: "40-accept-invitation" })[0];
 const verificationPlan = buildBackendVerificationPlan(validated, acceptFlow, fixtureEnv);
 assert.equal(verificationPlan.command, "npm");
@@ -305,8 +333,7 @@ assert.throws(
   () => buildBackendVerificationPlan(validated, cancelPauseFlow, { ...fixtureEnv, SAGESET_MAESTRO_USER_B_PASSWORD: "" }),
   /Missing required SageSet fixture environment variable/
 );
-assert.equal(buildFixtureResetPlan(validated, selectFlows(validated, { flow: "20-groups-challenges" })[0], {}), null);
-assert.equal(buildBackendVerificationPlan(validated, selectFlows(validated, { flow: "20-groups-challenges" })[0], {}), null);
+assert.equal(buildBackendVerificationPlan(validated, groupsFlow, fixtureEnv), null);
 
 const runnerSource = fs.readFileSync(path.join(__dirname, "..", "src", "maestro-runner.js"), "utf8");
 assert.match(runnerSource, /failureStage: "fixture"/);
