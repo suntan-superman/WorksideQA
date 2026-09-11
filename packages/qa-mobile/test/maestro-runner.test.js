@@ -99,6 +99,23 @@ assert.deepEqual(
   ]
 );
 assert.deepEqual(
+  selectFlows(validated, { suite: "phase6" }).map((flow) => [
+    flow.name,
+    flow.fixtureScenario,
+    flow.account,
+    flow.backendCoachingVerification,
+    Boolean(flow.coachingNonMutation),
+  ]),
+  [
+    ["70-missed-workout-first", "coaching-one-missed-workout", "user-a", "one-missed-workout", true],
+    ["71-missed-workout-simplification", "coaching-two-missed-workouts", "user-a", "two-missed-simplification", false],
+    ["72-high-adherence-progression", "coaching-high-adherence", "user-a", "high-adherence-progression", false],
+    ["77-weekly-coaching-review", "coaching-weekly-review", "user-a", "weekly-review", true],
+    ["78-smart-return-adaptation", "smart-return-ready", "user-a", "smart-return-adaptation", false],
+    ["79-adaptation-idempotency", "coaching-adaptation-ready", "user-a", "adaptation-idempotency", false],
+  ]
+);
+assert.deepEqual(
   collectEnvironmentReferences("${SAGESET_MAESTRO_USER_A_EMAIL} ${SAGESET_MAESTRO_USER_A_PASSWORD}"),
   ["SAGESET_MAESTRO_USER_A_EMAIL", "SAGESET_MAESTRO_USER_A_PASSWORD"]
 );
@@ -132,6 +149,10 @@ for (const mutate of [
   (value) => { value.mobile.fixtures.workoutVerification.args = "verify:maestro-workout"; },
   (value) => { value.mobile.fixtures.workoutVerification.cases = []; },
   (value) => { value.mobile.fixtures.workoutVerification.cases.push("workout-ready"); },
+  (value) => { value.mobile.fixtures.coachingVerification.command = ""; },
+  (value) => { value.mobile.fixtures.coachingVerification.args = "verify:maestro-coaching"; },
+  (value) => { value.mobile.fixtures.coachingVerification.cases = []; },
+  (value) => { value.mobile.fixtures.coachingVerification.cases.push("weekly-review"); },
   (value) => { value.mobile.flows.find((flow) => flow.name === "40-accept-invitation").backendVerification = "unknown"; },
   (value) => { value.mobile.flows.find((flow) => flow.name === "40-accept-invitation").fixtureScenario = undefined; },
   (value) => { value.mobile.flows.find((flow) => flow.name === "40-accept-invitation").account = "admin"; },
@@ -143,6 +164,10 @@ for (const mutate of [
   (value) => { value.mobile.flows.find((flow) => flow.name === "60-workout-plan-visible").fixtureScenario = undefined; },
   (value) => { value.mobile.flows.find((flow) => flow.name === "60-workout-plan-visible").account = "admin"; },
   (value) => { value.mobile.flows.find((flow) => flow.name === "60-workout-plan-visible").backendNegativeVerification = "cancel-pause"; },
+  (value) => { value.mobile.flows.find((flow) => flow.name === "71-missed-workout-simplification").backendCoachingVerification = "unknown"; },
+  (value) => { value.mobile.flows.find((flow) => flow.name === "71-missed-workout-simplification").fixtureScenario = undefined; },
+  (value) => { value.mobile.flows.find((flow) => flow.name === "71-missed-workout-simplification").account = "admin"; },
+  (value) => { value.mobile.flows.find((flow) => flow.name === "71-missed-workout-simplification").backendWorkoutVerification = "workout-ready"; },
 ]) {
   const unsafeManifest = clone(manifest);
   mutate(unsafeManifest);
@@ -244,6 +269,14 @@ assert.equal(workoutVerificationPlan.verificationKind, "workout");
 assert.equal(workoutVerificationPlan.verificationName, "progression-impact");
 assert.equal(workoutVerificationPlan.env.SAGESET_MAESTRO_FIREBASE_PROJECT_ID, "sageset-maestro-local");
 assert.equal(workoutVerificationPlan.env.SAGESET_MAESTRO_ALLOW_EXTERNAL_NOTIFICATIONS, "false");
+const coachingFlow = selectFlows(validated, { flow: "71-missed-workout-simplification" })[0];
+const coachingVerificationPlan = buildBackendVerificationPlan(validated, coachingFlow, fixtureEnv);
+assert.deepEqual(coachingVerificationPlan.args, [
+  "--prefix", "functions", "run", "verify:maestro-coaching", "--", "--case", "two-missed-simplification",
+]);
+assert.equal(coachingVerificationPlan.verificationKind, "coaching");
+const coachingNonMutationFlow = selectFlows(validated, { flow: "70-missed-workout-first" })[0];
+assert.equal(buildBackendVerificationPlan(validated, coachingNonMutationFlow, fixtureEnv).verificationKind, "coaching-non-mutation");
 assert.throws(
   () => buildFixtureResetPlan(validated, pendingFlow, { ...fixtureEnv, SAGESET_MOBILE_REPO: "" }),
   /Missing SAGESET_MOBILE_REPO/
@@ -284,6 +317,9 @@ assert.match(runnerSource, /UI PASS \/ BACKEND FAIL/);
 assert.match(runnerSource, /UI NEGATIVE-PATH FAIL/);
 assert.match(runnerSource, /UI PASS \/ BACKEND NON-MUTATION FAIL/);
 assert.match(runnerSource, /UI WORKOUT FLOW FAILED/);
+assert.match(runnerSource, /UI COACHING FLOW FAILED/);
+assert.match(runnerSource, /UI PASS \/ BACKEND ADAPTATION FAIL/);
+assert.match(runnerSource, /UI PASS \/ BACKEND NON-MUTATION PASS/);
 fs.rmSync(fixtureRoot, { recursive: true, force: true });
 
 console.log("SageSet Maestro runner contract verified.");

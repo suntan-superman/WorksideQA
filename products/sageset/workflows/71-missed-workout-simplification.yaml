@@ -1,0 +1,28 @@
+appId: com.workside.sageset
+name: SageSet simplifies after two missed workouts
+tags: [sageset, phase6, coaching, adaptation, emulator-only]
+---
+- launchApp: { clearState: true, clearKeychain: true }
+- extendedWaitUntil: { visible: { id: screen.auth.welcome }, timeout: 30000 }
+- tapOn: { id: auth.welcome.login }
+- extendedWaitUntil: { visible: { id: screen.auth.login }, timeout: 15000 }
+- tapOn: { id: auth.login.email }
+- inputText: { text: "${SAGESET_MAESTRO_USER_A_EMAIL}", label: Enter deterministic QA User A email }
+- tapOn: { id: auth.login.password }
+- inputText: { text: "${SAGESET_MAESTRO_USER_A_PASSWORD}", label: Enter deterministic QA User A password }
+- hideKeyboard
+- tapOn: { id: auth.login.submit, enabled: true }
+- runFlow:
+    when: { visible: "Not Now" }
+    commands: [{ tapOn: "Not Now" }]
+- extendedWaitUntil: { visible: { id: screen.today.ready }, timeout: 45000 }
+- scrollUntilVisible: { element: { id: coaching.review.title }, direction: DOWN, timeout: 30000, visibilityPercentage: 80 }
+- assertVisible: { id: coaching.review.adherence, text: '^50%$' }
+- assertVisible: { id: coaching.review.missed, text: '^2$' }
+- scrollUntilVisible: { element: { id: coaching.review.recommendation }, direction: DOWN, timeout: 30000, visibilityPercentage: 80 }
+- assertVisible: { id: coaching.review.recommendation, text: '^SageSet recommends easing a few targets so the next week is easier to finish\.$' }
+- scrollUntilVisible: { element: { id: coaching.review.accept }, direction: DOWN, timeout: 30000, visibilityPercentage: 80 }
+- tapOn: { id: coaching.review.accept }
+- extendedWaitUntil: { visible: { id: coaching.review.confirm.accept }, timeout: 15000 }
+- tapOn: { id: coaching.review.confirm.accept }
+- extendedWaitUntil: { notVisible: { id: coaching.review.title }, timeout: 45000 }

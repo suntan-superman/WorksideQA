@@ -185,6 +185,24 @@
           "incomplete-workout-recovery"
         ]
       },
+      "coachingVerification": {
+        "command": "npm",
+        "args": [
+          "--prefix",
+          "functions",
+          "run",
+          "verify:maestro-coaching",
+          "--"
+        ],
+        "cases": [
+          "one-missed-workout",
+          "two-missed-simplification",
+          "high-adherence-progression",
+          "weekly-review",
+          "smart-return-adaptation",
+          "adaptation-idempotency"
+        ]
+      },
       "projectId": "sageset-maestro-local",
       "scenarios": [
         "clean",
@@ -200,7 +218,13 @@
         "active-plan",
         "paused-plan",
         "workout-ready-progress-baseline",
-        "workout-in-progress"
+        "workout-in-progress",
+        "coaching-one-missed-workout",
+        "coaching-two-missed-workouts",
+        "coaching-high-adherence",
+        "coaching-weekly-review",
+        "smart-return-ready",
+        "coaching-adaptation-ready"
       ],
       "credentialEnvKeys": {
         "userAEmail": "SAGESET_MAESTRO_USER_A_EMAIL",
@@ -542,6 +566,62 @@
         "backendWorkoutVerification": "incomplete-workout-recovery",
         "requiredEnv": ["SAGESET_MAESTRO_USER_A_EMAIL", "SAGESET_MAESTRO_USER_A_PASSWORD"],
         "runByDefault": false
+      },
+      {
+        "name": "70-missed-workout-first",
+        "path": "products/sageset/workflows/70-missed-workout-first.yaml",
+        "fixtureScenario": "coaching-one-missed-workout",
+        "account": "user-a",
+        "backendCoachingVerification": "one-missed-workout",
+        "coachingNonMutation": true,
+        "requiredEnv": ["SAGESET_MAESTRO_USER_A_EMAIL", "SAGESET_MAESTRO_USER_A_PASSWORD"],
+        "runByDefault": false
+      },
+      {
+        "name": "71-missed-workout-simplification",
+        "path": "products/sageset/workflows/71-missed-workout-simplification.yaml",
+        "fixtureScenario": "coaching-two-missed-workouts",
+        "account": "user-a",
+        "backendCoachingVerification": "two-missed-simplification",
+        "requiredEnv": ["SAGESET_MAESTRO_USER_A_EMAIL", "SAGESET_MAESTRO_USER_A_PASSWORD"],
+        "runByDefault": false
+      },
+      {
+        "name": "72-high-adherence-progression",
+        "path": "products/sageset/workflows/72-high-adherence-progression.yaml",
+        "fixtureScenario": "coaching-high-adherence",
+        "account": "user-a",
+        "backendCoachingVerification": "high-adherence-progression",
+        "requiredEnv": ["SAGESET_MAESTRO_USER_A_EMAIL", "SAGESET_MAESTRO_USER_A_PASSWORD"],
+        "runByDefault": false
+      },
+      {
+        "name": "77-weekly-coaching-review",
+        "path": "products/sageset/workflows/77-weekly-coaching-review.yaml",
+        "fixtureScenario": "coaching-weekly-review",
+        "account": "user-a",
+        "backendCoachingVerification": "weekly-review",
+        "coachingNonMutation": true,
+        "requiredEnv": ["SAGESET_MAESTRO_USER_A_EMAIL", "SAGESET_MAESTRO_USER_A_PASSWORD"],
+        "runByDefault": false
+      },
+      {
+        "name": "78-smart-return-adaptation",
+        "path": "products/sageset/workflows/78-smart-return-adaptation.yaml",
+        "fixtureScenario": "smart-return-ready",
+        "account": "user-a",
+        "backendCoachingVerification": "smart-return-adaptation",
+        "requiredEnv": ["SAGESET_MAESTRO_USER_A_EMAIL", "SAGESET_MAESTRO_USER_A_PASSWORD"],
+        "runByDefault": false
+      },
+      {
+        "name": "79-adaptation-idempotency",
+        "path": "products/sageset/workflows/79-adaptation-idempotency.yaml",
+        "fixtureScenario": "coaching-adaptation-ready",
+        "account": "user-a",
+        "backendCoachingVerification": "adaptation-idempotency",
+        "requiredEnv": ["SAGESET_MAESTRO_USER_A_EMAIL", "SAGESET_MAESTRO_USER_A_PASSWORD"],
+        "runByDefault": false
       }
     ],
     "maestro": {
@@ -589,6 +669,14 @@
           "66-plan-resume",
           "67-workout-progression-impact",
           "68-incomplete-workout-recovery"
+        ],
+        "phase6": [
+          "70-missed-workout-first",
+          "71-missed-workout-simplification",
+          "72-high-adherence-progression",
+          "77-weekly-coaching-review",
+          "78-smart-return-adaptation",
+          "79-adaptation-idempotency"
         ]
       }
     },

@@ -82,11 +82,23 @@ function validateFixtureConfiguration(mobile, productKey) {
       throw new Error("Workout backend verification case names must be unique.");
     }
   }
+  if (fixtures.coachingVerification) {
+    const verification = fixtures.coachingVerification;
+    if (!verification.command || !Array.isArray(verification.args) || verification.args.length === 0) {
+      throw new Error("Coaching backend verification must declare a command and argument array.");
+    }
+    if (!Array.isArray(verification.cases) || verification.cases.length === 0) {
+      throw new Error("Coaching backend verification must declare supported cases.");
+    }
+    if (unique(verification.cases).length !== verification.cases.length) {
+      throw new Error("Coaching backend verification case names must be unique.");
+    }
+  }
   return fixtures;
 }
 
 function backendVerificationName(flow) {
-  return flow.backendWorkoutVerification || flow.backendNegativeVerification || flow.backendVerification || null;
+  return flow.backendCoachingVerification || flow.backendWorkoutVerification || flow.backendNegativeVerification || flow.backendVerification || null;
 }
 
 function collectEnvironmentReferences(source) {
@@ -197,12 +209,15 @@ function validateMaestroConfiguration(config) {
     if (flow.fixtureScenario && !fixtures.scenarios.includes(flow.fixtureScenario)) {
       throw new Error(`Flow ${flow.name} references unsupported fixture scenario ${flow.fixtureScenario}.`);
     }
-    const verificationDeclarations = [flow.backendVerification, flow.backendNegativeVerification, flow.backendWorkoutVerification].filter(Boolean);
+    const verificationDeclarations = [flow.backendVerification, flow.backendNegativeVerification, flow.backendWorkoutVerification, flow.backendCoachingVerification].filter(Boolean);
     if (verificationDeclarations.length > 1) {
       throw new Error(`Flow ${flow.name} cannot declare more than one backend verification type.`);
     }
     if (flow.backendWorkoutVerification && !fixtures.workoutVerification?.cases?.includes(flow.backendWorkoutVerification)) {
       throw new Error(`Flow ${flow.name} references unsupported workout backend verification ${flow.backendWorkoutVerification}.`);
+    }
+    if (flow.backendCoachingVerification && !fixtures.coachingVerification?.cases?.includes(flow.backendCoachingVerification)) {
+      throw new Error(`Flow ${flow.name} references unsupported coaching backend verification ${flow.backendCoachingVerification}.`);
     }
     if (flow.backendNegativeVerification) {
       if (!flow.negativePath) {
@@ -312,7 +327,10 @@ function buildBackendVerificationPlan(validated, flow, environment = process.env
   const fixturePlan = buildFixtureResetPlan(validated, flow, environment);
   const negativePath = Boolean(flow.backendNegativeVerification);
   const workoutPath = Boolean(flow.backendWorkoutVerification);
-  const verification = workoutPath
+  const coachingPath = Boolean(flow.backendCoachingVerification);
+  const verification = coachingPath
+    ? validated.mobile.fixtures.coachingVerification
+    : workoutPath
     ? validated.mobile.fixtures.workoutVerification
     : negativePath
       ? validated.mobile.fixtures.negativeVerification
@@ -322,11 +340,13 @@ function buildBackendVerificationPlan(validated, flow, environment = process.env
     command: verification.command,
     args: [
       ...verification.args,
-      negativePath || workoutPath ? "--case" : "--mutation",
+      negativePath || workoutPath || coachingPath ? "--case" : "--mutation",
       verificationName,
     ],
     verificationName,
-    verificationKind: workoutPath ? "workout" : negativePath ? "non-mutation" : "mutation",
+    verificationKind: coachingPath
+      ? (flow.coachingNonMutation ? "coaching-non-mutation" : "coaching")
+      : workoutPath ? "workout" : negativePath ? "non-mutation" : "mutation",
   };
 }
 
@@ -432,7 +452,9 @@ async function runMaestroFlows(config, options = {}) {
   const results = [];
   for (const flow of selected) {
     const backendName = backendVerificationName(flow);
-    const uiFailureLabel = flow.backendWorkoutVerification
+    const uiFailureLabel = flow.backendCoachingVerification
+      ? "UI COACHING FLOW FAILED"
+      : flow.backendWorkoutVerification
       ? "UI WORKOUT FLOW FAILED"
       : flow.negativePath
         ? "UI NEGATIVE-PATH FAIL"
@@ -607,9 +629,11 @@ async function runMaestroFlows(config, options = {}) {
         writeJson(path.join(runDirectory, "summary.json"), { status: "failed", results });
         logStream.end();
         const detail = backendOutcome.error ? ` ${backendOutcome.error.message}` : "";
-        const backendFailureLabel = backendPlan.verificationKind === "non-mutation"
+        const backendFailureLabel = ["non-mutation", "coaching-non-mutation"].includes(backendPlan.verificationKind)
           ? "UI PASS / BACKEND NON-MUTATION FAIL"
-          : "UI PASS / BACKEND FAIL";
+          : backendPlan.verificationKind === "coaching"
+            ? "UI PASS / BACKEND ADAPTATION FAIL"
+            : "UI PASS / BACKEND FAIL";
         throw new Error(`${backendFailureLabel}: ${flow.name} (exit ${backendOutcome.code ?? "unknown"}).${detail} See ${relativeArtifacts}.`);
       }
       backendStatus = "passed";
@@ -632,7 +656,10 @@ async function runMaestroFlows(config, options = {}) {
     results.push(result);
     writeJson(path.join(flowDirectory, "result.json"), result);
     logStream.end();
-    console.log(backendPlan ? `[Maestro] UI PASS / BACKEND PASS: ${flow.name}` : `[Maestro] Passed ${flow.name}`);
+    const backendSuccessLabel = backendPlan?.verificationKind === "coaching-non-mutation"
+      ? "UI PASS / BACKEND NON-MUTATION PASS"
+      : "UI PASS / BACKEND PASS";
+    console.log(backendPlan ? `[Maestro] ${backendSuccessLabel}: ${flow.name}` : `[Maestro] Passed ${flow.name}`);
   }
 
   writeJson(path.join(runDirectory, "summary.json"), { status: "passed", results });

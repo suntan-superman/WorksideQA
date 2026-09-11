@@ -233,7 +233,7 @@ and then delegates Firestore verification to SageSet's
 | `64-exercise-history-carryover` | `workout-history` | User A | Verify prior Dumbbell Row load/reps and current defaults | `history-carryover` |
 | `65-plan-pause` | `active-plan` | User A | Pause the plan using the normal break UI | `plan-paused` |
 | `66-plan-resume` | `paused-plan` | User A | Resume the same paused plan | `plan-resumed` |
-| `67-workout-progression-impact` | `workout-ready-progress-baseline` | User A | Complete workout and verify SageScore 100 / XP 500 | `progression-impact` |
+| `67-workout-progression-impact` | `workout-ready-progress-baseline` | User A | Complete workout and verify SageScore 100 / lifetime XP 1750 | `progression-impact` |
 | `68-incomplete-workout-recovery` | `workout-ready` | User A | Save partial values, reopen, and verify no completion | `incomplete-workout-recovery` |
 
 Every flow resets its declared fixture and performs a fresh User A login. The
@@ -269,3 +269,45 @@ WorksideQA only orchestrates the scenario name and backend case. Fixture data,
 reset behavior, workout verification, and safety enforcement remain owned by
 SageSet. The suite cannot use production Firebase, external notifications,
 physical AR, or SageSet Verified results.
+
+## Maestro Phase 6
+
+Phase 6 certifies the adaptive coaching contracts that exist in the current
+product. Every flow resets a SageSet-owned emulator fixture, performs a fresh
+User A login, uses the real coaching or Smart Return UI, and invokes
+`verify:maestro-coaching` afterward.
+
+| Flow | Fixture | UI behavior | Backend case |
+| --- | --- | --- | --- |
+| `70-missed-workout-first` | `coaching-one-missed-workout` | Observe one missed workout and a hold-steady review | `one-missed-workout` |
+| `71-missed-workout-simplification` | `coaching-two-missed-workouts` | Accept a two-miss rep simplification | `two-missed-simplification` |
+| `72-high-adherence-progression` | `coaching-high-adherence` | Accept the high-adherence rep progression | `high-adherence-progression` |
+| `77-weekly-coaching-review` | `coaching-weekly-review` | Inspect details and dismiss without mutation | `weekly-review` |
+| `78-smart-return-adaptation` | `smart-return-ready` | Resume after 15 days and accept Repeat last week | `smart-return-adaptation` |
+| `79-adaptation-idempotency` | `coaching-adaptation-ready` | Accept once, navigate away, and refresh | `adaptation-idempotency` |
+
+The server threshold contract is: adherence at least 90% progresses; below
+40% recommends a recovery week; below 65% or at least two missed workouts
+simplifies; all other reviews hold steady. Acceptance mutates only future,
+incomplete prescriptions and records one audit. Dismissal records the decision
+without changing the plan.
+
+Flows 73 (duration constraint), 74 (exercise substitution), 75 (temporary
+exclusion), and 76 (reinstatement) are deferred product gaps. The current app
+does not expose an end-to-end persisted workout-time budget, replacement
+workflow, or temporary restriction lifecycle that can be certified without
+inventing behavior.
+
+Validate on any platform:
+
+```sh
+npm run qa:sageset:maestro:phase6:validate
+npm run test:mobile
+```
+
+Execute on macOS with the Firebase emulator stack running and the current QA
+simulator build installed:
+
+```sh
+npm run qa:sageset:maestro:phase6
+```

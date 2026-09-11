@@ -1,0 +1,39 @@
+appId: com.workside.sageset
+name: SageSet Smart Return repeats the prior week after a break
+tags: [sageset, phase6, smart-return, adaptation, emulator-only]
+---
+- launchApp: { clearState: true, clearKeychain: true }
+- extendedWaitUntil: { visible: { id: screen.auth.welcome }, timeout: 30000 }
+- tapOn: { id: auth.welcome.login }
+- extendedWaitUntil: { visible: { id: screen.auth.login }, timeout: 15000 }
+- tapOn: { id: auth.login.email }
+- inputText: { text: "${SAGESET_MAESTRO_USER_A_EMAIL}", label: Enter deterministic QA User A email }
+- tapOn: { id: auth.login.password }
+- inputText: { text: "${SAGESET_MAESTRO_USER_A_PASSWORD}", label: Enter deterministic QA User A password }
+- hideKeyboard
+- tapOn: { id: auth.login.submit, enabled: true }
+- runFlow:
+    when: { visible: "Not Now" }
+    commands: [{ tapOn: "Not Now" }]
+- extendedWaitUntil: { visible: { id: screen.today.ready }, timeout: 45000 }
+- assertVisible: { id: plan.status.paused }
+- tapOn: { id: plan.resume.open }
+- extendedWaitUntil: { visible: { id: plan.break-checkin.resume }, timeout: 15000 }
+- tapOn: { id: plan.break-checkin.resume }
+- extendedWaitUntil: { visible: { id: plan.resume.confirm }, timeout: 15000 }
+- tapOn: { id: plan.resume.reason.ready_to_return }
+- tapOn: { id: plan.resume.confirm, enabled: true }
+- extendedWaitUntil: { visible: { id: plan.smart-return.continue }, timeout: 30000 }
+- tapOn: { id: plan.smart-return.continue }
+- extendedWaitUntil: { visible: { id: plan.smart-return.safety.none }, timeout: 15000 }
+- tapOn: { id: plan.smart-return.safety.none }
+- extendedWaitUntil: { visible: { id: plan.smart-return.recommendation }, timeout: 30000 }
+- scrollUntilVisible: { element: { id: plan.smart-return.outcome.repeat_week }, direction: DOWN, timeout: 30000, visibilityPercentage: 80 }
+- assertVisible: { id: plan.smart-return.outcome.repeat_week, selected: true }
+- tapOn: { id: plan.smart-return.confirm, enabled: true }
+- extendedWaitUntil: { visible: '^OK$', timeout: 45000 }
+- tapOn: '^OK$'
+- extendedWaitUntil: { visible: { id: plan.pause.open }, timeout: 45000 }
+- assertNotVisible: { id: plan.status.paused }
+- scrollUntilVisible: { element: { id: plan.smart-return.applied }, direction: DOWN, timeout: 30000, visibilityPercentage: 80 }
+- assertVisible: { id: plan.smart-return.applied, text: '^Smart Return applied$' }
