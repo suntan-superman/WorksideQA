@@ -24,7 +24,6 @@ tags: [sageset, phase5, workout-recovery, emulator-only]
 - tapOn: { id: workout.log.set.1.reps }
 - eraseText: 2
 - inputText: "8"
-- hideKeyboard
 - tapOn: { id: workout.log.save }
 - extendedWaitUntil: { notVisible: { id: screen.workout.log }, timeout: 30000 }
 - tapOn: { id: today.exercise.squat }

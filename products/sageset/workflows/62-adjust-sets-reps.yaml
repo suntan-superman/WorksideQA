@@ -22,7 +22,6 @@ tags: [sageset, phase5, workout-edit, emulator-only]
 - tapOn: { id: workout.log.set.1.reps }
 - eraseText: 2
 - inputText: "8"
-- hideKeyboard
 - tapOn: { id: workout.log.save }
 - extendedWaitUntil: { notVisible: { id: screen.workout.log }, timeout: 30000 }
 - tapOn: { id: today.exercise.squat }
@@ -30,4 +29,3 @@ tags: [sageset, phase5, workout-edit, emulator-only]
 - assertVisible: { id: workout.log.set.1.reps, text: '^8$' }
 - assertVisible: { id: workout.log.set.2.reps, text: '^10$' }
 - tapOn: { id: workout.log.close }
-
