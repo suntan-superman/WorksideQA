@@ -217,3 +217,55 @@ and current SageSet QA app installed:
 ```sh
 npm run qa:sageset:maestro:phase4
 ```
+
+## Maestro Phase 5
+
+Phase 5 validates the production workout lifecycle through the SageSet QA UI
+and then delegates Firestore verification to SageSet's
+`verify:maestro-workout` command:
+
+| Flow | Fixture | Account | UI behavior | Backend case |
+| --- | --- | --- | --- | --- |
+| `60-workout-plan-visible` | `workout-ready` | User A | Deterministic workout, exercises, prescriptions, and incomplete status | `workout-ready` |
+| `61-start-workout` | `workout-ready` | User A | Open and close the first exercise log | `workout-started` |
+| `62-adjust-sets-reps` | `workout-ready` | User A | Change achieved Squat reps and verify recovery | `sets-reps-adjusted` |
+| `63-complete-workout` | `workout-ready` | User A | Complete all three exercises and dismiss the reward summary | `workout-completed` |
+| `64-exercise-history-carryover` | `workout-history` | User A | Verify prior Dumbbell Row load/reps and current defaults | `history-carryover` |
+| `65-plan-pause` | `active-plan` | User A | Pause the plan using the normal break UI | `plan-paused` |
+| `66-plan-resume` | `paused-plan` | User A | Resume the same paused plan | `plan-resumed` |
+| `67-workout-progression-impact` | `workout-ready-progress-baseline` | User A | Complete workout and verify SageScore 100 / XP 500 | `progression-impact` |
+| `68-incomplete-workout-recovery` | `workout-ready` | User A | Save partial values, reopen, and verify no completion | `incomplete-workout-recovery` |
+
+Every flow resets its declared fixture and performs a fresh User A login. The
+runner then reports fixture failures, workout UI failures, and post-UI backend
+failures separately. JUnit, Maestro debug output, per-flow results, and the
+suite summary remain in the existing timestamped
+`reports/mobile/sageset/maestro` structure.
+
+SageSet currently starts workout activity by opening an exercise log; it does
+not create a separate workout-level session or `startedAt`. The log supports
+editing achieved reps and load but does not provide a control for changing the
+prescribed number of sets. Individual set checkbox state is also not persisted
+unless the exercise is completed. Phase 5 preserves and verifies those real
+semantics instead of introducing test-only workout behavior. Prescribed
+set-count customization and incomplete checkbox restoration remain product
+gaps, not hidden test substitutions.
+
+Validate all Phase 5 flow/config mappings on any platform:
+
+```sh
+npm run qa:sageset:maestro:phase5:validate
+npm run test:mobile
+```
+
+With the SageSet emulator stack running and the current SageSet QA build
+installed on the booted iOS Simulator, execute on macOS:
+
+```sh
+npm run qa:sageset:maestro:phase5
+```
+
+WorksideQA only orchestrates the scenario name and backend case. Fixture data,
+reset behavior, workout verification, and safety enforcement remain owned by
+SageSet. The suite cannot use production Firebase, external notifications,
+physical AR, or SageSet Verified results.

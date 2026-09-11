@@ -1,0 +1,34 @@
+appId: com.workside.sageset
+name: SageSet opens the workout exercise log
+tags: [sageset, phase5, workout-start, emulator-only]
+---
+- launchApp: { clearState: true, clearKeychain: true }
+- extendedWaitUntil: { visible: { id: screen.auth.welcome }, timeout: 30000 }
+- tapOn: { id: auth.welcome.login }
+- extendedWaitUntil: { visible: { id: screen.auth.login }, timeout: 15000 }
+- tapOn: { id: auth.login.email }
+- inputText: { text: "${SAGESET_MAESTRO_USER_A_EMAIL}", label: Enter deterministic QA User A email }
+- tapOn: { id: auth.login.password }
+- inputText: { text: "${SAGESET_MAESTRO_USER_A_PASSWORD}", label: Enter deterministic QA User A password }
+- hideKeyboard
+- tapOn: { id: auth.login.submit, enabled: true }
+- runFlow:
+    when: { visible: "Not Now" }
+    commands: [{ tapOn: "Not Now" }]
+- extendedWaitUntil: { visible: { id: screen.today.ready }, timeout: 45000 }
+- scrollUntilVisible:
+    element: { id: today.exercise.squat }
+    direction: DOWN
+    timeout: 30000
+    visibilityPercentage: 80
+- tapOn: { id: today.exercise.squat }
+- extendedWaitUntil: { visible: { id: screen.workout.log }, timeout: 30000 }
+- assertVisible: { id: workout.log.exercise-title, text: '^Squat$' }
+- assertVisible: { id: workout.log.set.1 }
+- assertVisible: { id: workout.log.set.1.weight }
+- assertVisible: { id: workout.log.set.1.reps }
+- assertVisible: { id: workout.log.complete-exercise }
+- assertVisible: { id: workout.log.save }
+- tapOn: { id: workout.log.close }
+- assertNotVisible: { id: screen.workout.log }
+

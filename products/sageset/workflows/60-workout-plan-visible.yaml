@@ -1,0 +1,50 @@
+appId: com.workside.sageset
+name: SageSet deterministic workout plan visibility
+tags: [sageset, phase5, workout, emulator-only]
+---
+- launchApp:
+    clearState: true
+    clearKeychain: true
+- extendedWaitUntil:
+    visible: { id: screen.auth.welcome }
+    timeout: 30000
+- tapOn: { id: auth.welcome.login }
+- extendedWaitUntil:
+    visible: { id: screen.auth.login }
+    timeout: 15000
+- tapOn: { id: auth.login.email }
+- inputText: { text: "${SAGESET_MAESTRO_USER_A_EMAIL}", label: Enter deterministic QA User A email }
+- tapOn: { id: auth.login.password }
+- inputText: { text: "${SAGESET_MAESTRO_USER_A_PASSWORD}", label: Enter deterministic QA User A password }
+- hideKeyboard
+- tapOn: { id: auth.login.submit, enabled: true }
+- runFlow:
+    when: { visible: "Not Now" }
+    commands:
+      - tapOn: "Not Now"
+- extendedWaitUntil:
+    visible: { id: screen.today.ready }
+    timeout: 45000
+- scrollUntilVisible:
+    element: { id: today.workout.maestro-strength-a.title }
+    direction: DOWN
+    timeout: 30000
+    visibilityPercentage: 70
+- assertVisible: { id: today.workout.maestro-strength-a.title }
+- assertVisible: { id: today.workout.maestro-strength-a.status, text: '^0/3 completed$' }
+- assertVisible: { id: today.exercise.squat }
+- assertVisible: { id: today.exercise.squat.prescription, text: '^3 sets . 10 reps$' }
+- scrollUntilVisible:
+    element: { id: today.exercise.push-up.prescription }
+    direction: DOWN
+    timeout: 30000
+    visibilityPercentage: 80
+- assertVisible: { id: today.exercise.push-up }
+- assertVisible: { id: today.exercise.push-up.prescription, text: '^3 sets . 12 reps$' }
+- scrollUntilVisible:
+    element: { id: today.exercise.dumbbell-row.prescription }
+    direction: DOWN
+    timeout: 30000
+    visibilityPercentage: 80
+- assertVisible: { id: today.exercise.dumbbell-row }
+- assertVisible: { id: today.exercise.dumbbell-row.prescription, text: '^3 sets . 10 reps$' }

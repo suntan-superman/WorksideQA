@@ -164,6 +164,27 @@
           "backend-error-recovery"
         ]
       },
+      "workoutVerification": {
+        "command": "npm",
+        "args": [
+          "--prefix",
+          "functions",
+          "run",
+          "verify:maestro-workout",
+          "--"
+        ],
+        "cases": [
+          "workout-ready",
+          "workout-started",
+          "sets-reps-adjusted",
+          "workout-completed",
+          "history-carryover",
+          "plan-paused",
+          "plan-resumed",
+          "progression-impact",
+          "incomplete-workout-recovery"
+        ]
+      },
       "projectId": "sageset-maestro-local",
       "scenarios": [
         "clean",
@@ -173,7 +194,13 @@
         "member-resumed",
         "progress-recorded",
         "member-removed",
-        "backend-error-once"
+        "backend-error-once",
+        "workout-ready",
+        "workout-history",
+        "active-plan",
+        "paused-plan",
+        "workout-ready-progress-baseline",
+        "workout-in-progress"
       ],
       "credentialEnvKeys": {
         "userAEmail": "SAGESET_MAESTRO_USER_A_EMAIL",
@@ -434,6 +461,87 @@
           "SAGESET_MAESTRO_USER_A_PASSWORD"
         ],
         "runByDefault": false
+      },
+      {
+        "name": "60-workout-plan-visible",
+        "path": "products/sageset/workflows/60-workout-plan-visible.yaml",
+        "fixtureScenario": "workout-ready",
+        "account": "user-a",
+        "backendWorkoutVerification": "workout-ready",
+        "requiredEnv": ["SAGESET_MAESTRO_USER_A_EMAIL", "SAGESET_MAESTRO_USER_A_PASSWORD"],
+        "runByDefault": false
+      },
+      {
+        "name": "61-start-workout",
+        "path": "products/sageset/workflows/61-start-workout.yaml",
+        "fixtureScenario": "workout-ready",
+        "account": "user-a",
+        "backendWorkoutVerification": "workout-started",
+        "requiredEnv": ["SAGESET_MAESTRO_USER_A_EMAIL", "SAGESET_MAESTRO_USER_A_PASSWORD"],
+        "runByDefault": false
+      },
+      {
+        "name": "62-adjust-sets-reps",
+        "path": "products/sageset/workflows/62-adjust-sets-reps.yaml",
+        "fixtureScenario": "workout-ready",
+        "account": "user-a",
+        "backendWorkoutVerification": "sets-reps-adjusted",
+        "requiredEnv": ["SAGESET_MAESTRO_USER_A_EMAIL", "SAGESET_MAESTRO_USER_A_PASSWORD"],
+        "runByDefault": false
+      },
+      {
+        "name": "63-complete-workout",
+        "path": "products/sageset/workflows/63-complete-workout.yaml",
+        "fixtureScenario": "workout-ready",
+        "account": "user-a",
+        "backendWorkoutVerification": "workout-completed",
+        "requiredEnv": ["SAGESET_MAESTRO_USER_A_EMAIL", "SAGESET_MAESTRO_USER_A_PASSWORD"],
+        "runByDefault": false
+      },
+      {
+        "name": "64-exercise-history-carryover",
+        "path": "products/sageset/workflows/64-exercise-history-carryover.yaml",
+        "fixtureScenario": "workout-history",
+        "account": "user-a",
+        "backendWorkoutVerification": "history-carryover",
+        "requiredEnv": ["SAGESET_MAESTRO_USER_A_EMAIL", "SAGESET_MAESTRO_USER_A_PASSWORD"],
+        "runByDefault": false
+      },
+      {
+        "name": "65-plan-pause",
+        "path": "products/sageset/workflows/65-plan-pause.yaml",
+        "fixtureScenario": "active-plan",
+        "account": "user-a",
+        "backendWorkoutVerification": "plan-paused",
+        "requiredEnv": ["SAGESET_MAESTRO_USER_A_EMAIL", "SAGESET_MAESTRO_USER_A_PASSWORD"],
+        "runByDefault": false
+      },
+      {
+        "name": "66-plan-resume",
+        "path": "products/sageset/workflows/66-plan-resume.yaml",
+        "fixtureScenario": "paused-plan",
+        "account": "user-a",
+        "backendWorkoutVerification": "plan-resumed",
+        "requiredEnv": ["SAGESET_MAESTRO_USER_A_EMAIL", "SAGESET_MAESTRO_USER_A_PASSWORD"],
+        "runByDefault": false
+      },
+      {
+        "name": "67-workout-progression-impact",
+        "path": "products/sageset/workflows/67-workout-progression-impact.yaml",
+        "fixtureScenario": "workout-ready-progress-baseline",
+        "account": "user-a",
+        "backendWorkoutVerification": "progression-impact",
+        "requiredEnv": ["SAGESET_MAESTRO_USER_A_EMAIL", "SAGESET_MAESTRO_USER_A_PASSWORD"],
+        "runByDefault": false
+      },
+      {
+        "name": "68-incomplete-workout-recovery",
+        "path": "products/sageset/workflows/68-incomplete-workout-recovery.yaml",
+        "fixtureScenario": "workout-ready",
+        "account": "user-a",
+        "backendWorkoutVerification": "incomplete-workout-recovery",
+        "requiredEnv": ["SAGESET_MAESTRO_USER_A_EMAIL", "SAGESET_MAESTRO_USER_A_PASSWORD"],
+        "runByDefault": false
       }
     ],
     "maestro": {
@@ -470,6 +578,17 @@
           "55-duplicate-invitation-accept",
           "56-unauthorized-member-management",
           "57-backend-error-recovery"
+        ],
+        "phase5": [
+          "60-workout-plan-visible",
+          "61-start-workout",
+          "62-adjust-sets-reps",
+          "63-complete-workout",
+          "64-exercise-history-carryover",
+          "65-plan-pause",
+          "66-plan-resume",
+          "67-workout-progression-impact",
+          "68-incomplete-workout-recovery"
         ]
       }
     },

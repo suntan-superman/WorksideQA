@@ -1,0 +1,37 @@
+appId: com.workside.sageset
+name: SageSet recovers an incomplete exercise log
+tags: [sageset, phase5, workout-recovery, emulator-only]
+---
+- launchApp: { clearState: true, clearKeychain: true }
+- extendedWaitUntil: { visible: { id: screen.auth.welcome }, timeout: 30000 }
+- tapOn: { id: auth.welcome.login }
+- extendedWaitUntil: { visible: { id: screen.auth.login }, timeout: 15000 }
+- tapOn: { id: auth.login.email }
+- inputText: { text: "${SAGESET_MAESTRO_USER_A_EMAIL}", label: Enter deterministic QA User A email }
+- tapOn: { id: auth.login.password }
+- inputText: { text: "${SAGESET_MAESTRO_USER_A_PASSWORD}", label: Enter deterministic QA User A password }
+- hideKeyboard
+- tapOn: { id: auth.login.submit, enabled: true }
+- runFlow:
+    when: { visible: "Not Now" }
+    commands: [{ tapOn: "Not Now" }]
+- extendedWaitUntil: { visible: { id: screen.today.ready }, timeout: 45000 }
+- scrollUntilVisible: { element: { id: today.exercise.squat }, direction: DOWN, timeout: 30000, visibilityPercentage: 80 }
+- tapOn: { id: today.exercise.squat }
+- extendedWaitUntil: { visible: { id: workout.log.set.1.weight }, timeout: 30000 }
+- tapOn: { id: workout.log.set.1.weight }
+- inputText: "25"
+- tapOn: { id: workout.log.set.1.reps }
+- eraseText: 2
+- inputText: "8"
+- hideKeyboard
+- tapOn: { id: workout.log.save }
+- extendedWaitUntil: { notVisible: { id: screen.workout.log }, timeout: 30000 }
+- tapOn: { id: today.exercise.squat }
+- extendedWaitUntil: { visible: { id: workout.log.set.1.weight }, timeout: 30000 }
+- assertVisible: { id: workout.log.set.1.weight, text: '^25$' }
+- assertVisible: { id: workout.log.set.1.reps, text: '^8$' }
+- assertVisible: { id: workout.log.set.1.complete, text: '^Complete$' }
+- tapOn: { id: workout.log.close }
+- scrollUntilVisible: { element: { id: today.workout.maestro-strength-a.status }, direction: UP, timeout: 30000, visibilityPercentage: 80 }
+- assertVisible: { id: today.workout.maestro-strength-a.status, text: '^0/3 completed$' }

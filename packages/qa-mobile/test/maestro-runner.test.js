@@ -80,6 +80,25 @@ assert.deepEqual(
   ]
 );
 assert.deepEqual(
+  selectFlows(validated, { suite: "phase5" }).map((flow) => [
+    flow.name,
+    flow.fixtureScenario,
+    flow.account,
+    flow.backendWorkoutVerification,
+  ]),
+  [
+    ["60-workout-plan-visible", "workout-ready", "user-a", "workout-ready"],
+    ["61-start-workout", "workout-ready", "user-a", "workout-started"],
+    ["62-adjust-sets-reps", "workout-ready", "user-a", "sets-reps-adjusted"],
+    ["63-complete-workout", "workout-ready", "user-a", "workout-completed"],
+    ["64-exercise-history-carryover", "workout-history", "user-a", "history-carryover"],
+    ["65-plan-pause", "active-plan", "user-a", "plan-paused"],
+    ["66-plan-resume", "paused-plan", "user-a", "plan-resumed"],
+    ["67-workout-progression-impact", "workout-ready-progress-baseline", "user-a", "progression-impact"],
+    ["68-incomplete-workout-recovery", "workout-ready", "user-a", "incomplete-workout-recovery"],
+  ]
+);
+assert.deepEqual(
   collectEnvironmentReferences("${SAGESET_MAESTRO_USER_A_EMAIL} ${SAGESET_MAESTRO_USER_A_PASSWORD}"),
   ["SAGESET_MAESTRO_USER_A_EMAIL", "SAGESET_MAESTRO_USER_A_PASSWORD"]
 );
@@ -109,6 +128,10 @@ for (const mutate of [
   (value) => { value.mobile.fixtures.negativeVerification.args = "verify:maestro-negative"; },
   (value) => { value.mobile.fixtures.negativeVerification.cases = []; },
   (value) => { value.mobile.fixtures.negativeVerification.cases.push("cancel-pause"); },
+  (value) => { value.mobile.fixtures.workoutVerification.command = ""; },
+  (value) => { value.mobile.fixtures.workoutVerification.args = "verify:maestro-workout"; },
+  (value) => { value.mobile.fixtures.workoutVerification.cases = []; },
+  (value) => { value.mobile.fixtures.workoutVerification.cases.push("workout-ready"); },
   (value) => { value.mobile.flows.find((flow) => flow.name === "40-accept-invitation").backendVerification = "unknown"; },
   (value) => { value.mobile.flows.find((flow) => flow.name === "40-accept-invitation").fixtureScenario = undefined; },
   (value) => { value.mobile.flows.find((flow) => flow.name === "40-accept-invitation").account = "admin"; },
@@ -116,6 +139,10 @@ for (const mutate of [
   (value) => { value.mobile.flows.find((flow) => flow.name === "51-cancel-member-pause").backendNegativeVerification = "unknown"; },
   (value) => { value.mobile.flows.find((flow) => flow.name === "51-cancel-member-pause").negativePath = false; },
   (value) => { value.mobile.flows.find((flow) => flow.name === "51-cancel-member-pause").backendVerification = "pause-member"; },
+  (value) => { value.mobile.flows.find((flow) => flow.name === "60-workout-plan-visible").backendWorkoutVerification = "unknown"; },
+  (value) => { value.mobile.flows.find((flow) => flow.name === "60-workout-plan-visible").fixtureScenario = undefined; },
+  (value) => { value.mobile.flows.find((flow) => flow.name === "60-workout-plan-visible").account = "admin"; },
+  (value) => { value.mobile.flows.find((flow) => flow.name === "60-workout-plan-visible").backendNegativeVerification = "cancel-pause"; },
 ]) {
   const unsafeManifest = clone(manifest);
   mutate(unsafeManifest);
@@ -189,6 +216,34 @@ assert.equal(negativeVerificationPlan.verificationKind, "non-mutation");
 assert.equal(negativeVerificationPlan.verificationName, "cancel-pause");
 assert.equal(negativeVerificationPlan.cwd, fs.realpathSync(fixtureRoot));
 assert.equal(negativeVerificationPlan.env.SAGESET_MAESTRO_ALLOW_EXTERNAL_NOTIFICATIONS, "false");
+const workoutFlow = selectFlows(validated, { flow: "67-workout-progression-impact" })[0];
+const workoutFixturePlan = buildFixtureResetPlan(validated, workoutFlow, fixtureEnv);
+assert.deepEqual(workoutFixturePlan.args, [
+  "--prefix",
+  "functions",
+  "run",
+  "reset:maestro-fixtures",
+  "--",
+  "--scenario",
+  "workout-ready-progress-baseline",
+  "--apply",
+  "--confirm-reset",
+]);
+const workoutVerificationPlan = buildBackendVerificationPlan(validated, workoutFlow, fixtureEnv);
+assert.equal(workoutVerificationPlan.command, "npm");
+assert.deepEqual(workoutVerificationPlan.args, [
+  "--prefix",
+  "functions",
+  "run",
+  "verify:maestro-workout",
+  "--",
+  "--case",
+  "progression-impact",
+]);
+assert.equal(workoutVerificationPlan.verificationKind, "workout");
+assert.equal(workoutVerificationPlan.verificationName, "progression-impact");
+assert.equal(workoutVerificationPlan.env.SAGESET_MAESTRO_FIREBASE_PROJECT_ID, "sageset-maestro-local");
+assert.equal(workoutVerificationPlan.env.SAGESET_MAESTRO_ALLOW_EXTERNAL_NOTIFICATIONS, "false");
 assert.throws(
   () => buildFixtureResetPlan(validated, pendingFlow, { ...fixtureEnv, SAGESET_MOBILE_REPO: "" }),
   /Missing SAGESET_MOBILE_REPO/
@@ -203,6 +258,10 @@ assert.throws(
 );
 assert.throws(
   () => buildBackendVerificationPlan(validated, cancelPauseFlow, { ...fixtureEnv, SAGESET_MOBILE_REPO: "" }),
+  /Missing SAGESET_MOBILE_REPO/
+);
+assert.throws(
+  () => buildBackendVerificationPlan(validated, workoutFlow, { ...fixtureEnv, SAGESET_MOBILE_REPO: "" }),
   /Missing SAGESET_MOBILE_REPO/
 );
 assert.throws(
@@ -224,6 +283,7 @@ assert.match(runnerSource, /UI PASS \/ BACKEND PASS/);
 assert.match(runnerSource, /UI PASS \/ BACKEND FAIL/);
 assert.match(runnerSource, /UI NEGATIVE-PATH FAIL/);
 assert.match(runnerSource, /UI PASS \/ BACKEND NON-MUTATION FAIL/);
+assert.match(runnerSource, /UI WORKOUT FLOW FAILED/);
 fs.rmSync(fixtureRoot, { recursive: true, force: true });
 
 console.log("SageSet Maestro runner contract verified.");

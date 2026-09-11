@@ -1,0 +1,41 @@
+appId: com.workside.sageset
+name: SageSet completes a deterministic workout
+tags: [sageset, phase5, workout-completion, emulator-only]
+---
+- launchApp: { clearState: true, clearKeychain: true }
+- extendedWaitUntil: { visible: { id: screen.auth.welcome }, timeout: 30000 }
+- tapOn: { id: auth.welcome.login }
+- extendedWaitUntil: { visible: { id: screen.auth.login }, timeout: 15000 }
+- tapOn: { id: auth.login.email }
+- inputText: { text: "${SAGESET_MAESTRO_USER_A_EMAIL}", label: Enter deterministic QA User A email }
+- tapOn: { id: auth.login.password }
+- inputText: { text: "${SAGESET_MAESTRO_USER_A_PASSWORD}", label: Enter deterministic QA User A password }
+- hideKeyboard
+- tapOn: { id: auth.login.submit, enabled: true }
+- runFlow:
+    when: { visible: "Not Now" }
+    commands: [{ tapOn: "Not Now" }]
+- extendedWaitUntil: { visible: { id: screen.today.ready }, timeout: 45000 }
+- scrollUntilVisible: { element: { id: today.exercise.squat }, direction: DOWN, timeout: 30000, visibilityPercentage: 80 }
+- tapOn: { id: today.exercise.squat }
+- extendedWaitUntil: { visible: { id: screen.workout.log }, timeout: 30000 }
+- tapOn: { id: workout.log.complete-exercise }
+- tapOn: { id: workout.log.save }
+- extendedWaitUntil: { notVisible: { id: screen.workout.log }, timeout: 30000 }
+- scrollUntilVisible: { element: { id: today.exercise.push-up }, direction: DOWN, timeout: 30000, visibilityPercentage: 80 }
+- tapOn: { id: today.exercise.push-up }
+- extendedWaitUntil: { visible: { id: screen.workout.log }, timeout: 30000 }
+- tapOn: { id: workout.log.complete-exercise }
+- tapOn: { id: workout.log.save }
+- extendedWaitUntil: { notVisible: { id: screen.workout.log }, timeout: 30000 }
+- scrollUntilVisible: { element: { id: today.exercise.dumbbell-row }, direction: DOWN, timeout: 30000, visibilityPercentage: 80 }
+- tapOn: { id: today.exercise.dumbbell-row }
+- extendedWaitUntil: { visible: { id: screen.workout.log }, timeout: 30000 }
+- tapOn: { id: workout.log.complete-exercise }
+- tapOn: { id: workout.log.save }
+- extendedWaitUntil: { visible: { id: screen.gamification.reward-summary }, timeout: 60000 }
+- scrollUntilVisible: { element: { id: gamification.reward-summary.continue }, direction: DOWN, timeout: 30000, visibilityPercentage: 80 }
+- tapOn: { id: gamification.reward-summary.continue }
+- extendedWaitUntil: { visible: { id: screen.today.ready }, timeout: 45000 }
+- scrollUntilVisible: { element: { id: today.workout.maestro-strength-a.status }, direction: DOWN, timeout: 30000, visibilityPercentage: 80 }
+- assertVisible: { id: today.workout.maestro-strength-a.status, text: '^3/3 completed$' }
