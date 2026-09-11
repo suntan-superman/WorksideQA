@@ -42,4 +42,4 @@ tags: [sageset, phase5, workout-progression, emulator-only]
 - extendedWaitUntil: { visible: { id: gamification.progression.score.value }, timeout: 45000 }
 - assertVisible: { id: gamification.progression.score.value, text: '^100$' }
 - scrollUntilVisible: { element: { id: gamification.progression.xp.value }, direction: DOWN, timeout: 30000, visibilityPercentage: 80 }
-- assertVisible: { id: gamification.progression.xp.value, text: '^500 lifetime XP$' }
+- assertVisible: { id: gamification.progression.xp.value, text: '^1750 lifetime XP$' }
