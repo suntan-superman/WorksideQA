@@ -680,6 +680,59 @@
         ]
       }
     },
+    "releaseCertification": {
+      "artifactDirectory": "reports/mobile/sageset/release-certification",
+      "requireCleanRepositories": true,
+      "suites": ["phase1", "phase2", "phase3", "phase4", "phase5", "phase6"],
+      "preflight": [
+        {
+          "id": "fixture-safety",
+          "label": "Fixture safety",
+          "owner": "sageset",
+          "commands": [
+            ["npm", "--prefix", "functions", "run", "verify:maestro-fixtures"],
+            ["npm", "--prefix", "functions", "run", "verify:maestro-mutation-contract"],
+            ["npm", "--prefix", "functions", "run", "verify:maestro-negative-contract"],
+            ["npm", "--prefix", "functions", "run", "verify:maestro-workout-contract"],
+            ["npm", "--prefix", "functions", "run", "verify:maestro-coaching-contract"]
+          ]
+        },
+        {
+          "id": "external-provider-isolation",
+          "label": "External-provider isolation",
+          "owner": "sageset",
+          "commands": [["npm", "--prefix", "functions", "run", "verify:emulator-isolation"]]
+        },
+        {
+          "id": "release-feature-gates",
+          "label": "Release feature gates",
+          "owner": "sageset",
+          "commands": [["npm", "run", "verify:release-gates"]]
+        },
+        {
+          "id": "native-expo-configuration",
+          "label": "Native/Expo configuration",
+          "owner": "sageset",
+          "commands": [["npm", "run", "verify:native-build-config"]]
+        },
+        {
+          "id": "selector-contracts",
+          "label": "Selector contracts",
+          "owner": "sageset",
+          "commands": [
+            ["npm", "run", "verify:login-automation-selectors"],
+            ["npm", "run", "verify:workout-automation-selectors"],
+            ["npm", "run", "verify:social-challenges"]
+          ]
+        },
+        {
+          "id": "runner-contracts",
+          "label": "Runner contracts",
+          "owner": "worksideqa",
+          "commands": [["node", "packages/qa-mobile/test/maestro-runner.test.js"]]
+        }
+      ]
+    },
     "pushNotifications": {
       "enabled": false
     }

@@ -444,7 +444,9 @@ async function runMaestroFlows(config, options = {}) {
     throw new Error("Maestro is not installed or is not available on PATH.");
   }
 
-  const runDirectory = fromRoot(validated.maestro.reportDirectory, timestampSlug());
+  const runDirectory = options.runDirectory
+    ? ensureDir(path.resolve(options.runDirectory))
+    : fromRoot(validated.maestro.reportDirectory, timestampSlug());
   ensureDir(runDirectory);
   console.log(`Maestro ${String(version.stdout || version.stderr).trim()}`);
   console.log(`Artifacts: ${toPosixPath(path.relative(fromRoot(), runDirectory))}`);

@@ -311,3 +311,77 @@ simulator build installed:
 ```sh
 npm run qa:sageset:maestro:phase6
 ```
+
+## Consolidated Maestro release certification
+
+WorksideQA owns the SageSet certification orchestration while the SageSet
+repository remains authoritative for fixtures, backend verifiers, feature
+gates, selector contracts, native/Expo checks, and external-provider
+isolation. The release suite discovers `phase1` through `phase6` from this
+product manifest and executes them in that order. It does not copy phase flow
+lists or SageSet verification logic.
+
+Validate the full contract without resetting fixtures, launching Maestro,
+changing emulator data, or contacting external providers:
+
+```sh
+npm run qa:sageset:release-certify:validate
+```
+
+Run the certification on macOS:
+
+```sh
+npm run qa:sageset:release-certify
+```
+
+The full command fails closed before fixture or Maestro execution unless all
+of the following are true:
+
+- the environment is `emulator` and the project is exactly
+  `sageset-maestro-local`;
+- Auth and Firestore use loopback ports `9099` and `8080`;
+- external notifications are explicitly disabled;
+- the QA allowlist contains exactly deterministic User A and User B and all
+  four credentials exist;
+- the SageSet Mobile repository exists;
+- the host is macOS with Maestro available and an iOS Simulator booted;
+- `com.workside.sageset` is installed and launchable; and
+- both WorksideQA and SageSet Mobile Git worktrees are clean.
+
+Static preflight runs all Phase 1–6 YAML/config checks, the WorksideQA runner
+contract, SageSet fixture/verifier contracts, release gates, emulator
+isolation, production/Maestro native configuration, and selector contracts.
+An ordinary UI or backend failure marks its phase failed but does not prevent
+later phases from running. An unsafe environment stops before every phase.
+
+Each run writes this layout:
+
+```text
+reports/mobile/sageset/release-certification/<timestamp>/
+  certification.json
+  certification.md
+  junit.xml
+  environment.json
+  preflight/
+  phases/
+    phase1/
+    phase2/
+    phase3/
+    phase4/
+    phase5/
+    phase6/
+```
+
+The JSON includes calculated phase/flow/backend counts, every failure,
+repository SHAs and clean status, and non-secret runtime metadata. Markdown
+provides the human release decision and failure details. JUnit exposes each
+preflight and flow independently to CI. Credentials, account emails, tokens,
+and provider secrets are never intentionally recorded; configured Maestro
+credential and allowlist values are redacted from consolidated reports and
+preflight logs.
+
+This certification validates the deterministic SageSet QA build against the
+local Firebase emulator environment using Maestro UI automation and
+SageSet-owned backend verification. It does not certify production
+infrastructure, App Store processing, external provider availability, or live
+AR camera behavior.
