@@ -3,6 +3,7 @@ module.exports = {
   ...require("./logger"),
   ...require("./masking"),
   ...require("./paths"),
+  ...require("./process-launcher"),
   ...require("./time"),
   ...require("./version"),
 };

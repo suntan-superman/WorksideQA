@@ -1,8 +1,7 @@
 const fs = require("fs");
 const path = require("path");
-const { spawn } = require("child_process");
 const YAML = require("yaml");
-const { ensureDir, fileExists, fromRoot, toPosixPath, writeJson } = require("../../qa-utils/src");
+const { ensureDir, fileExists, fromRoot, spawnCommand, terminateProcessTree, toPosixPath, writeJson } = require("../../qa-utils/src");
 const { resolveConfiguredDevice, validateDeviceDescriptors } = require('./device-selection');
 const { spawnMaestro, spawnMaestroSync, terminateMaestro } = require("./maestro-process");
 
@@ -414,18 +413,18 @@ function runProcess(command, args, options) {
     };
     const child = command === "maestro"
       ? spawnMaestro(args, spawnOptions)
-      : spawn(command, args, spawnOptions);
+      : spawnCommand(command, args, spawnOptions);
     const stdout = createOutputSink(process.stdout, options.logStream, options.secretValues);
     const stderr = createOutputSink(process.stderr, options.logStream, options.secretValues);
     const timeoutMs = Number(options.timeoutMs || 10 * 60 * 1000);
     let timedOut = false;
     const terminate = (signal) => command === "maestro"
       ? terminateMaestro(child, signal)
-      : child.kill(signal);
+      : terminateProcessTree(child, signal);
     const timer = setTimeout(() => {
       timedOut = true;
       terminate('SIGTERM');
-      if (process.platform !== "win32" || command !== "maestro") {
+      if (process.platform !== "win32") {
         setTimeout(() => terminate('SIGKILL'), 5000).unref();
       }
     }, timeoutMs);

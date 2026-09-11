@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 const path = require("path");
-const { spawn } = require("child_process");
 const { generateReleaseReview } = require("../../qa-openai/src");
 const { sendExecutiveEmail, writeExecutiveEmail } = require("../../qa-reporting/src/executive-email");
 const { writeDashboardData } = require("../../qa-reporting/src/dashboard-data");
-const { fromRoot, log } = require("../../qa-utils/src");
+const { fromRoot, log, spawnCommand } = require("../../qa-utils/src");
 const { runAllProducts } = require("./runner");
 
 function parseArgs(argv) {
@@ -55,7 +54,7 @@ function productCounts(products) {
 
 function openDashboardFile(dashboardPath) {
   if (process.platform !== "win32") return false;
-  const child = spawn("cmd", ["/c", "start", "", dashboardPath], {
+  const child = spawnCommand("cmd", ["/c", "start", "", dashboardPath], {
     detached: true,
     stdio: "ignore",
     windowsHide: true,

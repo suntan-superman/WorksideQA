@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const fs = require('node:fs');
 const path = require('node:path');
-const { spawnSync } = require('node:child_process');
+const { spawnCommandSync } = require('../../qa-utils/src');
 const { loadProductManifest } = require('../../qa-config/src');
 const { ensureDir, fromRoot, writeJson } = require('../../qa-utils/src');
 const { validateDeviceDescriptors } = require('./device-selection');
@@ -14,7 +14,7 @@ const CHECK_NAMES = [
 ];
 
 function run(command, args, cwd, env = process.env) {
-  return spawnSync(command, args, { cwd, env, encoding: 'utf8', timeout: 120000, windowsHide: true });
+  return spawnCommandSync(command, args, { cwd, env, encoding: 'utf8', timeout: 120000, windowsHide: true });
 }
 function safeText(value) {
   return String(value || '').replace(/(?:Bearer\s+|(?:token|secret|password|api[_-]?key)=)[^\s]+/gi, '[REDACTED]');

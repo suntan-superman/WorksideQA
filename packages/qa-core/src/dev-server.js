@@ -1,5 +1,4 @@
-const { spawn } = require("child_process");
-const { fileExists, log, warn } = require("../../qa-utils/src");
+const { fileExists, log, spawnCommand, terminateProcessTree, warn } = require("../../qa-utils/src");
 
 async function waitForUrl(url, timeoutMs = 30000, perAttemptTimeoutMs = 1500) {
   const startedAt = Date.now();
@@ -50,7 +49,7 @@ async function startDevServer(config, options) {
   }
 
   log(`Starting ${config.key} dev server: ${devServer.command}`);
-  const child = spawn(devServer.command, {
+  const child = spawnCommand(devServer.command, [], {
     cwd: devServer.workingDirectory,
     shell: true,
     stdio: ["ignore", "pipe", "pipe"],
@@ -99,11 +98,7 @@ async function startDevServer(config, options) {
 async function stopDevServer(server) {
   const child = server?.child || server;
   if (!child || child.killed) return;
-  if (process.platform === "win32") {
-    spawn("taskkill", ["/pid", String(child.pid), "/t", "/f"], { stdio: "ignore" });
-    return;
-  }
-  child.kill();
+  terminateProcessTree(child);
 }
 
 module.exports = {

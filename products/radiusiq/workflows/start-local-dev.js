@@ -1,12 +1,11 @@
-const { spawn } = require("child_process");
+const { spawnCommand, terminateProcessTree } = require("../../../packages/qa-utils/src");
 
 const children = [];
 let shuttingDown = false;
 
 function start(label, command, args, options = {}) {
-  const child = spawn(command, args, {
+  const child = spawnCommand(command, args, {
     cwd: options.cwd || process.cwd(),
-    shell: true,
     stdio: ["ignore", "pipe", "pipe"],
   });
   children.push(child);
@@ -30,11 +29,7 @@ function shutdown() {
   shuttingDown = true;
   for (const child of children) {
     if (child.killed) continue;
-    if (process.platform === "win32") {
-      spawn("taskkill", ["/pid", String(child.pid), "/t", "/f"], { stdio: "ignore" });
-    } else {
-      child.kill();
-    }
+    terminateProcessTree(child);
   }
 }
 

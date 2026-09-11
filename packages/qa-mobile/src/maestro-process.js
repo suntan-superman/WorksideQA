@@ -1,4 +1,8 @@
-const crossSpawn = require("cross-spawn");
+const {
+  spawnCommand,
+  spawnCommandSync,
+  terminateProcessTree,
+} = require("../../qa-utils/src/process-launcher");
 
 const MAESTRO_COMMAND = "maestro";
 
@@ -16,7 +20,11 @@ function validateArgs(args) {
  * through cmd.exe with escaped arguments. Its API mirrors child_process.spawn,
  * so cwd, env, stdio, timeout and AbortSignal options pass through unchanged.
  */
-function createMaestroProcessHelper(spawnImplementation = crossSpawn, spawnSyncImplementation = crossSpawn.sync) {
+function createMaestroProcessHelper(
+  spawnImplementation = spawnCommand,
+  spawnSyncImplementation = spawnCommandSync,
+  terminateImplementation = terminateProcessTree
+) {
   return {
     spawnMaestro(args, options = {}) {
       validateArgs(args);
@@ -27,17 +35,7 @@ function createMaestroProcessHelper(spawnImplementation = crossSpawn, spawnSyncI
       return spawnSyncImplementation(MAESTRO_COMMAND, args, options);
     },
     terminateMaestro(child, signal = "SIGTERM") {
-      if (!child || !Number.isInteger(child.pid)) return false;
-      if (process.platform !== "win32") return child.kill(signal);
-
-      // A .bat launch has a cmd.exe parent. taskkill /T prevents its Java/CLI
-      // descendant from surviving a timeout or Ctrl+C after the wrapper exits.
-      const killer = spawnImplementation("taskkill.exe", ["/pid", String(child.pid), "/t", "/f"], {
-        windowsHide: true,
-        stdio: "ignore",
-      });
-      killer.once("error", () => child.kill(signal));
-      return true;
+      return terminateImplementation(child, signal);
     },
   };
 }

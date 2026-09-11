@@ -1,4 +1,4 @@
-const { spawnSync } = require('node:child_process');
+const { spawnCommandSync } = require('../../qa-utils/src');
 
 function parseIosDevices(output) {
   const payload = JSON.parse(output || '{}');
@@ -14,7 +14,7 @@ function parseAndroidDevices(output) {
   });
 }
 
-function discoverDevices(platform, execute = spawnSync) {
+function discoverDevices(platform, execute = spawnCommandSync) {
   const command = platform === 'ios' ? 'xcrun' : 'adb';
   const args = platform === 'ios' ? ['simctl', 'list', 'devices', '--json'] : ['devices', '-l'];
   const result = execute(command, args, { encoding: 'utf8' });
@@ -34,7 +34,7 @@ function selectDiscoveredDevice(devices, requestedId, descriptor) {
   return selected;
 }
 
-function assertAppInstalled(selected, appId, execute = spawnSync) {
+function assertAppInstalled(selected, appId, execute = spawnCommandSync) {
   const command = selected.platform === 'ios' ? 'xcrun' : 'adb';
   const args = selected.platform === 'ios'
     ? ['simctl', 'get_app_container', selected.id, appId]
@@ -46,7 +46,7 @@ function assertAppInstalled(selected, appId, execute = spawnSync) {
   return true;
 }
 
-function inspectDeviceMetadata(selected, appId, execute = spawnSync) {
+function inspectDeviceMetadata(selected, appId, execute = spawnCommandSync) {
   if (selected.platform === 'ios') {
     const os = execute('xcrun', ['simctl', 'getenv', selected.id, 'SIMULATOR_RUNTIME_VERSION'], { encoding: 'utf8' });
     const app = execute('xcrun', ['simctl', 'appinfo', selected.id, appId], { encoding: 'utf8' });
@@ -78,7 +78,7 @@ function resolveConfiguredDevice(mobile, requestedName, environment = process.en
   const selected = selectDiscoveredDevice(devices, requestedId, descriptor);
   if (options.requireInstalled !== false) assertAppInstalled(selected, descriptor.appId || mobile.appId, options.execute);
   const appId = descriptor.appId || mobile.appId;
-  return { ...selected, descriptorName: requestedName, appId, ...inspectDeviceMetadata(selected, appId, options.execute || spawnSync) };
+  return { ...selected, descriptorName: requestedName, appId, ...inspectDeviceMetadata(selected, appId, options.execute || spawnCommandSync) };
 }
 
 function validateDeviceDescriptors(mobile) {

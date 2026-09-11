@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-const { spawnSync } = require("node:child_process");
+const { spawnCommandSync } = require("../../../packages/qa-utils/src");
 const fs = require("node:fs");
 const path = require("node:path");
 const config = require("./review-canary.config.json");
@@ -20,7 +20,7 @@ function parseArgs(argv) {
 function runBackend(backendDirectory, args) {
   const executable = process.platform === "win32" ? "node.exe" : "node";
   const script = path.join(backendDirectory, "scripts", "run-review-qa.js");
-  const result = spawnSync(executable, [script, ...args], {
+  const result = spawnCommandSync(executable, [script, ...args], {
     cwd: backendDirectory,
     env: process.env,
     encoding: "utf8",
