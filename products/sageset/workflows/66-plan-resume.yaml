@@ -18,11 +18,10 @@ tags: [sageset, phase5, plan-resume, emulator-only]
 - extendedWaitUntil: { visible: { id: screen.today.ready }, timeout: 45000 }
 - assertVisible: { id: plan.status.paused }
 - tapOn: { id: plan.resume.open }
-- extendedWaitUntil: { visible: { id: plan.resume.modal }, timeout: 15000 }
+- extendedWaitUntil: { visible: { id: plan.resume.confirm }, timeout: 15000 }
 - tapOn: { id: plan.resume.reason.ready_to_return }
 - tapOn: { id: plan.resume.confirm, enabled: true }
 - extendedWaitUntil: { visible: '^OK$', timeout: 45000 }
 - tapOn: '^OK$'
 - extendedWaitUntil: { visible: { id: plan.pause.open }, timeout: 45000 }
 - assertNotVisible: { id: plan.status.paused }
-

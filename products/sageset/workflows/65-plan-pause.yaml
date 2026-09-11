@@ -18,7 +18,7 @@ tags: [sageset, phase5, plan-pause, emulator-only]
 - extendedWaitUntil: { visible: { id: screen.today.ready }, timeout: 45000 }
 - scrollUntilVisible: { element: { id: plan.pause.open }, direction: DOWN, timeout: 30000, visibilityPercentage: 80 }
 - tapOn: { id: plan.pause.open }
-- extendedWaitUntil: { visible: { id: plan.pause.modal }, timeout: 15000 }
+- extendedWaitUntil: { visible: { id: plan.pause.confirm }, timeout: 15000 }
 - assertVisible: { id: plan.pause.reason.vacation, selected: true }
 - assertVisible: { id: plan.pause.return.unsure, selected: true }
 - tapOn: { id: plan.pause.confirm }
