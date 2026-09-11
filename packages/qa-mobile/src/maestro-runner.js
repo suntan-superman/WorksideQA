@@ -1,8 +1,10 @@
 const fs = require("fs");
 const path = require("path");
-const { spawn, spawnSync } = require("child_process");
+const { spawn } = require("child_process");
 const YAML = require("yaml");
 const { ensureDir, fileExists, fromRoot, toPosixPath, writeJson } = require("../../qa-utils/src");
+const { resolveConfiguredDevice, validateDeviceDescriptors } = require('./device-selection');
+const { spawnMaestro, spawnMaestroSync, terminateMaestro } = require("./maestro-process");
 
 const FORBIDDEN_FLOW_TARGETS = [
   { pattern: /https?:\/\//i, description: "network endpoint" },
@@ -40,8 +42,8 @@ function validateFixtureConfiguration(mobile, productKey) {
   if (unique(fixtures.scenarios).length !== fixtures.scenarios.length) {
     throw new Error("Product fixture scenario names must be unique.");
   }
-  if (!mobile.applicationSourceEnvKey) {
-    throw new Error("mobile.applicationSourceEnvKey is required for fixture orchestration.");
+  if (!fixtures.sourceEnvKey && !mobile.applicationSourceEnvKey) {
+    throw new Error("A fixture source environment key is required for fixture orchestration.");
   }
   if (configuredCredentialKeys(mobile).length === 0) {
     throw new Error("Product fixture credential environment keys are required.");
@@ -185,6 +187,7 @@ function validateMaestroConfiguration(config) {
   if (mobile.environment.firebaseProjectId === config.firebase?.projectId) {
     throw new Error("The Maestro Firebase project must not match the product's production Firebase project.");
   }
+  if (mobile.devices) validateDeviceDescriptors(mobile);
 
   const fixtures = validateFixtureConfiguration(mobile, config.key);
 
@@ -265,14 +268,14 @@ function validateMaestroConfiguration(config) {
   return { mobile, maestro, flows };
 }
 
-function buildFixtureResetPlan(validated, flow, environment = process.env) {
+function buildFixtureResetPlan(validated, flow, environment = process.env, generation = null) {
   if (!flow.fixtureScenario) return null;
   const { mobile } = validated;
   const fixtures = mobile.fixtures;
-  const sourceKey = mobile.applicationSourceEnvKey;
+  const sourceKey = fixtures.sourceEnvKey || mobile.applicationSourceEnvKey;
   const configuredSource = String(environment[sourceKey] || "").trim();
   if (!configuredSource) {
-    throw new Error(`Missing ${sourceKey}; set it to the local SageSet/mobile repository before running ${flow.name}.`);
+    throw new Error(`Missing ${sourceKey}; set it to the product-owned fixture repository before running ${flow.name}.`);
   }
 
   let sourceDirectory;
@@ -281,9 +284,10 @@ function buildFixtureResetPlan(validated, flow, environment = process.env) {
   } catch {
     throw new Error(`${sourceKey} does not resolve to a readable directory: ${configuredSource}`);
   }
-  const functionsPackage = path.join(sourceDirectory, "functions", "package.json");
-  if (!fileExists(functionsPackage)) {
-    throw new Error(`${sourceKey} must point to SageSet/mobile (missing functions/package.json at ${sourceDirectory}).`);
+  const packageRelativePath = fixtures.packageJsonRelative || "functions/package.json";
+  const fixturePackage = path.join(sourceDirectory, packageRelativePath);
+  if (!fileExists(fixturePackage)) {
+    throw new Error(`${sourceKey} is missing ${packageRelativePath} at ${sourceDirectory}.`);
   }
 
   const credentialValues = {};
@@ -304,6 +308,9 @@ function buildFixtureResetPlan(validated, flow, environment = process.env) {
     FIRESTORE_EMULATOR_HOST: `127.0.0.1:${emulatorPorts.firestore}`,
     FIREBASE_STORAGE_EMULATOR_HOST: `127.0.0.1:${emulatorPorts.storage}`,
     GCLOUD_PROJECT: mobile.environment.firebaseProjectId,
+    FIREBASE_PROJECT_ID: mobile.environment.firebaseProjectId,
+    ...(fixtures.environment || {}),
+    ...(generation && fixtures.passGeneration ? { MERXUS_MAESTRO_GENERATION: generation } : {}),
   };
 
   return {
@@ -314,6 +321,7 @@ function buildFixtureResetPlan(validated, flow, environment = process.env) {
       flow.fixtureScenario,
       "--apply",
       "--confirm-reset",
+      ...(generation && fixtures.passGeneration ? ["--generation", generation] : []),
     ],
     cwd: sourceDirectory,
     env: fixtureEnvironment,
@@ -321,10 +329,10 @@ function buildFixtureResetPlan(validated, flow, environment = process.env) {
   };
 }
 
-function buildBackendVerificationPlan(validated, flow, environment = process.env) {
+function buildBackendVerificationPlan(validated, flow, environment = process.env, generation = null) {
   const verificationName = backendVerificationName(flow);
   if (!verificationName) return null;
-  const fixturePlan = buildFixtureResetPlan(validated, flow, environment);
+  const fixturePlan = buildFixtureResetPlan(validated, flow, environment, generation);
   const negativePath = Boolean(flow.backendNegativeVerification);
   const workoutPath = Boolean(flow.backendWorkoutVerification);
   const coachingPath = Boolean(flow.backendCoachingVerification);
@@ -340,8 +348,10 @@ function buildBackendVerificationPlan(validated, flow, environment = process.env
     command: verification.command,
     args: [
       ...verification.args,
-      negativePath || workoutPath || coachingPath ? "--case" : "--mutation",
+      verification.argumentName || (negativePath || workoutPath || coachingPath ? "--case" : "--mutation"),
       verificationName,
+      ...(verification.includeScenario ? ["--scenario", flow.fixtureScenario] : []),
+      ...(generation && validated.mobile.fixtures.passGeneration ? ["--generation", generation] : []),
     ],
     verificationName,
     verificationKind: coachingPath
@@ -397,20 +407,39 @@ function createOutputSink(stream, logStream, secretValues) {
 
 function runProcess(command, args, options) {
   return new Promise((resolve, reject) => {
-    const child = spawn(command, args, {
+    const spawnOptions = {
       cwd: options.cwd,
       env: options.env,
       stdio: ["inherit", "pipe", "pipe"],
-    });
+    };
+    const child = command === "maestro"
+      ? spawnMaestro(args, spawnOptions)
+      : spawn(command, args, spawnOptions);
     const stdout = createOutputSink(process.stdout, options.logStream, options.secretValues);
     const stderr = createOutputSink(process.stderr, options.logStream, options.secretValues);
+    const timeoutMs = Number(options.timeoutMs || 10 * 60 * 1000);
+    let timedOut = false;
+    const terminate = (signal) => command === "maestro"
+      ? terminateMaestro(child, signal)
+      : child.kill(signal);
+    const timer = setTimeout(() => {
+      timedOut = true;
+      terminate('SIGTERM');
+      if (process.platform !== "win32" || command !== "maestro") {
+        setTimeout(() => terminate('SIGKILL'), 5000).unref();
+      }
+    }, timeoutMs);
+    const cancel = () => terminate('SIGTERM');
+    process.once('SIGINT', cancel);
     child.stdout.on("data", (chunk) => stdout.write(chunk));
     child.stderr.on("data", (chunk) => stderr.write(chunk));
     child.on("error", reject);
     child.on("close", (code, signal) => {
+      clearTimeout(timer);
+      process.removeListener('SIGINT', cancel);
       stdout.flush();
       stderr.flush();
-      resolve({ code, signal });
+      resolve({ code, signal, timedOut });
     });
   });
 }
@@ -429,8 +458,11 @@ async function runMaestroFlows(config, options = {}) {
   const validated = validateMaestroConfiguration(config);
   const selected = selectFlows(validated, options);
   if (options.validateOnly) return { validated, selected };
-  if (process.platform !== "darwin") {
-    throw new Error("SageSet Maestro execution is restricted to macOS. Use --validate on other platforms.");
+  const selectedDevice = validated.mobile.devices
+    ? resolveConfiguredDevice(validated.mobile, options.device)
+    : null;
+  if ((selectedDevice?.platform === 'ios' || !selectedDevice) && process.platform !== "darwin") {
+    throw new Error(`${config.key} iOS Maestro execution is restricted to macOS. Use --validate on other platforms.`);
   }
 
   const runnerEnv = {
@@ -439,20 +471,34 @@ async function runMaestroFlows(config, options = {}) {
     MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED: "true",
     MAESTRO_DISABLE_UPDATE_CHECK: "true",
   };
-  const version = spawnSync("maestro", ["--version"], { cwd: fromRoot(), env: runnerEnv, encoding: "utf8" });
+  const version = spawnMaestroSync(["--version"], { cwd: fromRoot(), env: runnerEnv, encoding: "utf8" });
   if (version.error || version.status !== 0) {
     throw new Error("Maestro is not installed or is not available on PATH.");
   }
 
   const runDirectory = options.runDirectory
     ? ensureDir(path.resolve(options.runDirectory))
-    : fromRoot(validated.maestro.reportDirectory, timestampSlug());
+    : fromRoot(validated.maestro.reportDirectory, timestampSlug(), selectedDevice?.platform || "unspecified");
   ensureDir(runDirectory);
+  if (selectedDevice) {
+    writeJson(path.join(runDirectory, 'device.json'), {
+      descriptor: selectedDevice.descriptorName,
+      id: selectedDevice.id,
+      name: selectedDevice.name,
+      platform: selectedDevice.platform,
+      kind: selectedDevice.kind,
+      appId: selectedDevice.appId,
+      osVersion: selectedDevice.osVersion,
+      appVersion: selectedDevice.appVersion,
+      appBuild: selectedDevice.appBuild,
+    });
+  }
   console.log(`Maestro ${String(version.stdout || version.stderr).trim()}`);
   console.log(`Artifacts: ${toPosixPath(path.relative(fromRoot(), runDirectory))}`);
 
   const results = [];
   for (const flow of selected) {
+    const generation = `${config.key}-maestro-${Date.now()}-${flow.name}`.toLowerCase().replace(/[^a-z0-9-]/g, '-');
     const backendName = backendVerificationName(flow);
     const uiFailureLabel = flow.backendCoachingVerification
       ? "UI COACHING FLOW FAILED"
@@ -470,8 +516,8 @@ async function runMaestroFlows(config, options = {}) {
     let fixturePlan;
     let backendPlan;
     try {
-      fixturePlan = buildFixtureResetPlan(validated, flow);
-      backendPlan = buildBackendVerificationPlan(validated, flow);
+      fixturePlan = buildFixtureResetPlan(validated, flow, process.env, generation);
+      backendPlan = buildBackendVerificationPlan(validated, flow, process.env, generation);
     } catch (error) {
       const result = {
         flow: flow.name,
@@ -499,6 +545,7 @@ async function runMaestroFlows(config, options = {}) {
     const relativeFlow = toPosixPath(path.relative(fromRoot(), flow.path));
     const environmentArgs = Object.entries(environmentValues).flatMap(([key, value]) => ["-e", `${key}=${value}`]);
     const args = [
+      ...(selectedDevice ? ['--device', selectedDevice.id] : []),
       "test",
       "--no-ansi",
       `--test-output-dir=${relativeArtifacts}`,
@@ -521,9 +568,10 @@ async function runMaestroFlows(config, options = {}) {
           env: fixturePlan.env,
           logStream,
           secretValues,
+          timeoutMs: validated.maestro.timeoutMs,
         });
         if (fixtureOutcome.code !== 0) {
-          throw new Error(`SageSet fixture reset exited with ${fixtureOutcome.code ?? "unknown"}.`);
+          throw new Error(`Product fixture reset exited with ${fixtureOutcome.code ?? "unknown"}.`);
         }
         fixtureStatus = "passed";
         console.log(`[Fixture] Applied ${flow.fixtureScenario}`);
@@ -555,6 +603,7 @@ async function runMaestroFlows(config, options = {}) {
         env: runnerEnv,
         logStream,
         secretValues,
+        timeoutMs: flow.timeoutMs || validated.maestro.timeoutMs,
       });
     } catch (error) {
       const result = {
@@ -607,6 +656,7 @@ async function runMaestroFlows(config, options = {}) {
           env: backendPlan.env,
           logStream,
           secretValues,
+          timeoutMs: validated.maestro.timeoutMs,
         });
       } catch (error) {
         backendOutcome = { code: null, signal: null, error };
@@ -644,9 +694,11 @@ async function runMaestroFlows(config, options = {}) {
 
     const result = {
       flow: flow.name,
+      generation,
       status: "passed",
       exitCode: outcome.code,
       signal: outcome.signal || null,
+      device: selectedDevice ? { descriptor: selectedDevice.descriptorName, id: selectedDevice.id, platform: selectedDevice.platform, kind: selectedDevice.kind, appId: selectedDevice.appId, osVersion: selectedDevice.osVersion, appVersion: selectedDevice.appVersion, appBuild: selectedDevice.appBuild } : null,
       stages: {
         fixture: { status: fixtureStatus, scenario: flow.fixtureScenario || null },
         ui: { status: "passed", exitCode: outcome.code },
@@ -673,6 +725,7 @@ module.exports = {
   buildFixtureResetPlan,
   collectEnvironmentReferences,
   normalizeFlowName,
+  runProcess,
   runMaestroFlows,
   selectFlows,
   validateFixtureConfiguration,

@@ -11,6 +11,7 @@ Options:
   --product <key>  Product manifest key (required)
   --suite <name>   Run a configured Maestro suite
   --flow <name>    Run one configured flow; .yaml is optional
+  --device <name>  Use an explicit manifest device descriptor
   --validate       Validate configuration and YAML without invoking Maestro
   --list           List configured suites and flows
   --help            Show this help`);
@@ -23,7 +24,7 @@ function parseArgs(argv) {
     if (argument === "--help" || argument === "-h") options.help = true;
     else if (argument === "--validate") options.validateOnly = true;
     else if (argument === "--list") options.list = true;
-    else if (["--product", "--suite", "--flow"].includes(argument)) {
+    else if (["--product", "--suite", "--flow", "--device"].includes(argument)) {
       const value = argv[index + 1];
       if (!value || value.startsWith("--")) throw new Error(`${argument} requires a value.`);
       options[argument.slice(2)] = value;

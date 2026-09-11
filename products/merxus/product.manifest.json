@@ -113,7 +113,105 @@
     ]
   },
   "mobile": {
-    "enabled": false
+    "enabled": true,
+    "orchestrationAuthority": "worksideqa",
+    "appId": "com.merxus.mobile.qa",
+    "productionAppId": "com.merxus.mobile",
+    "applicationSourceEnvKey": "MERXUS_MOBILE_REPO",
+    "environment": {
+      "name": "maestro",
+      "backend": "firebase-emulators",
+      "backendUrl": "http://127.0.0.1:8787",
+      "firebaseProjectId": "merxus-maestro-local",
+      "externalNotificationsAllowed": false,
+      "externalProvidersAllowed": false,
+      "emulators": { "auth": 9099, "firestore": 8080, "storage": 9199 }
+    },
+    "devices": {
+      "iosSimulator": { "platform": "ios", "kind": "simulator", "idEnvKey": "MERXUS_IOS_SIMULATOR_ID", "appId": "com.merxus.mobile.qa" },
+      "androidEmulator": { "platform": "android", "kind": "emulator", "idEnvKey": "MERXUS_ANDROID_EMULATOR_ID", "appId": "com.merxus.mobile.qa" }
+    },
+    "phase0": {
+      "backendSourceEnvKey": "MERXUS_BACKEND_REPO",
+      "preflightCommand": ["npm", "run", "qa:maestro:preflight"],
+      "authoritativeFirebaseRoot": "../web"
+    },
+    "fixtures": {
+      "owner": "merxus",
+      "sourceEnvKey": "MERXUS_BACKEND_REPO",
+      "packageJsonRelative": "package.json",
+      "command": "npm",
+      "args": ["run", "qa:maestro:reset", "--"],
+      "projectId": "merxus-maestro-local",
+      "passGeneration": true,
+      "scenarios": ["login-owner-a"],
+      "environment": {
+        "MERXUS_QA_ENVIRONMENT": "maestro",
+        "MERXUS_MAESTRO_FIREBASE_PROJECT_ID": "merxus-maestro-local",
+        "MERXUS_QA_BACKEND_URL": "http://127.0.0.1:8787",
+        "MERXUS_ALLOW_EXTERNAL_PROVIDERS": "false",
+        "MERXUS_MAESTRO_PROVIDER_INTENT_LOG": ".tmp/maestro-provider-intents.jsonl"
+      },
+      "credentialEnvKeys": {
+        "userAEmail": "MERXUS_MAESTRO_OWNER_A_EMAIL",
+        "userAPassword": "MERXUS_MAESTRO_OWNER_A_PASSWORD",
+        "userBEmail": "MERXUS_MAESTRO_OWNER_B_EMAIL",
+        "userBPassword": "MERXUS_MAESTRO_OWNER_B_PASSWORD"
+      },
+      "verification": {
+        "command": "npm",
+        "args": ["run", "qa:maestro:verify", "--"],
+        "argumentName": "--case",
+        "includeScenario": true,
+        "mutations": ["login-owner-a", "tenant-isolation-a-b", "logout-no-mutation"]
+      }
+    },
+    "flows": [
+      {
+        "name": "00-launch-environment",
+        "path": "products/merxus/workflows/00-launch-environment.yaml",
+        "fixtureScenario": "login-owner-a",
+        "backendVerification": "login-owner-a",
+        "account": "user-a",
+        "requiredEnv": ["MERXUS_MAESTRO_OWNER_A_EMAIL", "MERXUS_MAESTRO_OWNER_A_PASSWORD"],
+        "timeoutMs": 60000
+      },
+      {
+        "name": "01-login-owner-a",
+        "path": "products/merxus/workflows/01-login-owner-a.yaml",
+        "fixtureScenario": "login-owner-a",
+        "backendVerification": "login-owner-a",
+        "account": "user-a",
+        "requiredEnv": ["MERXUS_MAESTRO_OWNER_A_EMAIL", "MERXUS_MAESTRO_OWNER_A_PASSWORD"],
+        "timeoutMs": 90000
+      },
+      {
+        "name": "02-tenant-isolation",
+        "path": "products/merxus/workflows/02-tenant-isolation.yaml",
+        "fixtureScenario": "login-owner-a",
+        "backendVerification": "tenant-isolation-a-b",
+        "account": "user-a",
+        "requiredEnv": ["MERXUS_MAESTRO_OWNER_A_EMAIL", "MERXUS_MAESTRO_OWNER_A_PASSWORD"],
+        "timeoutMs": 90000
+      },
+      {
+        "name": "03-logout",
+        "path": "products/merxus/workflows/03-logout.yaml",
+        "fixtureScenario": "login-owner-a",
+        "backendVerification": "logout-no-mutation",
+        "account": "user-a",
+        "requiredEnv": ["MERXUS_MAESTRO_OWNER_A_EMAIL", "MERXUS_MAESTRO_OWNER_A_PASSWORD"],
+        "timeoutMs": 90000
+      }
+    ],
+    "maestro": {
+      "defaultSuite": "phase1",
+      "timeoutMs": 90000,
+      "reportDirectory": "reports/mobile/merxus/maestro",
+      "suites": {
+        "phase1": ["00-launch-environment", "01-login-owner-a", "02-tenant-isolation", "03-logout"]
+      }
+    }
   },
   "reviewCanary": {
     "enabled": true,

@@ -1,6 +1,6 @@
-const { spawnSync } = require("child_process");
 const path = require("path");
 const { fileExists, fromRoot } = require("../../qa-utils/src");
+const { spawnMaestroSync } = require("./maestro-process");
 
 function check(status, name, message) {
   return { status, name, message };
@@ -19,7 +19,7 @@ function runMobileChecks(config, options = {}) {
   }
 
   const checks = [];
-  const maestro = spawnSync("maestro", ["--version"], { encoding: "utf8" });
+  const maestro = spawnMaestroSync(["--version"], { encoding: "utf8" });
   if (maestro.error || maestro.status !== 0) {
     checks.push(check("skipped", "maestro", "Maestro is not installed or not on PATH."));
   } else if (flows.length === 0) {
@@ -37,7 +37,7 @@ function runMobileChecks(config, options = {}) {
         continue;
       }
 
-      const result = spawnSync("maestro", ["test", flowPath], { encoding: "utf8" });
+      const result = spawnMaestroSync(["test", flowPath], { encoding: "utf8" });
       checks.push(result.status === 0 ? check("passed", `maestro ${flow.name}`, "Flow completed.") : check("failed", `maestro ${flow.name}`, result.stderr || result.stdout || "Flow failed."));
     }
   }

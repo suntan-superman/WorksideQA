@@ -3,6 +3,7 @@ const path = require("path");
 const { spawnSync } = require("child_process");
 const { ensureDir, fromRoot, readJson, slugTimestamp, toPosixPath, writeText } = require("../../qa-utils/src");
 const { runMaestroFlows, validateMaestroConfiguration } = require("./maestro-runner");
+const { spawnMaestroSync } = require("./maestro-process");
 const {
   finalizeCertification,
   redactText,
@@ -115,6 +116,14 @@ function nativeCommand(command) {
 }
 
 function defaultCommandSync(command, args, options = {}) {
+  if (command === "maestro") {
+    return spawnMaestroSync(args, {
+      cwd: options.cwd,
+      env: options.env,
+      encoding: "utf8",
+      timeout: options.timeout,
+    });
+  }
   return spawnSync(nativeCommand(command), args, {
     cwd: options.cwd,
     env: options.env,

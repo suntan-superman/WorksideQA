@@ -1,0 +1,23 @@
+appId: com.merxus.mobile.qa
+---
+- launchApp:
+    clearState: true
+- tapOn:
+    id: auth.login.email
+- inputText: ${MERXUS_MAESTRO_OWNER_A_EMAIL}
+- tapOn:
+    id: auth.login.password
+- inputText: ${MERXUS_MAESTRO_OWNER_A_PASSWORD}
+- tapOn:
+    id: auth.login.submit
+- extendedWaitUntil:
+    visible:
+      id: dashboard.tenant.name
+    timeout: 20000
+- assertVisible:
+    id: dashboard.tenant.name
+    text: Merxus Maestro Tenant A
+- assertNotVisible: Merxus Maestro Tenant B
+- assertVisible:
+    id: dashboard.user.role
+    text: owner
