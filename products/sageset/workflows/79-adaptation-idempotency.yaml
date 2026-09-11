@@ -26,7 +26,11 @@ tags: [sageset, phase6, coaching, idempotency, emulator-only]
 - extendedWaitUntil: { visible: { id: coaching.review.confirm.accept }, timeout: 15000 }
 - tapOn: { id: coaching.review.confirm.accept }
 - extendedWaitUntil: { notVisible: { id: coaching.review.title }, timeout: 45000 }
-- tapOn: { id: tab.calendar }
+- tapOn: { id: tab.challenges }
+- extendedWaitUntil:
+    visible:
+      id: tab.today
+    timeout: 15000
 - tapOn: { id: tab.today }
 - extendedWaitUntil: { visible: { id: screen.today.ready }, timeout: 45000 }
 - assertNotVisible: { id: coaching.review.title }
