@@ -1,0 +1,31 @@
+appId: com.merxus.mobile.qa
+---
+- assertVisible:
+    id: qa-environment-value
+    text: maestro
+- assertVisible:
+    id: qa-application-id
+    text: com.merxus.mobile.qa
+- assertVisible:
+    id: qa-firebase-project
+    text: merxus-maestro-local
+- assertVisible:
+    id: settings.sms.daily-digest-time
+- repeat:
+    times: 2
+    commands:
+      - scrollUntilVisible:
+          element:
+            id: settings.sms.save
+          direction: DOWN
+          timeout: 20000
+      - assertVisible:
+          id: settings.sms.save
+          enabled: true
+      - scrollUntilVisible:
+          element:
+            id: settings.sms.daily-digest-time
+          direction: UP
+          timeout: 20000
+      - assertVisible:
+          id: settings.sms.daily-digest-time

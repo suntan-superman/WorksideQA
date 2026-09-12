@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "product": "merxus",
+  "phase": 0,
+  "status": "PHASE 0 CERTIFIED",
+  "checks": [
+    {
+      "name": "QA app identity",
+      "status": "PASS",
+      "detail": "com.merxus.mobile.qa != com.merxus.mobile"
+    },
+    {
+      "name": "Production app rejection",
+      "status": "PASS",
+      "detail": "Manifest identities are distinct and mobile contract tests enforce the rejection."
+    },
+    {
+      "name": "Production Firebase rejection",
+      "status": "PASS",
+      "detail": "merxus-maestro-local"
+    },
+    {
+      "name": "Production backend rejection",
+      "status": "PASS",
+      "detail": "http://127.0.0.1:8787"
+    },
+    {
+      "name": "Auth emulator contract",
+      "status": "PASS",
+      "detail": "127.0.0.1:9099"
+    },
+    {
+      "name": "Firestore emulator contract",
+      "status": "PASS",
+      "detail": "127.0.0.1:8080"
+    },
+    {
+      "name": "Storage emulator contract",
+      "status": "PASS",
+      "detail": "127.0.0.1:9199"
+    },
+    {
+      "name": "Authoritative rules available",
+      "status": "PASS",
+      "detail": "Merxus/web Firebase files found."
+    },
+    {
+      "name": "External providers disabled",
+      "status": "PASS",
+      "detail": "All external providers disabled."
+    },
+    {
+      "name": "Fixture reset bounded",
+      "status": "PASS",
+      "detail": "Bounded ID and dual-confirmation tests passed."
+    },
+    {
+      "name": "iOS explicit-device support",
+      "status": "PASS",
+      "detail": "MERXUS_IOS_SIMULATOR_ID"
+    },
+    {
+      "name": "Android explicit-device support",
+      "status": "PASS",
+      "detail": "MERXUS_ANDROID_EMULATOR_ID"
+    },
+    {
+      "name": "Notification security review",
+      "status": "PASS",
+      "detail": "Authenticated user/tenant ownership tests passed."
+    }
+  ],
+  "repositories": {
+    "backendRoot": "C:\\Users\\sjroy\\Source\\Merxus\\merxus-ai-backend",
+    "mobileRoot": "C:\\Users\\sjroy\\Source\\Merxus\\mobile"
+  }
+}

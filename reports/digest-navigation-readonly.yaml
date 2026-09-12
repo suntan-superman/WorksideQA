@@ -1,0 +1,45 @@
+appId: com.merxus.mobile.qa
+---
+- assertVisible:
+    id: qa-environment-value
+    text: maestro
+- assertVisible:
+    id: qa-application-id
+    text: com.merxus.mobile.qa
+- assertVisible:
+    id: qa-firebase-project
+    text: merxus-maestro-local
+- assertVisible:
+    id: settings.tenant.id
+    text: merxus-maestro-tenant-a
+- tapOn:
+    id: settings.sms.open
+- assertNotVisible:
+    id: settings.sms.qa-scroll-to-save
+- assertNotVisible:
+    id: settings.sms.qa-scroll-to-business-name
+- scrollUntilVisible:
+    element:
+      id: settings.sms.daily-digest-time
+    direction: DOWN
+    timeout: 20000
+- assertVisible:
+    id: settings.sms.daily-digest-time
+- takeScreenshot: digest-time-navigation
+- scrollUntilVisible:
+    element:
+      id: settings.sms.save
+    direction: DOWN
+    timeout: 20000
+- assertVisible:
+    id: settings.sms.save
+    enabled: true
+- takeScreenshot: digest-save-navigation
+- scrollUntilVisible:
+    element:
+      id: settings.sms.daily-digest-time
+    direction: UP
+    timeout: 20000
+- assertVisible:
+    id: settings.sms.daily-digest-time
+- takeScreenshot: digest-return-navigation
