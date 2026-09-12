@@ -138,18 +138,19 @@
         "launchReadyTimeoutMs": 30000,
         "runtimeTimeoutMultiplier": 1.5,
         "launchDismissIfVisible": ["Continue", "Close"],
-        "launchOverlayDismissIfVisible": [
+        "systemOverlaySweepers": [
           {
             "visible": "Save Password?",
             "tap": "Not Now",
-            "below": "Save Password?"
-          }
-        ],
-        "postActionDismissIfVisible": [
-          {
-            "afterTapId": "auth.login.submit",
-            "visible": "Save Password?",
-            "tap": "Not Now"
+            "below": "Save Password?",
+            "attempts": 5,
+            "pollSettleTimeoutMs": 750,
+            "checkpoints": {
+              "afterLaunchDismissals": true,
+              "afterLaunchReady": true,
+              "beforeAssertIds": ["auth.login.submit"],
+              "afterTapIds": ["auth.login.submit"]
+            }
           }
         ],
         "deterministicTextEntry": [

@@ -86,8 +86,7 @@ function resolveConfiguredDevice(mobile, requestedName, environment = process.en
     launchReadySelector: descriptor.launchReadySelector || null,
     launchReadyTimeoutMs: descriptor.launchReadyTimeoutMs || null,
     launchDismissIfVisible: descriptor.launchDismissIfVisible || null,
-    launchOverlayDismissIfVisible: descriptor.launchOverlayDismissIfVisible || null,
-    postActionDismissIfVisible: descriptor.postActionDismissIfVisible || null,
+    systemOverlaySweepers: descriptor.systemOverlaySweepers || null,
     deterministicTextEntry: descriptor.deterministicTextEntry || null,
     runtimeTimeoutMultiplier: descriptor.runtimeTimeoutMultiplier || null,
     ...inspectDeviceMetadata(selected, appId, options.execute || spawnCommandSync),
@@ -126,32 +125,30 @@ function validateDeviceDescriptors(mobile) {
           throw new Error(`Device ${name} launchDismissIfVisible must contain one or more non-empty accessibility labels.`);
         }
       }
-      if (descriptor.launchOverlayDismissIfVisible != null) {
+      if (descriptor.systemOverlaySweepers != null) {
         if (descriptor.platform !== 'ios' || descriptor.kind !== 'simulator') {
-          throw new Error(`Device ${name} launchOverlayDismissIfVisible is supported only for iOS simulators.`);
+          throw new Error(`Device ${name} systemOverlaySweepers is supported only for iOS simulators.`);
         }
-        const rules = descriptor.launchOverlayDismissIfVisible;
+        const rules = descriptor.systemOverlaySweepers;
         if (!Array.isArray(rules) || rules.length === 0 || rules.some((rule) => (
           !rule || typeof rule !== 'object' ||
           typeof rule.visible !== 'string' || !rule.visible.trim() ||
           typeof rule.tap !== 'string' || !rule.tap.trim() ||
-          (rule.below != null && (typeof rule.below !== 'string' || !rule.below.trim()))
+          (rule.below != null && (typeof rule.below !== 'string' || !rule.below.trim())) ||
+          !Number.isInteger(rule.attempts) || rule.attempts < 1 || rule.attempts > 10 ||
+          !Number.isInteger(rule.pollSettleTimeoutMs) || rule.pollSettleTimeoutMs < 1 || rule.pollSettleTimeoutMs > 1000 ||
+          !rule.checkpoints || typeof rule.checkpoints !== 'object' ||
+          !['afterLaunchDismissals', 'afterLaunchReady'].every((key) => rule.checkpoints[key] == null || typeof rule.checkpoints[key] === 'boolean') ||
+          !['beforeAssertIds', 'afterTapIds'].every((key) => rule.checkpoints[key] == null || (
+            Array.isArray(rule.checkpoints[key]) && rule.checkpoints[key].length > 0 &&
+            rule.checkpoints[key].every((id) => typeof id === 'string' && id.trim())
+          )) ||
+          !(
+            rule.checkpoints.afterLaunchDismissals || rule.checkpoints.afterLaunchReady ||
+            rule.checkpoints.beforeAssertIds?.length || rule.checkpoints.afterTapIds?.length
+          )
         ))) {
-          throw new Error(`Device ${name} launchOverlayDismissIfVisible requires one or more valid visible, tap, and optional below labels.`);
-        }
-      }
-      if (descriptor.postActionDismissIfVisible != null) {
-        if (descriptor.platform !== 'ios' || descriptor.kind !== 'simulator') {
-          throw new Error(`Device ${name} postActionDismissIfVisible is supported only for iOS simulators.`);
-        }
-        const rules = descriptor.postActionDismissIfVisible;
-        if (!Array.isArray(rules) || rules.length === 0 || rules.some((rule) => (
-          !rule || typeof rule !== 'object' ||
-          typeof rule.afterTapId !== 'string' || !rule.afterTapId.trim() ||
-          typeof rule.visible !== 'string' || !rule.visible.trim() ||
-          typeof rule.tap !== 'string' || !rule.tap.trim()
-        ))) {
-          throw new Error(`Device ${name} postActionDismissIfVisible requires one or more valid afterTapId, visible, and tap labels.`);
+          throw new Error(`Device ${name} systemOverlaySweepers requires valid bounded iOS overlay polling rules.`);
         }
       }
       if (descriptor.deterministicTextEntry != null) {

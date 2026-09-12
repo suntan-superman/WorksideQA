@@ -179,18 +179,16 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
   const commands = documents[1].toJS();
   const launches = [];
   const runtimeCommands = [];
-  const postActionDismissals = selectedDevice.platform === 'ios' && Array.isArray(selectedDevice.postActionDismissIfVisible)
-    ? selectedDevice.postActionDismissIfVisible
+  const systemOverlaySweepers = selectedDevice.platform === 'ios' && Array.isArray(selectedDevice.systemOverlaySweepers)
+    ? selectedDevice.systemOverlaySweepers
     : [];
   const deterministicTextFields = selectedDevice.platform === 'ios' && Array.isArray(selectedDevice.deterministicTextEntry)
     ? selectedDevice.deterministicTextEntry
     : [];
-  const launchOverlayDismissals = selectedDevice.platform === 'ios' && Array.isArray(selectedDevice.launchOverlayDismissIfVisible)
-    ? selectedDevice.launchOverlayDismissIfVisible
-    : [];
-  const appendLaunchOverlaySweep = () => {
-    for (const rule of launchOverlayDismissals) {
-      runtimeCommands.push({
+  const buildOverlaySweeper = (rule) => ({
+    repeat: {
+      times: rule.attempts,
+      commands: [{
         runFlow: {
           when: { visible: rule.visible },
           commands: [{
@@ -200,13 +198,21 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
             },
           }],
         },
-      });
+      }, {
+        waitForAnimationToEnd: { timeout: rule.pollSettleTimeoutMs },
+      }],
+    },
+  });
+  const appendOverlaySweepers = (predicate) => {
+    for (const rule of systemOverlaySweepers.filter(predicate)) {
+      runtimeCommands.push(buildOverlaySweeper(rule));
     }
   };
 
   for (let commandIndex = 0; commandIndex < commands.length; commandIndex += 1) {
     const command = commands[commandIndex];
     if (!command || typeof command !== "object" || !("launchApp" in command)) {
+      appendOverlaySweepers((rule) => rule.checkpoints.beforeAssertIds?.includes(command?.assertVisible?.id));
       const field = deterministicTextFields.find((candidate) => command?.tapOn?.id === candidate.id);
       const eraseCommand = commands[commandIndex + 1];
       const inputCommand = commands[commandIndex + 2];
@@ -239,16 +245,7 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
         continue;
       }
       runtimeCommands.push(command);
-      for (const rule of postActionDismissals.filter((candidate) => command?.tapOn?.id === candidate.afterTapId)) {
-        runtimeCommands.push({
-          tapOn: {
-            text: rule.tap,
-            below: { text: rule.visible },
-            optional: true,
-            label: `Dismiss ${rule.visible} if it appears`,
-          },
-        });
-      }
+      appendOverlaySweepers((rule) => rule.checkpoints.afterTapIds?.includes(command?.tapOn?.id));
       continue;
     }
     launches.push(command.launchApp);
@@ -265,7 +262,7 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
         },
       });
     }
-    appendLaunchOverlaySweep();
+    appendOverlaySweepers((rule) => rule.checkpoints.afterLaunchDismissals === true);
     runtimeCommands.push({
       extendedWaitUntil: {
         visible: { id: selectedDevice.launchReadySelector },
@@ -274,7 +271,7 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
     });
     // Sweep once more after readiness to close an overlay that materialized
     // while the dev-client bundle was becoming interactive.
-    appendLaunchOverlaySweep();
+    appendOverlaySweepers((rule) => rule.checkpoints.afterLaunchReady === true);
   }
 
   if (launches.length === 0) {
@@ -698,8 +695,7 @@ async function runMaestroFlows(config, options = {}) {
       launchUri: selectedDevice.launchUri,
       launchReadySelector: selectedDevice.launchReadySelector,
       launchDismissIfVisible: selectedDevice.launchDismissIfVisible,
-      launchOverlayDismissIfVisible: selectedDevice.launchOverlayDismissIfVisible,
-      postActionDismissIfVisible: selectedDevice.postActionDismissIfVisible,
+      systemOverlaySweepers: selectedDevice.systemOverlaySweepers,
       deterministicTextEntry: selectedDevice.deterministicTextEntry,
       runtimeTimeoutMultiplier: selectedDevice.runtimeTimeoutMultiplier,
     });
