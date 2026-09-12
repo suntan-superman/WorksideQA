@@ -185,6 +185,24 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
   const deterministicTextFields = selectedDevice.platform === 'ios' && Array.isArray(selectedDevice.deterministicTextEntry)
     ? selectedDevice.deterministicTextEntry
     : [];
+  const launchOverlayDismissals = selectedDevice.platform === 'ios' && Array.isArray(selectedDevice.launchOverlayDismissIfVisible)
+    ? selectedDevice.launchOverlayDismissIfVisible
+    : [];
+  const appendLaunchOverlaySweep = () => {
+    for (const rule of launchOverlayDismissals) {
+      runtimeCommands.push({
+        runFlow: {
+          when: { visible: rule.visible },
+          commands: [{
+            tapOn: {
+              text: rule.tap,
+              ...(rule.below ? { below: { text: rule.below } } : {}),
+            },
+          }],
+        },
+      });
+    }
+  };
 
   for (let commandIndex = 0; commandIndex < commands.length; commandIndex += 1) {
     const command = commands[commandIndex];
@@ -247,12 +265,16 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
         },
       });
     }
+    appendLaunchOverlaySweep();
     runtimeCommands.push({
       extendedWaitUntil: {
         visible: { id: selectedDevice.launchReadySelector },
         timeout: selectedDevice.launchReadyTimeoutMs || 30000,
       },
     });
+    // Sweep once more after readiness to close an overlay that materialized
+    // while the dev-client bundle was becoming interactive.
+    appendLaunchOverlaySweep();
   }
 
   if (launches.length === 0) {
@@ -676,6 +698,7 @@ async function runMaestroFlows(config, options = {}) {
       launchUri: selectedDevice.launchUri,
       launchReadySelector: selectedDevice.launchReadySelector,
       launchDismissIfVisible: selectedDevice.launchDismissIfVisible,
+      launchOverlayDismissIfVisible: selectedDevice.launchOverlayDismissIfVisible,
       postActionDismissIfVisible: selectedDevice.postActionDismissIfVisible,
       deterministicTextEntry: selectedDevice.deterministicTextEntry,
       runtimeTimeoutMultiplier: selectedDevice.runtimeTimeoutMultiplier,

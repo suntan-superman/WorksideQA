@@ -138,6 +138,13 @@
         "launchReadyTimeoutMs": 30000,
         "runtimeTimeoutMultiplier": 1.5,
         "launchDismissIfVisible": ["Continue", "Close"],
+        "launchOverlayDismissIfVisible": [
+          {
+            "visible": "Save Password?",
+            "tap": "Not Now",
+            "below": "Save Password?"
+          }
+        ],
         "postActionDismissIfVisible": [
           {
             "afterTapId": "auth.login.submit",

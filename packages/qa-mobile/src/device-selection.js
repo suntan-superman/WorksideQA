@@ -86,6 +86,7 @@ function resolveConfiguredDevice(mobile, requestedName, environment = process.en
     launchReadySelector: descriptor.launchReadySelector || null,
     launchReadyTimeoutMs: descriptor.launchReadyTimeoutMs || null,
     launchDismissIfVisible: descriptor.launchDismissIfVisible || null,
+    launchOverlayDismissIfVisible: descriptor.launchOverlayDismissIfVisible || null,
     postActionDismissIfVisible: descriptor.postActionDismissIfVisible || null,
     deterministicTextEntry: descriptor.deterministicTextEntry || null,
     runtimeTimeoutMultiplier: descriptor.runtimeTimeoutMultiplier || null,
@@ -123,6 +124,20 @@ function validateDeviceDescriptors(mobile) {
           : [descriptor.launchDismissIfVisible];
         if (labels.length === 0 || labels.some((label) => typeof label !== 'string' || !label.trim())) {
           throw new Error(`Device ${name} launchDismissIfVisible must contain one or more non-empty accessibility labels.`);
+        }
+      }
+      if (descriptor.launchOverlayDismissIfVisible != null) {
+        if (descriptor.platform !== 'ios' || descriptor.kind !== 'simulator') {
+          throw new Error(`Device ${name} launchOverlayDismissIfVisible is supported only for iOS simulators.`);
+        }
+        const rules = descriptor.launchOverlayDismissIfVisible;
+        if (!Array.isArray(rules) || rules.length === 0 || rules.some((rule) => (
+          !rule || typeof rule !== 'object' ||
+          typeof rule.visible !== 'string' || !rule.visible.trim() ||
+          typeof rule.tap !== 'string' || !rule.tap.trim() ||
+          (rule.below != null && (typeof rule.below !== 'string' || !rule.below.trim()))
+        ))) {
+          throw new Error(`Device ${name} launchOverlayDismissIfVisible requires one or more valid visible, tap, and optional below labels.`);
         }
       }
       if (descriptor.postActionDismissIfVisible != null) {
