@@ -698,6 +698,7 @@ async function runMaestroFlows(config, options = {}) {
       deterministicTextReset: selectedDevice.deterministicTextReset,
       deterministicTextEntry: selectedDevice.deterministicTextEntry,
       runtimeTimeoutMultiplier: selectedDevice.runtimeTimeoutMultiplier,
+      manualPreparation: selectedDevice.manualPreparation,
     });
   }
   console.log(`Maestro ${String(version.stdout || version.stderr).trim()}`);

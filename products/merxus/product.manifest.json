@@ -138,31 +138,10 @@
         "launchReadyTimeoutMs": 30000,
         "runtimeTimeoutMultiplier": 1.5,
         "launchDismissIfVisible": ["Continue", "Close"],
-        "systemOverlaySweepers": [
-          {
-            "visible": "Save Password?",
-            "tap": "Not Now",
-            "below": "Save Password?",
-            "attempts": 1,
-            "pollSettleTimeoutMs": 100,
-            "checkpoints": {
-              "afterLaunchDismissals": true,
-              "afterLaunchReady": true,
-              "beforeCredentialReset": true
-            }
-          },
-          {
-            "visible": "Save Password?",
-            "tap": "Not Now",
-            "below": "Save Password?",
-            "attempts": 5,
-            "pollSettleTimeoutMs": 250,
-            "checkpoints": {
-              "beforeAssertIds": ["auth.login.submit"],
-              "afterTapIds": ["auth.login.submit"]
-            }
-          }
-        ],
+        "manualPreparation": {
+          "acknowledgementEnvKey": "MERXUS_IOS_AUTOFILL_DISABLED_SIMULATOR_ID",
+          "instructions": "docs/MERXUS_IOS_SIMULATOR_PASSWORD_AUTOFILL_PREPARATION.md"
+        },
         "deterministicTextReset": {
           "id": "auth.login.qa-reset",
           "readySelector": "screen.auth.login",
