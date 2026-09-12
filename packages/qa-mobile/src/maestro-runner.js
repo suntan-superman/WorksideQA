@@ -281,11 +281,56 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
   }
 
   ensureDir(path.dirname(destinationPath));
-  fs.writeFileSync(
-    destinationPath,
-    `${YAML.stringify(header).trimEnd()}\n---\n${YAML.stringify(runtimeCommands)}`,
-    "utf8"
-  );
+  const writeRuntimeFlow = (flowPath, flowCommands) => {
+    fs.writeFileSync(
+      flowPath,
+      `${YAML.stringify(header).trimEnd()}\n---\n${YAML.stringify(flowCommands)}`,
+      "utf8"
+    );
+  };
+  let stages = [{ name: 'application', kind: 'application', path: destinationPath }];
+  const externalOverlay = selectedDevice.platform === 'ios' ? selectedDevice.externalSystemOverlay : null;
+  if (externalOverlay) {
+    const boundaryIndexes = runtimeCommands
+      .map((command, index) => command?.tapOn?.id === externalOverlay.afterTapId ? index : -1)
+      .filter((index) => index >= 0);
+    if (boundaryIndexes.length !== 1) {
+      throw new Error(
+        `Flow ${flow.name} must contain exactly one ${externalOverlay.afterTapId} tap for external iOS system-overlay handling.`
+      );
+    }
+    const boundaryIndex = boundaryIndexes[0];
+    const overlayPath = path.join(path.dirname(destinationPath), 'runtime-system-overlay.yaml');
+    const resumePath = path.join(path.dirname(destinationPath), 'runtime-resume.yaml');
+    const overlayCommands = [{
+      repeat: {
+        times: externalOverlay.attempts,
+        commands: [{
+          runFlow: {
+            when: { visible: externalOverlay.visible },
+            commands: [{
+              tapOn: {
+                text: externalOverlay.tap,
+                ...(externalOverlay.below ? { below: { text: externalOverlay.below } } : {}),
+              },
+            }],
+          },
+        }, {
+          waitForAnimationToEnd: { timeout: externalOverlay.pollSettleTimeoutMs },
+        }],
+      },
+    }];
+    writeRuntimeFlow(destinationPath, runtimeCommands.slice(0, boundaryIndex + 1));
+    writeRuntimeFlow(overlayPath, overlayCommands);
+    writeRuntimeFlow(resumePath, runtimeCommands.slice(boundaryIndex + 1));
+    stages = [
+      { name: 'application-login', kind: 'application', path: destinationPath },
+      { name: 'system-overlay', kind: 'system-overlay', path: overlayPath },
+      { name: 'application-resume', kind: 'application', path: resumePath },
+    ];
+  } else {
+    writeRuntimeFlow(destinationPath, runtimeCommands);
+  }
   const clearState = Boolean(launches[0]?.clearState);
   let clearCommand = null;
   let clearArgs = [];
@@ -324,6 +369,7 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
 
   return {
     path: destinationPath,
+    stages,
     launchPlan: {
       platform: selectedDevice.platform,
       clearState,
@@ -698,7 +744,7 @@ async function runMaestroFlows(config, options = {}) {
       deterministicTextReset: selectedDevice.deterministicTextReset,
       deterministicTextEntry: selectedDevice.deterministicTextEntry,
       runtimeTimeoutMultiplier: selectedDevice.runtimeTimeoutMultiplier,
-      manualPreparation: selectedDevice.manualPreparation,
+      externalSystemOverlay: selectedDevice.externalSystemOverlay,
     });
   }
   console.log(`Maestro ${String(version.stdout || version.stderr).trim()}`);
@@ -755,15 +801,6 @@ async function runMaestroFlows(config, options = {}) {
       selectedDevice,
       path.join(flowDirectory, "runtime-flow.yaml")
     );
-    const relativeFlow = toPosixPath(path.relative(fromRoot(), runtimeFlow.path));
-    const args = buildMaestroTestArgs({
-      selectedDevice,
-      artifactPath: relativeArtifacts,
-      junitPath: relativeJunit,
-      environmentValues,
-      flowPath: relativeFlow,
-    });
-
     console.log(`\n[Maestro] Running ${flow.name}`);
     let fixtureStatus = fixturePlan ? "pending" : "skipped";
     if (fixturePlan) {
@@ -824,13 +861,29 @@ async function runMaestroFlows(config, options = {}) {
         });
         if (launchOutcome.code !== 0) throw new Error(`${runtimeFlow.launchPlan.platform} QA launch URI exited with ${launchOutcome.code ?? "unknown"}.`);
       }
-      outcome = await runProcess("maestro", args, {
-        cwd: fromRoot(),
-        env: runnerEnv,
-        logStream,
-        secretValues,
-        timeoutMs: resolveMaestroProcessTimeoutMs(flow, validated.maestro, selectedDevice),
-      });
+      const runtimeStages = runtimeFlow.stages || [{ name: 'application', kind: 'application', path: runtimeFlow.path }];
+      for (let stageIndex = 0; stageIndex < runtimeStages.length; stageIndex += 1) {
+        const stage = runtimeStages[stageIndex];
+        const stageJunitPath = stageIndex === runtimeStages.length - 1
+          ? relativeJunit
+          : toPosixPath(path.relative(fromRoot(), path.join(flowDirectory, `junit-${stage.name}.xml`)));
+        const stageArgs = buildMaestroTestArgs({
+          selectedDevice,
+          artifactPath: relativeArtifacts,
+          junitPath: stageJunitPath,
+          environmentValues,
+          flowPath: toPosixPath(path.relative(fromRoot(), stage.path)),
+        });
+        console.log(`[Maestro] Stage ${stageIndex + 1}/${runtimeStages.length}: ${stage.name}`);
+        outcome = await runProcess("maestro", stageArgs, {
+          cwd: fromRoot(),
+          env: runnerEnv,
+          logStream,
+          secretValues,
+          timeoutMs: resolveMaestroProcessTimeoutMs(flow, validated.maestro, selectedDevice),
+        });
+        if (outcome.code !== 0) break;
+      }
     } catch (error) {
       const result = {
         flow: flow.name,

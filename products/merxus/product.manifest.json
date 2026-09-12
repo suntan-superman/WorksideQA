@@ -138,9 +138,13 @@
         "launchReadyTimeoutMs": 30000,
         "runtimeTimeoutMultiplier": 1.5,
         "launchDismissIfVisible": ["Continue", "Close"],
-        "manualPreparation": {
-          "acknowledgementEnvKey": "MERXUS_IOS_AUTOFILL_DISABLED_SIMULATOR_ID",
-          "instructions": "docs/MERXUS_IOS_SIMULATOR_PASSWORD_AUTOFILL_PREPARATION.md"
+        "externalSystemOverlay": {
+          "afterTapId": "auth.login.submit",
+          "visible": "Save Password?",
+          "tap": "Not Now",
+          "below": "Save Password?",
+          "attempts": 12,
+          "pollSettleTimeoutMs": 250
         },
         "deterministicTextReset": {
           "id": "auth.login.qa-reset",

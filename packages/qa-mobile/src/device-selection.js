@@ -46,20 +46,6 @@ function assertAppInstalled(selected, appId, execute = spawnCommandSync) {
   return true;
 }
 
-function assertManualDevicePreparation(selected, descriptor, environment = process.env) {
-  const preparation = descriptor.manualPreparation;
-  if (!preparation) return true;
-  const acknowledgedDeviceId = environment[preparation.acknowledgementEnvKey];
-  if (acknowledgedDeviceId !== selected.id) {
-    const instructions = preparation.instructions ? ` See ${preparation.instructions}.` : '';
-    throw new Error(
-      `Selected device ${selected.id} requires manual preparation. After completing it, set ` +
-      `${preparation.acknowledgementEnvKey}=${selected.id}.${instructions}`
-    );
-  }
-  return true;
-}
-
 function inspectDeviceMetadata(selected, appId, execute = spawnCommandSync) {
   if (selected.platform === 'ios') {
     const os = execute('xcrun', ['simctl', 'getenv', selected.id, 'SIMULATOR_RUNTIME_VERSION'], { encoding: 'utf8' });
@@ -90,7 +76,6 @@ function resolveConfiguredDevice(mobile, requestedName, environment = process.en
   const requestedId = environment[descriptor.idEnvKey];
   const devices = discoverDevices(descriptor.platform, options.execute);
   const selected = selectDiscoveredDevice(devices, requestedId, descriptor);
-  assertManualDevicePreparation(selected, descriptor, environment);
   if (options.requireInstalled !== false) assertAppInstalled(selected, descriptor.appId || mobile.appId, options.execute);
   const appId = descriptor.appId || mobile.appId;
   return {
@@ -105,7 +90,7 @@ function resolveConfiguredDevice(mobile, requestedName, environment = process.en
     deterministicTextReset: descriptor.deterministicTextReset || null,
     deterministicTextEntry: descriptor.deterministicTextEntry || null,
     runtimeTimeoutMultiplier: descriptor.runtimeTimeoutMultiplier || null,
-    manualPreparation: descriptor.manualPreparation || null,
+    externalSystemOverlay: descriptor.externalSystemOverlay || null,
     ...inspectDeviceMetadata(selected, appId, options.execute || spawnCommandSync),
   };
 }
@@ -117,17 +102,21 @@ function validateDeviceDescriptors(mobile) {
     if (!allowedKinds.includes(descriptor.kind)) throw new Error(`Phase 0 device ${name} must be an iOS simulator or Android emulator.`);
     if (!descriptor.idEnvKey || !descriptor.appId) throw new Error(`Device ${name} requires idEnvKey and appId.`);
     if (descriptor.appId !== mobile.appId) throw new Error(`Device ${name} must target the manifest QA appId.`);
-    if (descriptor.manualPreparation != null) {
+    if (descriptor.externalSystemOverlay != null) {
       if (descriptor.platform !== 'ios' || descriptor.kind !== 'simulator') {
-        throw new Error(`Device ${name} manualPreparation is supported only for iOS simulators.`);
+        throw new Error(`Device ${name} externalSystemOverlay is supported only for iOS simulators.`);
       }
-      const preparation = descriptor.manualPreparation;
+      const overlay = descriptor.externalSystemOverlay;
       if (
-        !preparation || typeof preparation !== 'object' ||
-        typeof preparation.acknowledgementEnvKey !== 'string' || !/^[A-Z][A-Z0-9_]+$/.test(preparation.acknowledgementEnvKey) ||
-        (preparation.instructions != null && (typeof preparation.instructions !== 'string' || !preparation.instructions.trim()))
+        !overlay || typeof overlay !== 'object' ||
+        typeof overlay.afterTapId !== 'string' || !overlay.afterTapId.trim() ||
+        typeof overlay.visible !== 'string' || !overlay.visible.trim() ||
+        typeof overlay.tap !== 'string' || !overlay.tap.trim() ||
+        (overlay.below != null && (typeof overlay.below !== 'string' || !overlay.below.trim())) ||
+        !Number.isInteger(overlay.attempts) || overlay.attempts < 1 || overlay.attempts > 20 ||
+        !Number.isInteger(overlay.pollSettleTimeoutMs) || overlay.pollSettleTimeoutMs < 100 || overlay.pollSettleTimeoutMs > 1000
       ) {
-        throw new Error(`Device ${name} manualPreparation requires a valid acknowledgementEnvKey and optional instructions path.`);
+        throw new Error(`Device ${name} externalSystemOverlay requires a valid semantic boundary and bounded polling rule.`);
       }
     }
     if (descriptor.runtimeTimeoutMultiplier != null) {
@@ -215,4 +204,4 @@ function validateDeviceDescriptors(mobile) {
   return true;
 }
 
-module.exports = { assertAppInstalled, assertManualDevicePreparation, discoverDevices, inspectDeviceMetadata, parseAndroidDevices, parseIosDevices, resolveConfiguredDevice, selectDiscoveredDevice, validateDeviceDescriptors };
+module.exports = { assertAppInstalled, discoverDevices, inspectDeviceMetadata, parseAndroidDevices, parseIosDevices, resolveConfiguredDevice, selectDiscoveredDevice, validateDeviceDescriptors };

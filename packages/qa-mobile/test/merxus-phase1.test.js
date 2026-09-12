@@ -24,9 +24,13 @@ assert.equal(iosDescriptor.launchUri, 'exp+merxus-mobile://expo-development-clie
 assert.equal(iosDescriptor.runtimeTimeoutMultiplier, 1.5);
 assert.deepEqual(iosDescriptor.launchDismissIfVisible, ['Continue', 'Close']);
 assert.equal(iosDescriptor.systemOverlaySweepers, undefined);
-assert.deepEqual(iosDescriptor.manualPreparation, {
-  acknowledgementEnvKey: 'MERXUS_IOS_AUTOFILL_DISABLED_SIMULATOR_ID',
-  instructions: 'docs/MERXUS_IOS_SIMULATOR_PASSWORD_AUTOFILL_PREPARATION.md',
+assert.deepEqual(iosDescriptor.externalSystemOverlay, {
+  afterTapId: 'auth.login.submit',
+  visible: 'Save Password?',
+  tap: 'Not Now',
+  below: 'Save Password?',
+  attempts: 12,
+  pollSettleTimeoutMs: 250,
 });
 assert.deepEqual(iosDescriptor.deterministicTextReset, {
   id: 'auth.login.qa-reset',
@@ -103,6 +107,7 @@ assert.deepEqual(runtimeCommands.slice(0, 3), [
 assert.equal(JSON.stringify(runtimeCommands).includes('Save Password?'), false);
 assert.equal(JSON.stringify(runtimeCommands).includes('Not Now'), false);
 assert.equal(runtimeFlow.path, runtimeFlowPath);
+assert.deepEqual(runtimeFlow.stages, [{ name: 'application', kind: 'application', path: runtimeFlowPath }]);
 assert.equal(runtimeFlow.launchPlan.clearState, true);
 assert.equal(runtimeFlow.launchPlan.platform, 'android');
 assert.equal(runtimeFlow.launchPlan.clearCommand, 'adb');
@@ -121,6 +126,8 @@ const iosRuntimeFlow = buildDeviceLaunchFlow(flow, {
 }, iosRuntimePath);
 const iosRuntimeDocuments = yaml.parseAllDocuments(fs.readFileSync(iosRuntimePath, 'utf8'));
 const iosRuntimeCommands = iosRuntimeDocuments[1].toJS();
+const iosOverlayCommands = yaml.parseAllDocuments(fs.readFileSync(iosRuntimeFlow.stages[1].path, 'utf8'))[1].toJS();
+const iosResumeCommands = yaml.parseAllDocuments(fs.readFileSync(iosRuntimeFlow.stages[2].path, 'utf8'))[1].toJS();
 assert.deepEqual(iosRuntimeCommands.slice(0, 6), [
   { runFlow: { when: { visible: 'Continue' }, commands: [{ tapOn: 'Continue' }] } },
   { runFlow: { when: { visible: 'Close' }, commands: [{ tapOn: 'Close' }] } },
@@ -142,6 +149,34 @@ for (const forbiddenText of ['"Select All"', '"Select"', '"Paste"', '"AutoFill"'
 }
 assert.equal(JSON.stringify(iosRuntimeCommands).includes('Save Password?'), false);
 assert.equal(JSON.stringify(iosRuntimeCommands).includes('Not Now'), false);
+assert.deepEqual(iosRuntimeFlow.stages.map(({ name, kind }) => ({ name, kind })), [
+  { name: 'application-login', kind: 'application' },
+  { name: 'system-overlay', kind: 'system-overlay' },
+  { name: 'application-resume', kind: 'application' },
+]);
+assert.deepEqual(iosOverlayCommands, [{
+  repeat: {
+    times: 12,
+    commands: [{
+      runFlow: {
+        when: { visible: 'Save Password?' },
+        commands: [{ tapOn: { text: 'Not Now', below: { text: 'Save Password?' } } }],
+      },
+    }, { waitForAnimationToEnd: { timeout: 250 } }],
+  },
+}]);
+assert.equal(JSON.stringify(iosOverlayCommands).includes('"text":"Save"'), false);
+assert.equal(JSON.stringify(iosResumeCommands).includes('Save Password?'), false);
+assert.equal(iosOverlayCommands.some((command) => Object.hasOwn(command, 'launchApp')), false);
+assert.equal(iosResumeCommands.some((command) => Object.hasOwn(command, 'launchApp')), false);
+const overlayArgs = buildMaestroTestArgs({
+  selectedDevice: { id: '3C029085-0B3D-49B6-AB7D-2943DA45F695' },
+  artifactPath: 'reports/overlay-artifacts',
+  junitPath: 'reports/overlay.xml',
+  environmentValues: {},
+  flowPath: 'reports/runtime-system-overlay.yaml',
+});
+assert.deepEqual(overlayArgs.slice(0, 2), ['--device', '3C029085-0B3D-49B6-AB7D-2943DA45F695']);
 for (const field of iosDescriptor.deterministicTextEntry) {
   const fieldTapIndex = iosRuntimeCommands.findIndex((command) => command.tapOn?.id === field.id);
   assert.ok(fieldTapIndex >= 0);
@@ -166,7 +201,8 @@ const iosSubmitIndex = iosRuntimeCommands.findIndex((command) => command.tapOn?.
 assert.ok(iosSubmitIndex >= 0);
 const iosSubmitAssertionIndex = iosRuntimeCommands.findIndex((command) => command.assertVisible?.id === 'auth.login.submit' && command.assertVisible.enabled === true);
 assert.equal(iosSubmitAssertionIndex >= 0, true);
-assert.equal(iosRuntimeCommands[iosSubmitIndex + 1].extendedWaitUntil?.visible?.id, 'screen.dashboard.ready');
+assert.equal(iosSubmitIndex, iosRuntimeCommands.length - 1);
+assert.equal(iosResumeCommands[0].extendedWaitUntil?.visible?.id, 'screen.dashboard.ready');
 assert.equal(iosRuntimeFlow.path, iosRuntimePath);
 assert.equal(iosRuntimeFlow.launchPlan.platform, 'ios');
 assert.equal(iosRuntimeFlow.launchPlan.clearState, true);
