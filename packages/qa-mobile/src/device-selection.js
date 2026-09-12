@@ -86,6 +86,7 @@ function resolveConfiguredDevice(mobile, requestedName, environment = process.en
     launchReadySelector: descriptor.launchReadySelector || null,
     launchReadyTimeoutMs: descriptor.launchReadyTimeoutMs || null,
     launchDismissIfVisible: descriptor.launchDismissIfVisible || null,
+    postActionDismissIfVisible: descriptor.postActionDismissIfVisible || null,
     ...inspectDeviceMetadata(selected, appId, options.execute || spawnCommandSync),
   };
 }
@@ -112,6 +113,20 @@ function validateDeviceDescriptors(mobile) {
           : [descriptor.launchDismissIfVisible];
         if (labels.length === 0 || labels.some((label) => typeof label !== 'string' || !label.trim())) {
           throw new Error(`Device ${name} launchDismissIfVisible must contain one or more non-empty accessibility labels.`);
+        }
+      }
+      if (descriptor.postActionDismissIfVisible != null) {
+        if (descriptor.platform !== 'ios' || descriptor.kind !== 'simulator') {
+          throw new Error(`Device ${name} postActionDismissIfVisible is supported only for iOS simulators.`);
+        }
+        const rules = descriptor.postActionDismissIfVisible;
+        if (!Array.isArray(rules) || rules.length === 0 || rules.some((rule) => (
+          !rule || typeof rule !== 'object' ||
+          typeof rule.afterTapId !== 'string' || !rule.afterTapId.trim() ||
+          typeof rule.visible !== 'string' || !rule.visible.trim() ||
+          typeof rule.tap !== 'string' || !rule.tap.trim()
+        ))) {
+          throw new Error(`Device ${name} postActionDismissIfVisible requires one or more valid afterTapId, visible, and tap labels.`);
         }
       }
     }

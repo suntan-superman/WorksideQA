@@ -179,10 +179,23 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
   const commands = documents[1].toJS();
   const launches = [];
   const runtimeCommands = [];
+  const postActionDismissals = selectedDevice.platform === 'ios' && Array.isArray(selectedDevice.postActionDismissIfVisible)
+    ? selectedDevice.postActionDismissIfVisible
+    : [];
 
   for (const command of commands) {
     if (!command || typeof command !== "object" || !("launchApp" in command)) {
       runtimeCommands.push(command);
+      for (const rule of postActionDismissals.filter((candidate) => command?.tapOn?.id === candidate.afterTapId)) {
+        runtimeCommands.push({
+          tapOn: {
+            text: rule.tap,
+            below: { text: rule.visible },
+            optional: true,
+            label: `Dismiss ${rule.visible} if it appears`,
+          },
+        });
+      }
       continue;
     }
     launches.push(command.launchApp);
@@ -617,6 +630,7 @@ async function runMaestroFlows(config, options = {}) {
       launchUri: selectedDevice.launchUri,
       launchReadySelector: selectedDevice.launchReadySelector,
       launchDismissIfVisible: selectedDevice.launchDismissIfVisible,
+      postActionDismissIfVisible: selectedDevice.postActionDismissIfVisible,
     });
   }
   console.log(`Maestro ${String(version.stdout || version.stderr).trim()}`);

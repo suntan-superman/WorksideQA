@@ -22,6 +22,9 @@ assert.equal(iosDescriptor.kind, 'simulator');
 assert.equal(iosDescriptor.launchReadySelector, 'qa-environment-root');
 assert.equal(iosDescriptor.launchUri, 'exp+merxus-mobile://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081');
 assert.deepEqual(iosDescriptor.launchDismissIfVisible, ['Continue', 'Close']);
+assert.deepEqual(iosDescriptor.postActionDismissIfVisible, [
+  { afterTapId: 'auth.login.submit', visible: 'Save Password?', tap: 'Not Now' },
+]);
 assert.deepEqual(selectFlows(validated, { suite: 'phase1' }).map((flow) => flow.name), ['00-launch-environment', '01-login-owner-a', '02-tenant-isolation', '03-logout']);
 
 const yaml = require('yaml');
@@ -79,6 +82,8 @@ assert.deepEqual(runtimeCommands.slice(0, 3), [
   { tapOn: { id: 'auth.login.email' } },
   { eraseText: 128 },
 ]);
+assert.equal(JSON.stringify(runtimeCommands).includes('Save Password?'), false);
+assert.equal(JSON.stringify(runtimeCommands).includes('Not Now'), false);
 assert.equal(runtimeFlow.path, runtimeFlowPath);
 assert.equal(runtimeFlow.launchPlan.clearState, true);
 assert.equal(runtimeFlow.launchPlan.platform, 'android');
@@ -109,6 +114,18 @@ for (const [index, label] of ['Continue', 'Close'].entries()) {
   assert.deepEqual(iosRuntimeCommands[index].runFlow.commands, [{ tapOn: label }]);
 }
 assert.equal(iosRuntimeCommands.some((command) => command.tapOn === 'Reload' || command.tapOn === 'Go home'), false);
+const iosSubmitIndex = iosRuntimeCommands.findIndex((command) => command.tapOn?.id === 'auth.login.submit');
+assert.ok(iosSubmitIndex >= 0);
+assert.deepEqual(iosRuntimeCommands[iosSubmitIndex + 1], {
+  tapOn: {
+    text: 'Not Now',
+    below: { text: 'Save Password?' },
+    optional: true,
+    label: 'Dismiss Save Password? if it appears',
+  },
+});
+assert.equal(JSON.stringify(iosRuntimeCommands[iosSubmitIndex + 1]).includes('"text":"Save"'), false);
+assert.equal(iosRuntimeCommands[iosSubmitIndex + 2].extendedWaitUntil?.visible?.id, 'screen.dashboard.ready');
 assert.equal(iosRuntimeFlow.path, iosRuntimePath);
 assert.equal(iosRuntimeFlow.launchPlan.platform, 'ios');
 assert.equal(iosRuntimeFlow.launchPlan.clearState, true);
