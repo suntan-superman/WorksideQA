@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const YAML = require("yaml");
 const { parseAuthoritativeResult } = require('./authoritative-result');
+const { collectCorrelationSources, emptyCorrelationDiagnostics } = require('./ui-correlation');
 const { ensureDir, fileExists, fromRoot, spawnCommand, terminateProcessTree, toPosixPath, writeJson } = require("../../qa-utils/src");
 const { resolveConfiguredDevice, validateDeviceDescriptors } = require('./device-selection');
 const { spawnMaestro, spawnMaestroSync, terminateMaestro } = require("./maestro-process");
@@ -687,6 +688,7 @@ function runProcess(command, args, options) {
     let escalationTimer;
     let stopping = false;
     let capturedOutput = '';
+    let capturedErrorOutput = '';
     const terminate = (signal) => command === "maestro"
       ? terminateMaestro(child, signal)
       : terminateProcessTree(child, signal);
@@ -724,7 +726,10 @@ function runProcess(command, args, options) {
       stdout.write(chunk);
       if (options.captureOutput) capturedOutput = (capturedOutput + chunk.toString()).slice(-1024 * 1024);
     });
-    child.stderr.on("data", (chunk) => stderr.write(chunk));
+    child.stderr.on("data", (chunk) => {
+      stderr.write(chunk);
+      if (options.captureOutput) capturedErrorOutput = (capturedErrorOutput + chunk.toString()).slice(-1024 * 1024);
+    });
     const cleanup = () => {
       clearTimeout(timer);
       clearTimeout(escalationTimer);
@@ -738,7 +743,7 @@ function runProcess(command, args, options) {
     });
     child.on("close", (code, signal) => {
       cleanup();
-      resolve({ code, signal, timedOut, ...(timeout ? { timeout } : {}), ...(cancelled ? { cancelled } : {}), ...(options.captureOutput ? { stdout: redact(capturedOutput, options.secretValues) } : {}) });
+      resolve({ code, signal, timedOut, ...(timeout ? { timeout } : {}), ...(cancelled ? { cancelled } : {}), ...(options.captureOutput ? { stdout: redact(capturedOutput, options.secretValues), stderr: redact(capturedErrorOutput, options.secretValues) } : {}) });
     });
   });
 }
@@ -911,6 +916,9 @@ async function runMaestroFlows(config, options = {}) {
 
     let outcome;
     let uiOutput = '';
+    let uiErrorOutput = '';
+    const applicationFlowNames = [];
+    const applicationStartedAt = Date.now();
     try {
       if (runtimeFlow.launchPlan) {
         if (runtimeFlow.launchPlan.clearState) {
@@ -961,8 +969,12 @@ async function runMaestroFlows(config, options = {}) {
           stageName: stage.name,
           captureOutput: Boolean(flow.authoritativeResult),
         });
-        uiOutput += outcome.stdout || '';
         if (processFailed(outcome)) break;
+        if (stage.kind === 'application') {
+          uiOutput += `${outcome.stdout || ''}\n`;
+          uiErrorOutput += `${outcome.stderr || ''}\n`;
+          applicationFlowNames.push(path.basename(stage.path, path.extname(stage.path)));
+        }
       }
     } catch (error) {
       const result = {
@@ -1009,6 +1021,7 @@ async function runMaestroFlows(config, options = {}) {
 
     let backendStatus = backendPlan ? "pending" : "skipped";
     let authoritativeResult;
+    let correlationDiagnostics = flow.authoritativeResult ? emptyCorrelationDiagnostics() : undefined;
     if (backendPlan) {
       console.log(`[Backend] Verifying ${backendPlan.verificationKind} ${backendPlan.verificationName}`);
       let backendOutcome;
@@ -1023,16 +1036,21 @@ async function runMaestroFlows(config, options = {}) {
           captureOutput: Boolean(flow.authoritativeResult),
         });
         if (!processFailed(backendOutcome) && flow.authoritativeResult) {
-          authoritativeResult = parseAuthoritativeResult(backendOutcome.stdout, flow.authoritativeResult, uiOutput, generation);
+          const sources = await collectCorrelationSources({ stdout: uiOutput, stderr: uiErrorOutput, artifactDirectory, applicationFlowNames, notBeforeMs: applicationStartedAt });
+          authoritativeResult = parseAuthoritativeResult(backendOutcome.stdout, flow.authoritativeResult, sources, generation);
+          correlationDiagnostics = Object.fromEntries(Object.keys(emptyCorrelationDiagnostics()).map((key) => [key, authoritativeResult[key]]));
         }
       } catch (error) {
+        if (error.correlationDiagnostics) correlationDiagnostics = error.correlationDiagnostics;
         backendOutcome = { code: null, signal: null, error };
       }
+      if (correlationDiagnostics) logStream.write(`[WorksideQA correlation] ${JSON.stringify(correlationDiagnostics)}\n`);
       if (processFailed(backendOutcome)) {
         const result = {
           flow: flow.name,
           status: "failed",
           failureStage: "backend",
+          ...(correlationDiagnostics || {}),
           ...processFailureMetadata(backendOutcome),
           exitCode: outcome.code,
           backendExitCode: backendOutcome.code,
@@ -1064,6 +1082,7 @@ async function runMaestroFlows(config, options = {}) {
       flow: flow.name,
       generation,
       ...(authoritativeResult ? { authoritativeResult } : {}),
+      ...(correlationDiagnostics || {}),
       status: "passed",
       exitCode: outcome.code,
       signal: outcome.signal || null,
