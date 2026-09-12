@@ -34,10 +34,11 @@ const executeIos = (command, args) => {
   if (args[1] === 'appinfo') return { status: 0, stdout: 'CFBundleShortVersionString = 1.0;\nCFBundleVersion = 1;' };
   return { status: 0, stdout: '' };
 };
-const iosMobile = { appId: mobile.appId, devices: { iosSimulator: { platform: 'ios', kind: 'simulator', idEnvKey: 'IOS_ID', appId: mobile.appId, runtimeTimeoutMultiplier: 1.5 } } };
+const iosMobile = { appId: mobile.appId, devices: { iosSimulator: { platform: 'ios', kind: 'simulator', idEnvKey: 'IOS_ID', appId: mobile.appId, runtimeTimeoutMultiplier: 1.5, deterministicTextReset: { id: 'auth.login.qa-reset', readySelector: 'screen.auth.login', readyTimeoutMs: 30000 } } } };
 const resolvedIos = resolveConfiguredDevice(iosMobile, 'iosSimulator', { IOS_ID: 'IOS-A' }, { execute: executeIos });
 assert.equal(resolvedIos.id, 'IOS-A');
 assert.equal(resolvedIos.runtimeTimeoutMultiplier, 1.5);
+assert.equal(resolvedIos.deterministicTextReset.id, 'auth.login.qa-reset');
 assert.ok(iosCalls.every(([, args]) => !args.includes('IOS-B')));
 assert.equal(validateDeviceDescriptors(mobile), true);
 assert.equal(validateDeviceDescriptors({ ...mobile, devices: { iosSimulator: { platform: 'ios', kind: 'simulator', idEnvKey: 'IOS_ID', appId: mobile.appId, launchUri, launchReadySelector: 'qa-environment-root', launchDismissIfVisible: ['Continue', 'Close'] } } }), true);
@@ -56,6 +57,10 @@ assert.throws(() => validateDeviceDescriptors({ ...mobile, devices: { androidEmu
 assert.throws(() => validateDeviceDescriptors({ ...mobile, devices: { iosSimulator: { platform: 'ios', kind: 'simulator', idEnvKey: 'IOS_ID', appId: mobile.appId, launchUri, launchReadySelector: 'qa-environment-root', systemOverlaySweepers: [{ ...passwordSweeper[0], attempts: 0 }] } } }), /valid bounded iOS overlay polling rules/);
 assert.throws(() => validateDeviceDescriptors({ ...mobile, devices: { iosSimulator: { platform: 'ios', kind: 'simulator', idEnvKey: 'IOS_ID', appId: mobile.appId, launchUri, launchReadySelector: 'qa-environment-root', systemOverlaySweepers: [{ ...passwordSweeper[0], checkpoints: {} }] } } }), /valid bounded iOS overlay polling rules/);
 const deterministicFields = [{ id: 'auth.login.email', secure: false, assertExact: true }, { id: 'auth.login.password', secure: true, assertExact: false }];
+const deterministicReset = { id: 'auth.login.qa-reset', readySelector: 'screen.auth.login', readyTimeoutMs: 30000 };
+assert.equal(validateDeviceDescriptors({ ...mobile, devices: { iosSimulator: { platform: 'ios', kind: 'simulator', idEnvKey: 'IOS_ID', appId: mobile.appId, launchUri, launchReadySelector: 'qa-environment-root', deterministicTextReset: deterministicReset } } }), true);
+assert.throws(() => validateDeviceDescriptors({ ...mobile, devices: { androidEmulator: { ...mobile.devices.androidEmulator, deterministicTextReset: deterministicReset } } }), /only for iOS simulators/);
+assert.throws(() => validateDeviceDescriptors({ ...mobile, devices: { iosSimulator: { platform: 'ios', kind: 'simulator', idEnvKey: 'IOS_ID', appId: mobile.appId, launchUri, launchReadySelector: 'qa-environment-root', deterministicTextReset: { ...deterministicReset, id: '' } } } }), /valid id, readySelector, and readyTimeoutMs/);
 assert.equal(validateDeviceDescriptors({ ...mobile, devices: { iosSimulator: { platform: 'ios', kind: 'simulator', idEnvKey: 'IOS_ID', appId: mobile.appId, launchUri, launchReadySelector: 'qa-environment-root', deterministicTextEntry: deterministicFields } } }), true);
 assert.throws(() => validateDeviceDescriptors({ ...mobile, devices: { androidEmulator: { ...mobile.devices.androidEmulator, deterministicTextEntry: deterministicFields } } }), /only for iOS simulators/);
 assert.throws(() => validateDeviceDescriptors({ ...mobile, devices: { iosSimulator: { platform: 'ios', kind: 'simulator', idEnvKey: 'IOS_ID', appId: mobile.appId, launchUri, launchReadySelector: 'qa-environment-root', deterministicTextEntry: [{ id: '', assertExact: true }] } } }), /valid field IDs/);

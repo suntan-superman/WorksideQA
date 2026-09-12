@@ -143,16 +143,31 @@
             "visible": "Save Password?",
             "tap": "Not Now",
             "below": "Save Password?",
-            "attempts": 5,
-            "pollSettleTimeoutMs": 750,
+            "attempts": 1,
+            "pollSettleTimeoutMs": 100,
             "checkpoints": {
               "afterLaunchDismissals": true,
               "afterLaunchReady": true,
+              "beforeCredentialReset": true
+            }
+          },
+          {
+            "visible": "Save Password?",
+            "tap": "Not Now",
+            "below": "Save Password?",
+            "attempts": 5,
+            "pollSettleTimeoutMs": 250,
+            "checkpoints": {
               "beforeAssertIds": ["auth.login.submit"],
               "afterTapIds": ["auth.login.submit"]
             }
           }
         ],
+        "deterministicTextReset": {
+          "id": "auth.login.qa-reset",
+          "readySelector": "screen.auth.login",
+          "readyTimeoutMs": 30000
+        },
         "deterministicTextEntry": [
           {
             "id": "auth.login.email",

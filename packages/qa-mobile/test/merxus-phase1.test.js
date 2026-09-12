@@ -28,16 +28,31 @@ assert.deepEqual(iosDescriptor.systemOverlaySweepers, [
     visible: 'Save Password?',
     tap: 'Not Now',
     below: 'Save Password?',
-    attempts: 5,
-    pollSettleTimeoutMs: 750,
+    attempts: 1,
+    pollSettleTimeoutMs: 100,
     checkpoints: {
       afterLaunchDismissals: true,
       afterLaunchReady: true,
+      beforeCredentialReset: true,
+    },
+  },
+  {
+    visible: 'Save Password?',
+    tap: 'Not Now',
+    below: 'Save Password?',
+    attempts: 5,
+    pollSettleTimeoutMs: 250,
+    checkpoints: {
       beforeAssertIds: ['auth.login.submit'],
       afterTapIds: ['auth.login.submit'],
     },
   },
 ]);
+assert.deepEqual(iosDescriptor.deterministicTextReset, {
+  id: 'auth.login.qa-reset',
+  readySelector: 'screen.auth.login',
+  readyTimeoutMs: 30000,
+});
 assert.deepEqual(iosDescriptor.deterministicTextEntry, [
   { id: 'auth.login.email', secure: false, assertExact: true },
   { id: 'auth.login.password', secure: true, assertExact: false },
@@ -126,9 +141,9 @@ const iosRuntimeFlow = buildDeviceLaunchFlow(flow, {
 }, iosRuntimePath);
 const iosRuntimeDocuments = yaml.parseAllDocuments(fs.readFileSync(iosRuntimePath, 'utf8'));
 const iosRuntimeCommands = iosRuntimeDocuments[1].toJS();
-const passwordSweeper = {
+const buildPasswordSweeper = (times, timeout) => ({
   repeat: {
-    times: 5,
+    times,
     commands: [
       {
         runFlow: {
@@ -136,16 +151,21 @@ const passwordSweeper = {
           commands: [{ tapOn: { text: 'Not Now', below: { text: 'Save Password?' } } }],
         },
       },
-      { waitForAnimationToEnd: { timeout: 750 } },
+      { waitForAnimationToEnd: { timeout } },
     ],
   },
-};
-assert.deepEqual(iosRuntimeCommands.slice(0, 6), [
+});
+const quickPasswordSweeper = buildPasswordSweeper(1, 100);
+const boundedPasswordSweeper = buildPasswordSweeper(5, 250);
+assert.deepEqual(iosRuntimeCommands.slice(0, 9), [
   { runFlow: { when: { visible: 'Continue' }, commands: [{ tapOn: 'Continue' }] } },
   { runFlow: { when: { visible: 'Close' }, commands: [{ tapOn: 'Close' }] } },
-  passwordSweeper,
+  quickPasswordSweeper,
   { extendedWaitUntil: { visible: { id: 'qa-environment-root' }, timeout: 30000 } },
-  passwordSweeper,
+  quickPasswordSweeper,
+  { extendedWaitUntil: { visible: { id: 'screen.auth.login' }, timeout: 30000 } },
+  quickPasswordSweeper,
+  { tapOn: { id: 'auth.login.qa-reset' } },
   { tapOn: { id: 'auth.login.email' } },
 ]);
 for (const [index, label] of ['Continue', 'Close'].entries()) {
@@ -154,12 +174,16 @@ for (const [index, label] of ['Continue', 'Close'].entries()) {
 }
 assert.equal(iosRuntimeCommands.some((command) => command.tapOn === 'Reload' || command.tapOn === 'Go home'), false);
 assert.equal(iosRuntimeCommands.some((command) => command.longPressOn), false);
+assert.equal(iosRuntimeCommands.filter((command) => command.tapOn?.id === 'auth.login.qa-reset').length, 1);
+assert.equal(iosRuntimeCommands.some((command) => Object.hasOwn(command, 'eraseText')), false);
 for (const forbiddenText of ['"Select All"', '"Select"', '"Paste"', '"AutoFill"']) {
   assert.equal(JSON.stringify(iosRuntimeCommands).includes(forbiddenText), false);
 }
-const passwordSweepers = iosRuntimeCommands.filter((command) => JSON.stringify(command) === JSON.stringify(passwordSweeper));
-assert.equal(passwordSweepers.length, 4);
-const simulateSweep = (appearances) => Array.from({ length: passwordSweeper.repeat.times }, (_, index) => Boolean(appearances[index])).some(Boolean);
+assert.equal(iosRuntimeCommands.filter((command) => JSON.stringify(command) === JSON.stringify(quickPasswordSweeper)).length, 3);
+assert.equal(iosRuntimeCommands.filter((command) => JSON.stringify(command) === JSON.stringify(boundedPasswordSweeper)).length, 2);
+const maximumOverlaySettleBudgetMs = (3 * quickPasswordSweeper.repeat.times * 100) + (2 * boundedPasswordSweeper.repeat.times * 250);
+assert.equal(maximumOverlaySettleBudgetMs, 2800);
+const simulateSweep = (appearances) => Array.from({ length: boundedPasswordSweeper.repeat.times }, (_, index) => Boolean(appearances[index])).some(Boolean);
 assert.equal(simulateSweep([true]), true);
 assert.equal(simulateSweep([false, true]), true);
 assert.equal(simulateSweep([false, false, false, false, true]), true);
@@ -168,31 +192,29 @@ for (const field of iosDescriptor.deterministicTextEntry) {
   const fieldTapIndex = iosRuntimeCommands.findIndex((command) => command.tapOn?.id === field.id);
   assert.ok(fieldTapIndex >= 0);
   const entryCommands = iosRuntimeCommands.slice(fieldTapIndex, fieldTapIndex + 3);
-  assert.deepEqual(entryCommands.slice(0, 2), [
-    { tapOn: { id: field.id } },
-    { eraseText: 100 },
-  ]);
-  assert.equal(entryCommands.filter((command) => Object.hasOwn(command, 'eraseText')).length, 1);
+  assert.deepEqual(entryCommands[0], { tapOn: { id: field.id } });
+  assert.equal(Object.hasOwn(entryCommands[1], 'inputText'), true);
+  assert.equal(entryCommands.some((command) => Object.hasOwn(command, 'eraseText')), false);
   for (const forbidden of ['longPressOn', 'Select All', 'Select', 'Paste', 'AutoFill']) {
     assert.equal(JSON.stringify(entryCommands).includes(forbidden), false);
   }
   if (field.secure) {
-    assert.match(String(entryCommands[2].inputText), /^\$\{MERXUS_MAESTRO_OWNER_[AB]_PASSWORD\}$/);
+    assert.match(String(entryCommands[1].inputText), /^\$\{MERXUS_MAESTRO_OWNER_[AB]_PASSWORD\}$/);
     assert.equal(iosRuntimeCommands.some((command) => command.assertVisible?.id === field.id && command.assertVisible?.text), false);
   } else {
-    assert.match(String(entryCommands[2].inputText), /^\$\{MERXUS_MAESTRO_OWNER_[AB]_EMAIL\}$/);
-    assert.deepEqual(iosRuntimeCommands[fieldTapIndex + 3], {
-      assertVisible: { id: field.id, text: `^${entryCommands[2].inputText}$` },
+    assert.match(String(entryCommands[1].inputText), /^\$\{MERXUS_MAESTRO_OWNER_[AB]_EMAIL\}$/);
+    assert.deepEqual(iosRuntimeCommands[fieldTapIndex + 2], {
+      assertVisible: { id: field.id, text: `^${entryCommands[1].inputText}$` },
     });
   }
 }
 const iosSubmitIndex = iosRuntimeCommands.findIndex((command) => command.tapOn?.id === 'auth.login.submit');
 assert.ok(iosSubmitIndex >= 0);
 const iosSubmitAssertionIndex = iosRuntimeCommands.findIndex((command) => command.assertVisible?.id === 'auth.login.submit' && command.assertVisible.enabled === true);
-assert.deepEqual(iosRuntimeCommands[iosSubmitAssertionIndex - 1], passwordSweeper);
-assert.deepEqual(iosRuntimeCommands[iosSubmitIndex + 1], passwordSweeper);
+assert.deepEqual(iosRuntimeCommands[iosSubmitAssertionIndex - 1], boundedPasswordSweeper);
+assert.deepEqual(iosRuntimeCommands[iosSubmitIndex + 1], boundedPasswordSweeper);
 const allPasswordDismissals = iosRuntimeCommands.filter((command) => JSON.stringify(command).includes('Save Password?'));
-assert.equal(allPasswordDismissals.length, 4);
+assert.equal(allPasswordDismissals.length, 5);
 assert.equal(allPasswordDismissals.every((command) => JSON.stringify(command).includes('Not Now')), true);
 assert.equal(allPasswordDismissals.some((command) => JSON.stringify(command).includes('"text":"Save"')), false);
 assert.equal(iosRuntimeCommands[iosSubmitIndex + 2].extendedWaitUntil?.visible?.id, 'screen.dashboard.ready');

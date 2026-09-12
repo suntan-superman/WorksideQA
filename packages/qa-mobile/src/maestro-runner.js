@@ -185,6 +185,10 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
   const deterministicTextFields = selectedDevice.platform === 'ios' && Array.isArray(selectedDevice.deterministicTextEntry)
     ? selectedDevice.deterministicTextEntry
     : [];
+  const deterministicTextReset = selectedDevice.platform === 'ios'
+    ? selectedDevice.deterministicTextReset
+    : null;
+  let deterministicTextResetApplied = false;
   const buildOverlaySweeper = (rule) => ({
     repeat: {
       times: rule.attempts,
@@ -218,9 +222,19 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
       const inputCommand = commands[commandIndex + 2];
       if (field && eraseCommand && typeof eraseCommand === 'object' && Object.hasOwn(eraseCommand, 'eraseText') && inputCommand && typeof inputCommand === 'object' && Object.hasOwn(inputCommand, 'inputText')) {
         const inputValue = typeof inputCommand.inputText === 'string' ? inputCommand.inputText : inputCommand.inputText?.text;
+        if (deterministicTextReset && !deterministicTextResetApplied) {
+          runtimeCommands.push({
+            extendedWaitUntil: {
+              visible: { id: deterministicTextReset.readySelector },
+              timeout: deterministicTextReset.readyTimeoutMs,
+            },
+          });
+          appendOverlaySweepers((rule) => rule.checkpoints.beforeCredentialReset === true);
+          runtimeCommands.push({ tapOn: { id: deterministicTextReset.id } });
+          deterministicTextResetApplied = true;
+        }
         runtimeCommands.push(
           command,
-          { eraseText: 100 },
           inputCommand
         );
         if (field.assertExact && typeof inputValue === 'string' && inputValue) {
@@ -681,6 +695,7 @@ async function runMaestroFlows(config, options = {}) {
       launchReadySelector: selectedDevice.launchReadySelector,
       launchDismissIfVisible: selectedDevice.launchDismissIfVisible,
       systemOverlaySweepers: selectedDevice.systemOverlaySweepers,
+      deterministicTextReset: selectedDevice.deterministicTextReset,
       deterministicTextEntry: selectedDevice.deterministicTextEntry,
       runtimeTimeoutMultiplier: selectedDevice.runtimeTimeoutMultiplier,
     });

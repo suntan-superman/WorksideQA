@@ -87,6 +87,7 @@ function resolveConfiguredDevice(mobile, requestedName, environment = process.en
     launchReadyTimeoutMs: descriptor.launchReadyTimeoutMs || null,
     launchDismissIfVisible: descriptor.launchDismissIfVisible || null,
     systemOverlaySweepers: descriptor.systemOverlaySweepers || null,
+    deterministicTextReset: descriptor.deterministicTextReset || null,
     deterministicTextEntry: descriptor.deterministicTextEntry || null,
     runtimeTimeoutMultiplier: descriptor.runtimeTimeoutMultiplier || null,
     ...inspectDeviceMetadata(selected, appId, options.execute || spawnCommandSync),
@@ -138,17 +139,31 @@ function validateDeviceDescriptors(mobile) {
           !Number.isInteger(rule.attempts) || rule.attempts < 1 || rule.attempts > 10 ||
           !Number.isInteger(rule.pollSettleTimeoutMs) || rule.pollSettleTimeoutMs < 1 || rule.pollSettleTimeoutMs > 1000 ||
           !rule.checkpoints || typeof rule.checkpoints !== 'object' ||
-          !['afterLaunchDismissals', 'afterLaunchReady'].every((key) => rule.checkpoints[key] == null || typeof rule.checkpoints[key] === 'boolean') ||
+          !['afterLaunchDismissals', 'afterLaunchReady', 'beforeCredentialReset'].every((key) => rule.checkpoints[key] == null || typeof rule.checkpoints[key] === 'boolean') ||
           !['beforeAssertIds', 'afterTapIds'].every((key) => rule.checkpoints[key] == null || (
             Array.isArray(rule.checkpoints[key]) && rule.checkpoints[key].length > 0 &&
             rule.checkpoints[key].every((id) => typeof id === 'string' && id.trim())
           )) ||
           !(
-            rule.checkpoints.afterLaunchDismissals || rule.checkpoints.afterLaunchReady ||
+            rule.checkpoints.afterLaunchDismissals || rule.checkpoints.afterLaunchReady || rule.checkpoints.beforeCredentialReset ||
             rule.checkpoints.beforeAssertIds?.length || rule.checkpoints.afterTapIds?.length
           )
         ))) {
           throw new Error(`Device ${name} systemOverlaySweepers requires valid bounded iOS overlay polling rules.`);
+        }
+      }
+      if (descriptor.deterministicTextReset != null) {
+        if (descriptor.platform !== 'ios' || descriptor.kind !== 'simulator') {
+          throw new Error(`Device ${name} deterministicTextReset is supported only for iOS simulators.`);
+        }
+        const reset = descriptor.deterministicTextReset;
+        if (
+          !reset || typeof reset !== 'object' ||
+          typeof reset.id !== 'string' || !reset.id.trim() ||
+          typeof reset.readySelector !== 'string' || !reset.readySelector.trim() ||
+          !Number.isInteger(reset.readyTimeoutMs) || reset.readyTimeoutMs <= 0
+        ) {
+          throw new Error(`Device ${name} deterministicTextReset requires a valid id, readySelector, and readyTimeoutMs.`);
         }
       }
       if (descriptor.deterministicTextEntry != null) {
