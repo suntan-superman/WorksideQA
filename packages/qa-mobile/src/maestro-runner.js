@@ -162,6 +162,78 @@ function validateFlowFile(flow, mobile) {
   return { ...flow, path: flowPath, references };
 }
 
+function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
+  if (!selectedDevice?.launchUri || selectedDevice.platform !== "android") {
+    return { path: flow.path, launchPlan: null };
+  }
+
+  const source = fs.readFileSync(flow.path, "utf8");
+  const documents = YAML.parseAllDocuments(source);
+  const header = documents[0].toJS();
+  const commands = documents[1].toJS();
+  const launches = [];
+  const runtimeCommands = [];
+
+  for (const command of commands) {
+    if (!command || typeof command !== "object" || !("launchApp" in command)) {
+      runtimeCommands.push(command);
+      continue;
+    }
+    launches.push(command.launchApp);
+    runtimeCommands.push({
+      extendedWaitUntil: {
+        visible: { id: selectedDevice.launchReadySelector },
+        timeout: selectedDevice.launchReadyTimeoutMs || 30000,
+      },
+    });
+  }
+
+  if (launches.length === 0) {
+    throw new Error(`Flow ${flow.name} must launch the app before applying device launchUri metadata.`);
+  }
+  if (launches.length !== 1) {
+    throw new Error(`Flow ${flow.name} must contain exactly one launchApp command when device launchUri metadata is used.`);
+  }
+
+  ensureDir(path.dirname(destinationPath));
+  fs.writeFileSync(
+    destinationPath,
+    `${YAML.stringify(header).trimEnd()}\n---\n${YAML.stringify(runtimeCommands)}`,
+    "utf8"
+  );
+  return {
+    path: destinationPath,
+    launchPlan: {
+      command: "adb",
+      clearState: Boolean(launches[0]?.clearState),
+      clearArgs: ["-s", selectedDevice.id, "shell", "pm", "clear", selectedDevice.appId],
+      launchArgs: [
+        "-s", selectedDevice.id, "shell", "am", "start", "-W",
+        "-a", "android.intent.action.VIEW",
+        "-d", selectedDevice.launchUri,
+        "-p", selectedDevice.appId,
+      ],
+    },
+  };
+}
+
+function buildMaestroTestArgs({ selectedDevice, artifactPath, junitPath, environmentValues, flowPath }) {
+  const environmentArgs = Object.entries(environmentValues).flatMap(([key, value]) => ["-e", `${key}=${value}`]);
+  return [
+    ...(selectedDevice ? ["--device", selectedDevice.id] : []),
+    "test",
+    "--no-ansi",
+    `--test-output-dir=${artifactPath}`,
+    `--debug-output=${artifactPath}`,
+    "--format",
+    "junit",
+    "--output",
+    junitPath,
+    ...environmentArgs,
+    flowPath,
+  ];
+}
+
 function validateMaestroConfiguration(config) {
   const mobile = config.mobile;
   if (!mobile?.enabled) throw new Error(`Mobile testing is not enabled for ${config.key}.`);
@@ -490,6 +562,8 @@ async function runMaestroFlows(config, options = {}) {
       osVersion: selectedDevice.osVersion,
       appVersion: selectedDevice.appVersion,
       appBuild: selectedDevice.appBuild,
+      launchUri: selectedDevice.launchUri,
+      launchReadySelector: selectedDevice.launchReadySelector,
     });
   }
   console.log(`Maestro ${String(version.stdout || version.stderr).trim()}`);
@@ -541,21 +615,19 @@ async function runMaestroFlows(config, options = {}) {
     ]).sort((left, right) => right.length - left.length);
     const relativeArtifacts = toPosixPath(path.relative(fromRoot(), artifactDirectory));
     const relativeJunit = toPosixPath(path.relative(fromRoot(), junitPath));
-    const relativeFlow = toPosixPath(path.relative(fromRoot(), flow.path));
-    const environmentArgs = Object.entries(environmentValues).flatMap(([key, value]) => ["-e", `${key}=${value}`]);
-    const args = [
-      ...(selectedDevice ? ['--device', selectedDevice.id] : []),
-      "test",
-      "--no-ansi",
-      `--test-output-dir=${relativeArtifacts}`,
-      `--debug-output=${relativeArtifacts}`,
-      "--format",
-      "junit",
-      "--output",
-      relativeJunit,
-      ...environmentArgs,
-      relativeFlow,
-    ];
+    const runtimeFlow = buildDeviceLaunchFlow(
+      flow,
+      selectedDevice,
+      path.join(flowDirectory, "runtime-flow.yaml")
+    );
+    const relativeFlow = toPosixPath(path.relative(fromRoot(), runtimeFlow.path));
+    const args = buildMaestroTestArgs({
+      selectedDevice,
+      artifactPath: relativeArtifacts,
+      junitPath: relativeJunit,
+      environmentValues,
+      flowPath: relativeFlow,
+    });
 
     console.log(`\n[Maestro] Running ${flow.name}`);
     let fixtureStatus = fixturePlan ? "pending" : "skipped";
@@ -597,6 +669,26 @@ async function runMaestroFlows(config, options = {}) {
 
     let outcome;
     try {
+      if (runtimeFlow.launchPlan) {
+        if (runtimeFlow.launchPlan.clearState) {
+          const clearOutcome = await runProcess(runtimeFlow.launchPlan.command, runtimeFlow.launchPlan.clearArgs, {
+            cwd: fromRoot(),
+            env: runnerEnv,
+            logStream,
+            secretValues,
+            timeoutMs: flow.timeoutMs || validated.maestro.timeoutMs,
+          });
+          if (clearOutcome.code !== 0) throw new Error(`Android QA state clear exited with ${clearOutcome.code ?? "unknown"}.`);
+        }
+        const launchOutcome = await runProcess(runtimeFlow.launchPlan.command, runtimeFlow.launchPlan.launchArgs, {
+          cwd: fromRoot(),
+          env: runnerEnv,
+          logStream,
+          secretValues,
+          timeoutMs: flow.timeoutMs || validated.maestro.timeoutMs,
+        });
+        if (launchOutcome.code !== 0) throw new Error(`Android QA launch URI exited with ${launchOutcome.code ?? "unknown"}.`);
+      }
       outcome = await runProcess("maestro", args, {
         cwd: fromRoot(),
         env: runnerEnv,
@@ -721,6 +813,8 @@ async function runMaestroFlows(config, options = {}) {
 
 module.exports = {
   buildBackendVerificationPlan,
+  buildDeviceLaunchFlow,
+  buildMaestroTestArgs,
   buildFixtureResetPlan,
   collectEnvironmentReferences,
   normalizeFlowName,

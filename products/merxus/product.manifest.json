@@ -129,7 +129,15 @@
     },
     "devices": {
       "iosSimulator": { "platform": "ios", "kind": "simulator", "idEnvKey": "MERXUS_IOS_SIMULATOR_ID", "appId": "com.merxus.mobile.qa" },
-      "androidEmulator": { "platform": "android", "kind": "emulator", "idEnvKey": "MERXUS_ANDROID_EMULATOR_ID", "appId": "com.merxus.mobile.qa" }
+      "androidEmulator": {
+        "platform": "android",
+        "kind": "emulator",
+        "idEnvKey": "MERXUS_ANDROID_EMULATOR_ID",
+        "appId": "com.merxus.mobile.qa",
+        "launchUri": "exp+merxus-mobile://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081%3FdisableOnboarding%3D1",
+        "launchReadySelector": "qa-environment-root",
+        "launchReadyTimeoutMs": 30000
+      }
     },
     "phase0": {
       "backendSourceEnvKey": "MERXUS_BACKEND_REPO",

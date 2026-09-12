@@ -78,7 +78,15 @@ function resolveConfiguredDevice(mobile, requestedName, environment = process.en
   const selected = selectDiscoveredDevice(devices, requestedId, descriptor);
   if (options.requireInstalled !== false) assertAppInstalled(selected, descriptor.appId || mobile.appId, options.execute);
   const appId = descriptor.appId || mobile.appId;
-  return { ...selected, descriptorName: requestedName, appId, ...inspectDeviceMetadata(selected, appId, options.execute || spawnCommandSync) };
+  return {
+    ...selected,
+    descriptorName: requestedName,
+    appId,
+    launchUri: descriptor.launchUri || null,
+    launchReadySelector: descriptor.launchReadySelector || null,
+    launchReadyTimeoutMs: descriptor.launchReadyTimeoutMs || null,
+    ...inspectDeviceMetadata(selected, appId, options.execute || spawnCommandSync),
+  };
 }
 
 function validateDeviceDescriptors(mobile) {
@@ -88,6 +96,14 @@ function validateDeviceDescriptors(mobile) {
     if (!allowedKinds.includes(descriptor.kind)) throw new Error(`Phase 0 device ${name} must be an iOS simulator or Android emulator.`);
     if (!descriptor.idEnvKey || !descriptor.appId) throw new Error(`Device ${name} requires idEnvKey and appId.`);
     if (descriptor.appId !== mobile.appId) throw new Error(`Device ${name} must target the manifest QA appId.`);
+    if (descriptor.launchUri) {
+      if (descriptor.platform !== 'android') throw new Error(`Device ${name} launchUri is currently supported only for Android.`);
+      if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(descriptor.launchUri)) throw new Error(`Device ${name} launchUri must be an absolute application URI.`);
+      if (!descriptor.launchReadySelector) throw new Error(`Device ${name} requires launchReadySelector when launchUri is configured.`);
+      if (descriptor.launchReadyTimeoutMs != null && (!Number.isInteger(descriptor.launchReadyTimeoutMs) || descriptor.launchReadyTimeoutMs <= 0)) {
+        throw new Error(`Device ${name} launchReadyTimeoutMs must be a positive integer.`);
+      }
+    }
   }
   return true;
 }
