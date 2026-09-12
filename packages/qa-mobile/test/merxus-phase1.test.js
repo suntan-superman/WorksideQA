@@ -26,8 +26,8 @@ assert.deepEqual(iosDescriptor.postActionDismissIfVisible, [
   { afterTapId: 'auth.login.submit', visible: 'Save Password?', tap: 'Not Now' },
 ]);
 assert.deepEqual(iosDescriptor.deterministicTextEntry, [
-  { id: 'auth.login.email', assertExact: true },
-  { id: 'auth.login.password', assertExact: false },
+  { id: 'auth.login.email', secure: false, assertExact: true },
+  { id: 'auth.login.password', secure: true, assertExact: false },
 ]);
 assert.deepEqual(selectFlows(validated, { suite: 'phase1' }).map((flow) => flow.name), ['00-launch-environment', '01-login-owner-a', '02-tenant-isolation', '03-logout']);
 
@@ -121,17 +121,28 @@ assert.equal(iosRuntimeCommands.some((command) => command.tapOn === 'Reload' || 
 for (const field of iosDescriptor.deterministicTextEntry) {
   const fieldTapIndex = iosRuntimeCommands.findIndex((command) => command.tapOn?.id === field.id);
   assert.ok(fieldTapIndex >= 0);
-  assert.deepEqual(iosRuntimeCommands.slice(fieldTapIndex, fieldTapIndex + 7), [
-    { tapOn: { id: field.id } },
-    { longPressOn: { id: field.id } },
-    { runFlow: { when: { visible: 'Select All' }, commands: [{ tapOn: 'Select All' }, { eraseText: 1 }] } },
-    { tapOn: { id: field.id } },
-    { eraseText: 100 },
-    { eraseText: 100 },
-    iosRuntimeCommands[fieldTapIndex + 6],
-  ]);
-  assert.match(String(iosRuntimeCommands[fieldTapIndex + 6].inputText), /^\$\{MERXUS_MAESTRO_OWNER_[AB]_(?:EMAIL|PASSWORD)\}$/);
-  if (field.assertExact) {
+  if (field.secure) {
+    const secureCommands = iosRuntimeCommands.slice(fieldTapIndex, fieldTapIndex + 5);
+    assert.deepEqual(secureCommands.slice(0, 4), [
+      { tapOn: { id: field.id } },
+      { eraseText: 100 },
+      { eraseText: 100 },
+      { eraseText: 100 },
+    ]);
+    assert.match(String(secureCommands[4].inputText), /^\$\{MERXUS_MAESTRO_OWNER_[AB]_PASSWORD\}$/);
+    assert.equal(JSON.stringify(secureCommands).includes('longPressOn'), false);
+    for (const forbidden of ['Select All', 'Paste', 'AutoFill']) assert.equal(JSON.stringify(secureCommands).includes(forbidden), false);
+  } else {
+    assert.deepEqual(iosRuntimeCommands.slice(fieldTapIndex, fieldTapIndex + 7), [
+      { tapOn: { id: field.id } },
+      { longPressOn: { id: field.id } },
+      { runFlow: { when: { visible: 'Select All' }, commands: [{ tapOn: 'Select All' }, { eraseText: 1 }] } },
+      { tapOn: { id: field.id } },
+      { eraseText: 100 },
+      { eraseText: 100 },
+      iosRuntimeCommands[fieldTapIndex + 6],
+    ]);
+    assert.match(String(iosRuntimeCommands[fieldTapIndex + 6].inputText), /^\$\{MERXUS_MAESTRO_OWNER_[AB]_EMAIL\}$/);
     assert.deepEqual(iosRuntimeCommands[fieldTapIndex + 7], {
       assertVisible: { id: field.id, text: `^${iosRuntimeCommands[fieldTapIndex + 6].inputText}$` },
     });

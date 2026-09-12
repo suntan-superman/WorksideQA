@@ -194,20 +194,30 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
       const inputCommand = commands[commandIndex + 2];
       if (field && eraseCommand && typeof eraseCommand === 'object' && Object.hasOwn(eraseCommand, 'eraseText') && inputCommand && typeof inputCommand === 'object' && Object.hasOwn(inputCommand, 'inputText')) {
         const inputValue = typeof inputCommand.inputText === 'string' ? inputCommand.inputText : inputCommand.inputText?.text;
-        runtimeCommands.push(
-          command,
-          { longPressOn: { id: field.id } },
-          {
-            runFlow: {
-              when: { visible: 'Select All' },
-              commands: [{ tapOn: 'Select All' }, { eraseText: 1 }],
+        if (field.secure) {
+          runtimeCommands.push(
+            command,
+            { eraseText: 100 },
+            { eraseText: 100 },
+            { eraseText: 100 },
+            inputCommand
+          );
+        } else {
+          runtimeCommands.push(
+            command,
+            { longPressOn: { id: field.id } },
+            {
+              runFlow: {
+                when: { visible: 'Select All' },
+                commands: [{ tapOn: 'Select All' }, { eraseText: 1 }],
+              },
             },
-          },
-          { tapOn: { id: field.id } },
-          { eraseText: 100 },
-          { eraseText: 100 },
-          inputCommand
-        );
+            { tapOn: { id: field.id } },
+            { eraseText: 100 },
+            { eraseText: 100 },
+            inputCommand
+          );
+        }
         if (field.assertExact && typeof inputValue === 'string' && inputValue) {
           runtimeCommands.push({ assertVisible: { id: field.id, text: `^${inputValue}$` } });
         }

@@ -138,7 +138,9 @@ function validateDeviceDescriptors(mobile) {
         if (!Array.isArray(fields) || fields.length === 0 || fields.some((field) => (
           !field || typeof field !== 'object' ||
           typeof field.id !== 'string' || !field.id.trim() ||
-          (field.assertExact != null && typeof field.assertExact !== 'boolean')
+          (field.secure != null && typeof field.secure !== 'boolean') ||
+          (field.assertExact != null && typeof field.assertExact !== 'boolean') ||
+          (field.secure === true && field.assertExact === true)
         ))) {
           throw new Error(`Device ${name} deterministicTextEntry requires one or more valid field IDs.`);
         }

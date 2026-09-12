@@ -147,10 +147,12 @@
         "deterministicTextEntry": [
           {
             "id": "auth.login.email",
+            "secure": false,
             "assertExact": true
           },
           {
             "id": "auth.login.password",
+            "secure": true,
             "assertExact": false
           }
         ]
