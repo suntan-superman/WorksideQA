@@ -350,7 +350,8 @@ assert.match(runnerSource, /UI WORKOUT FLOW FAILED/);
 assert.match(runnerSource, /UI COACHING FLOW FAILED/);
 assert.match(runnerSource, /UI PASS \/ BACKEND ADAPTATION FAIL/);
 assert.match(runnerSource, /UI PASS \/ BACKEND NON-MUTATION PASS/);
-assert.match(runnerSource, /timeoutMs: resolveMaestroProcessTimeoutMs\(flow, validated\.maestro, selectedDevice\)/);
+assert.match(runnerSource, /const watchdog = resolveMaestroProcessBudget\(flow, validated\.maestro, selectedDevice\)/);
+assert.match(runnerSource, /timeoutMs: watchdog\.effectiveWatchdogMs/);
 fs.rmSync(fixtureRoot, { recursive: true, force: true });
 
 console.log("SageSet Maestro runner contract verified.");

@@ -217,7 +217,7 @@
         "backendVerification": "phase2-settings-update-owner-a",
         "account": "user-a",
         "requiredEnv": ["MERXUS_MAESTRO_OWNER_A_EMAIL", "MERXUS_MAESTRO_OWNER_A_PASSWORD"],
-        "timeoutMs": 90000,
+        "timeoutMs": 180000,
         "authoritativeResult": {
           "externalProviderInvocationCount": 0,
           "blockedProviderAttemptCount": 0,

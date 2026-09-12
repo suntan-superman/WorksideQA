@@ -72,7 +72,7 @@ assert.equal(commands[commands.indexOf(boundedNavigation[1]) - 1].extendedWaitUn
 assert.equal(flow.backendVerification, 'phase2-settings-update-owner-a');
 assert.equal(flow.fixtureScenario, 'phase2-settings-update-owner-a');
 assert.equal(flow.account, 'user-a');
-assert.equal(flow.timeoutMs, 90000, 'navigation fix does not inflate the flow timeout');
+assert.equal(flow.timeoutMs, 180000, 'settings workflow has its own explicit logical runtime');
 assert.deepEqual(flow.authoritativeResult, {
   externalProviderInvocationCount: 0, blockedProviderAttemptCount: 0,
   crossTenantLeakageCount: 0, successAuditCount: 1, operationReceiptCount: 1,

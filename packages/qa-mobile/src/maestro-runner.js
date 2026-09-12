@@ -400,11 +400,24 @@ function buildMaestroTestArgs({ selectedDevice, artifactPath, junitPath, environ
 }
 
 function resolveMaestroProcessTimeoutMs(flow, maestro, selectedDevice = null) {
-  const flowTimeoutMs = Number(flow.timeoutMs || maestro.timeoutMs);
+  return resolveMaestroProcessBudget(flow, maestro, selectedDevice).effectiveWatchdogMs;
+}
+
+function resolveMaestroProcessBudget(flow, maestro, selectedDevice = null) {
+  // Undeclared products retain runProcess's historical ten-minute default.
+  const declaredFlowTimeoutMs = Number(flow.timeoutMs ?? maestro.timeoutMs ?? 10 * 60 * 1000);
   // Keep the flow timeout as the logical baseline while allowing slower device
   // automation runtimes to opt into more execution time; CLI startup stays separate.
-  const runtimeMultiplier = Number(selectedDevice?.runtimeTimeoutMultiplier || 1);
-  return Math.ceil(flowTimeoutMs * runtimeMultiplier) + Number(maestro.processStartupGraceMs || 0);
+  const runtimeMultiplier = Number(selectedDevice?.runtimeTimeoutMultiplier ?? 1);
+  const startupGraceMs = Number(maestro.processStartupGraceMs ?? 0);
+  const effectiveWatchdogMs = Math.ceil(declaredFlowTimeoutMs * runtimeMultiplier) + startupGraceMs;
+  if (!Number.isSafeInteger(declaredFlowTimeoutMs) || declaredFlowTimeoutMs <= 0
+    || !Number.isFinite(runtimeMultiplier) || runtimeMultiplier < 1
+    || !Number.isSafeInteger(startupGraceMs) || startupGraceMs < 0
+    || !Number.isSafeInteger(effectiveWatchdogMs) || effectiveWatchdogMs > 2147483647) {
+    throw new Error('Maestro process timeout must be finite, positive and within the Node timer limit.');
+  }
+  return { declaredFlowTimeoutMs, runtimeMultiplier, startupGraceMs, effectiveWatchdogMs };
 }
 
 function validateMaestroConfiguration(config) {
@@ -654,6 +667,10 @@ function createOutputSink(stream, logStream, secretValues) {
 
 function runProcess(command, args, options) {
   return new Promise((resolve, reject) => {
+    const timeoutMs = Number(options.timeoutMs ?? 10 * 60 * 1000);
+    if (!Number.isSafeInteger(timeoutMs) || timeoutMs <= 0 || timeoutMs > 2147483647) {
+      throw new Error('Process timeout must be a bounded positive integer.');
+    }
     const spawnOptions = {
       cwd: options.cwd,
       env: options.env,
@@ -664,35 +681,83 @@ function runProcess(command, args, options) {
       : spawnCommand(command, args, spawnOptions);
     const stdout = createOutputSink(process.stdout, options.logStream, options.secretValues);
     const stderr = createOutputSink(process.stderr, options.logStream, options.secretValues);
-    const timeoutMs = Number(options.timeoutMs || 10 * 60 * 1000);
     let timedOut = false;
+    let cancelled = false;
+    let timeout;
+    let escalationTimer;
+    let stopping = false;
     let capturedOutput = '';
     const terminate = (signal) => command === "maestro"
       ? terminateMaestro(child, signal)
       : terminateProcessTree(child, signal);
-    const timer = setTimeout(() => {
-      timedOut = true;
+    const stop = () => {
+      if (stopping) return;
+      stopping = true;
       terminate('SIGTERM');
       if (process.platform !== "win32") {
-        setTimeout(() => terminate('SIGKILL'), 5000).unref();
+        escalationTimer = setTimeout(() => terminate('SIGKILL'), 5000);
+        escalationTimer.unref();
       }
+    };
+    const timer = setTimeout(() => {
+      timedOut = true;
+      timeout = {
+        code: 'WORKSIDEQA_PROCESS_TIMEOUT',
+        declaredFlowTimeoutMs: options.watchdog?.declaredFlowTimeoutMs ?? timeoutMs,
+        startupGraceMs: options.watchdog?.startupGraceMs ?? 0,
+        effectiveWatchdogMs: timeoutMs,
+        runtimeMultiplier: options.watchdog?.runtimeMultiplier ?? 1,
+        stage: options.stage || 'process',
+        ...(options.stageName ? { stageName: options.stageName } : {}),
+      };
+      stderr.write(`\n${JSON.stringify(timeout)}\n`);
+      stderr.flush();
+      stop();
     }, timeoutMs);
-    const cancel = () => terminate('SIGTERM');
+    const cancel = () => {
+      cancelled = true;
+      clearTimeout(timer);
+      stop();
+    };
     process.once('SIGINT', cancel);
     child.stdout.on("data", (chunk) => {
       stdout.write(chunk);
       if (options.captureOutput) capturedOutput = (capturedOutput + chunk.toString()).slice(-1024 * 1024);
     });
     child.stderr.on("data", (chunk) => stderr.write(chunk));
-    child.on("error", reject);
-    child.on("close", (code, signal) => {
+    const cleanup = () => {
       clearTimeout(timer);
+      clearTimeout(escalationTimer);
       process.removeListener('SIGINT', cancel);
       stdout.flush();
       stderr.flush();
-      resolve({ code, signal, timedOut, ...(options.captureOutput ? { stdout: redact(capturedOutput, options.secretValues) } : {}) });
+    };
+    child.on("error", (error) => {
+      cleanup();
+      reject(error);
+    });
+    child.on("close", (code, signal) => {
+      cleanup();
+      resolve({ code, signal, timedOut, ...(timeout ? { timeout } : {}), ...(cancelled ? { cancelled } : {}), ...(options.captureOutput ? { stdout: redact(capturedOutput, options.secretValues) } : {}) });
     });
   });
+}
+
+function processFailed(outcome) {
+  return outcome.code !== 0 || outcome.timedOut || outcome.cancelled;
+}
+
+function processFailureMetadata(outcome) {
+  if (outcome.timeout) return { errorCode: outcome.timeout.code, timeout: outcome.timeout };
+  if (outcome.cancelled || outcome.errorCode === 'WORKSIDEQA_PROCESS_CANCELLED') return { errorCode: 'WORKSIDEQA_PROCESS_CANCELLED' };
+  return {};
+}
+
+function assertProcessSucceeded(outcome, description) {
+  if (processFailed(outcome)) {
+    const metadata = processFailureMetadata(outcome);
+    throw Object.assign(new Error(`${metadata.errorCode || description}: exited with ${outcome.code ?? 'unknown'}.`), metadata);
+  }
 }
 
 function requireFlowEnvironment(flow) {
@@ -817,10 +882,9 @@ async function runMaestroFlows(config, options = {}) {
           logStream,
           secretValues,
           timeoutMs: validated.maestro.timeoutMs,
+          stage: 'fixture',
         });
-        if (fixtureOutcome.code !== 0) {
-          throw new Error(`Product fixture reset exited with ${fixtureOutcome.code ?? "unknown"}.`);
-        }
+        assertProcessSucceeded(fixtureOutcome, 'Product fixture reset');
         fixtureStatus = "passed";
         console.log(`[Fixture] Applied ${flow.fixtureScenario}`);
       } catch (error) {
@@ -828,6 +892,7 @@ async function runMaestroFlows(config, options = {}) {
           flow: flow.name,
           status: "failed",
           failureStage: "fixture",
+          ...processFailureMetadata(error),
           stages: {
             fixture: { status: "failed", scenario: flow.fixtureScenario || null },
             ui: { status: "not-run" },
@@ -855,8 +920,9 @@ async function runMaestroFlows(config, options = {}) {
             logStream,
             secretValues,
             timeoutMs: flow.timeoutMs || validated.maestro.timeoutMs,
+            stage: 'clear-state',
           });
-          if (clearOutcome.code !== 0) throw new Error(`${runtimeFlow.launchPlan.platform} QA state clear exited with ${clearOutcome.code ?? "unknown"}.`);
+          assertProcessSucceeded(clearOutcome, `${runtimeFlow.launchPlan.platform} QA state clear`);
         }
         const launchOutcome = await runProcess(runtimeFlow.launchPlan.launchCommand, runtimeFlow.launchPlan.launchArgs, {
           cwd: fromRoot(),
@@ -864,8 +930,9 @@ async function runMaestroFlows(config, options = {}) {
           logStream,
           secretValues,
           timeoutMs: flow.timeoutMs || validated.maestro.timeoutMs,
+          stage: 'launch',
         });
-        if (launchOutcome.code !== 0) throw new Error(`${runtimeFlow.launchPlan.platform} QA launch URI exited with ${launchOutcome.code ?? "unknown"}.`);
+        assertProcessSucceeded(launchOutcome, `${runtimeFlow.launchPlan.platform} QA launch URI`);
       }
       const runtimeStages = runtimeFlow.stages || [{ name: 'application', kind: 'application', path: runtimeFlow.path }];
       for (let stageIndex = 0; stageIndex < runtimeStages.length; stageIndex += 1) {
@@ -881,22 +948,28 @@ async function runMaestroFlows(config, options = {}) {
           flowPath: toPosixPath(path.relative(fromRoot(), stage.path)),
         });
         console.log(`[Maestro] Stage ${stageIndex + 1}/${runtimeStages.length}: ${stage.name}`);
+        const watchdog = resolveMaestroProcessBudget(flow, validated.maestro, selectedDevice);
+        logStream.write(`[WorksideQA watchdog] ${JSON.stringify({ ...watchdog, stage: stage.kind, stageName: stage.name })}\n`);
         outcome = await runProcess("maestro", stageArgs, {
           cwd: fromRoot(),
           env: runnerEnv,
           logStream,
           secretValues,
-          timeoutMs: resolveMaestroProcessTimeoutMs(flow, validated.maestro, selectedDevice),
+          timeoutMs: watchdog.effectiveWatchdogMs,
+          watchdog,
+          stage: stage.kind,
+          stageName: stage.name,
           captureOutput: Boolean(flow.authoritativeResult),
         });
         uiOutput += outcome.stdout || '';
-        if (outcome.code !== 0) break;
+        if (processFailed(outcome)) break;
       }
     } catch (error) {
       const result = {
         flow: flow.name,
         status: "failed",
         failureStage: "ui",
+        ...processFailureMetadata(error),
         stages: {
           fixture: { status: fixtureStatus, scenario: flow.fixtureScenario || null },
           ui: { status: "failed" },
@@ -911,16 +984,17 @@ async function runMaestroFlows(config, options = {}) {
       logStream.end();
       throw new Error(`${uiFailureLabel}: ${flow.name}\n${error.message}. See ${relativeArtifacts}.`);
     }
-    if (outcome.code !== 0) {
+    if (processFailed(outcome)) {
       const result = {
         flow: flow.name,
         status: "failed",
         failureStage: "ui",
+        ...processFailureMetadata(outcome),
         exitCode: outcome.code,
         signal: outcome.signal || null,
         stages: {
           fixture: { status: fixtureStatus, scenario: flow.fixtureScenario || null },
-          ui: { status: "failed", exitCode: outcome.code },
+          ui: { status: "failed", exitCode: outcome.code, ...processFailureMetadata(outcome) },
           backend: { status: "not-run", verification: backendName },
         },
         report: toPosixPath(path.relative(fromRoot(), junitPath)),
@@ -930,7 +1004,7 @@ async function runMaestroFlows(config, options = {}) {
       writeJson(path.join(flowDirectory, "result.json"), result);
       writeJson(path.join(runDirectory, "summary.json"), { status: "failed", results });
       logStream.end();
-      throw new Error(`${uiFailureLabel}: ${flow.name} (exit ${outcome.code ?? "unknown"}). See ${relativeArtifacts}.`);
+      throw new Error(`${processFailureMetadata(outcome).errorCode || uiFailureLabel}: ${flow.name} (exit ${outcome.code ?? "unknown"}). See ${relativeArtifacts}.`);
     }
 
     let backendStatus = backendPlan ? "pending" : "skipped";
@@ -945,19 +1019,21 @@ async function runMaestroFlows(config, options = {}) {
           logStream,
           secretValues,
           timeoutMs: validated.maestro.timeoutMs,
+          stage: 'backend',
           captureOutput: Boolean(flow.authoritativeResult),
         });
-        if (backendOutcome.code === 0 && flow.authoritativeResult) {
+        if (!processFailed(backendOutcome) && flow.authoritativeResult) {
           authoritativeResult = parseAuthoritativeResult(backendOutcome.stdout, flow.authoritativeResult, uiOutput, generation);
         }
       } catch (error) {
         backendOutcome = { code: null, signal: null, error };
       }
-      if (backendOutcome.code !== 0) {
+      if (processFailed(backendOutcome)) {
         const result = {
           flow: flow.name,
           status: "failed",
           failureStage: "backend",
+          ...processFailureMetadata(backendOutcome),
           exitCode: outcome.code,
           backendExitCode: backendOutcome.code,
           stages: {
@@ -978,7 +1054,7 @@ async function runMaestroFlows(config, options = {}) {
           : backendPlan.verificationKind === "coaching"
             ? "UI PASS / BACKEND ADAPTATION FAIL"
             : "UI PASS / BACKEND FAIL";
-        throw new Error(`${backendFailureLabel}: ${flow.name} (exit ${backendOutcome.code ?? "unknown"}).${detail} See ${relativeArtifacts}.`);
+        throw new Error(`${processFailureMetadata(backendOutcome).errorCode || backendFailureLabel}: ${flow.name} (exit ${backendOutcome.code ?? "unknown"}).${detail} See ${relativeArtifacts}.`);
       }
       backendStatus = "passed";
       console.log(`[Backend] Passed ${backendPlan.verificationName}`);
@@ -1021,6 +1097,7 @@ module.exports = {
   collectEnvironmentReferences,
   normalizeFlowName,
   resolveMaestroProcessTimeoutMs,
+  resolveMaestroProcessBudget,
   runProcess,
   runMaestroFlows,
   selectFlows,
