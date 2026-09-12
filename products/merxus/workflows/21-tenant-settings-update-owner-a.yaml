@@ -60,19 +60,13 @@ appId: com.merxus.mobile.qa
     id: settings.sms.business-name
     text: '^Merxus Maestro Tenant A QA Branding$'
 - hideKeyboard
-# Long SMS form: re-check visibility after each bounded directional gesture.
-# Once visible, remaining iterations do not swipe past the semantic target.
-- repeat:
-    times: 12
-    commands:
-      - runFlow:
-          when:
-            notVisible:
-              id: settings.sms.save
-          commands:
-            - swipe:
-                direction: UP
-                duration: 500
+# QA navigation only; the actual mutation still uses the real Save button.
+- tapOn:
+    id: settings.sms.qa-scroll-to-save
+- extendedWaitUntil:
+    visible:
+      id: settings.sms.save
+    timeout: 5000
 - assertVisible:
     id: settings.sms.save
 - tapOn:
@@ -95,18 +89,13 @@ appId: com.merxus.mobile.qa
     visible:
       id: settings.sms.reloaded
     timeout: 15000
-# Return through the same long form after fetching the persisted settings.
-- repeat:
-    times: 12
-    commands:
-      - runFlow:
-          when:
-            notVisible:
-              id: settings.sms.business-name
-          commands:
-            - swipe:
-                direction: DOWN
-                duration: 500
+# Re-measure the existing field after fetching persisted settings.
+- tapOn:
+    id: settings.sms.qa-scroll-to-business-name
+- extendedWaitUntil:
+    visible:
+      id: settings.sms.business-name
+    timeout: 5000
 - assertVisible:
     id: settings.sms.business-name
     text: '^Merxus Maestro Tenant A QA Branding$'
