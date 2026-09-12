@@ -88,6 +88,7 @@ function resolveConfiguredDevice(mobile, requestedName, environment = process.en
     launchDismissIfVisible: descriptor.launchDismissIfVisible || null,
     postActionDismissIfVisible: descriptor.postActionDismissIfVisible || null,
     deterministicTextEntry: descriptor.deterministicTextEntry || null,
+    runtimeTimeoutMultiplier: descriptor.runtimeTimeoutMultiplier || null,
     ...inspectDeviceMetadata(selected, appId, options.execute || spawnCommandSync),
   };
 }
@@ -99,6 +100,14 @@ function validateDeviceDescriptors(mobile) {
     if (!allowedKinds.includes(descriptor.kind)) throw new Error(`Phase 0 device ${name} must be an iOS simulator or Android emulator.`);
     if (!descriptor.idEnvKey || !descriptor.appId) throw new Error(`Device ${name} requires idEnvKey and appId.`);
     if (descriptor.appId !== mobile.appId) throw new Error(`Device ${name} must target the manifest QA appId.`);
+    if (descriptor.runtimeTimeoutMultiplier != null) {
+      if (descriptor.platform !== 'ios' || descriptor.kind !== 'simulator') {
+        throw new Error(`Device ${name} runtimeTimeoutMultiplier is supported only for iOS simulators.`);
+      }
+      if (typeof descriptor.runtimeTimeoutMultiplier !== 'number' || !Number.isFinite(descriptor.runtimeTimeoutMultiplier) || descriptor.runtimeTimeoutMultiplier < 1) {
+        throw new Error(`Device ${name} runtimeTimeoutMultiplier must be a finite number greater than or equal to 1.`);
+      }
+    }
     if (descriptor.launchUri) {
       if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(descriptor.launchUri)) throw new Error(`Device ${name} launchUri must be an absolute application URI.`);
       if (!descriptor.launchReadySelector) throw new Error(`Device ${name} requires launchReadySelector when launchUri is configured.`);

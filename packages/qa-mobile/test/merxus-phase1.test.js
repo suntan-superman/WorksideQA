@@ -21,6 +21,7 @@ assert.equal(iosDescriptor.appId, 'com.merxus.mobile.qa');
 assert.equal(iosDescriptor.kind, 'simulator');
 assert.equal(iosDescriptor.launchReadySelector, 'qa-environment-root');
 assert.equal(iosDescriptor.launchUri, 'exp+merxus-mobile://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081');
+assert.equal(iosDescriptor.runtimeTimeoutMultiplier, 1.5);
 assert.deepEqual(iosDescriptor.launchDismissIfVisible, ['Continue', 'Close']);
 assert.deepEqual(iosDescriptor.postActionDismissIfVisible, [
   { afterTapId: 'auth.login.submit', visible: 'Save Password?', tap: 'Not Now' },
@@ -33,7 +34,8 @@ assert.deepEqual(selectFlows(validated, { suite: 'phase1' }).map((flow) => flow.
 const launchEnvironmentFlow = selectFlows(validated, { flow: '00-launch-environment' })[0];
 assert.equal(launchEnvironmentFlow.timeoutMs, 60000);
 assert.equal(validated.maestro.processStartupGraceMs, 15000);
-assert.equal(resolveMaestroProcessTimeoutMs(launchEnvironmentFlow, validated.maestro), 75000);
+assert.equal(resolveMaestroProcessTimeoutMs(launchEnvironmentFlow, validated.maestro, androidDescriptor), 75000);
+assert.equal(resolveMaestroProcessTimeoutMs(launchEnvironmentFlow, validated.maestro, iosDescriptor), 105000);
 assert.equal(resolveMaestroProcessTimeoutMs({ timeoutMs: 60000 }, { timeoutMs: 90000 }), 60000);
 
 const yaml = require('yaml');
@@ -138,18 +140,17 @@ for (const field of iosDescriptor.deterministicTextEntry) {
     for (const forbidden of ['Select All', 'Paste', 'AutoFill']) assert.equal(JSON.stringify(secureCommands).includes(forbidden), false);
     assert.equal(iosRuntimeCommands.some((command) => command.assertVisible?.id === field.id && command.assertVisible?.text), false);
   } else {
-    assert.deepEqual(iosRuntimeCommands.slice(fieldTapIndex, fieldTapIndex + 7), [
+    assert.deepEqual(iosRuntimeCommands.slice(fieldTapIndex, fieldTapIndex + 5), [
       { tapOn: { id: field.id } },
       { longPressOn: { id: field.id } },
       { runFlow: { when: { visible: 'Select All' }, commands: [{ tapOn: 'Select All' }, { eraseText: 1 }] } },
       { tapOn: { id: field.id } },
-      { eraseText: 100 },
-      { eraseText: 100 },
-      iosRuntimeCommands[fieldTapIndex + 6],
+      iosRuntimeCommands[fieldTapIndex + 4],
     ]);
-    assert.match(String(iosRuntimeCommands[fieldTapIndex + 6].inputText), /^\$\{MERXUS_MAESTRO_OWNER_[AB]_EMAIL\}$/);
-    assert.deepEqual(iosRuntimeCommands[fieldTapIndex + 7], {
-      assertVisible: { id: field.id, text: `^${iosRuntimeCommands[fieldTapIndex + 6].inputText}$` },
+    assert.match(String(iosRuntimeCommands[fieldTapIndex + 4].inputText), /^\$\{MERXUS_MAESTRO_OWNER_[AB]_EMAIL\}$/);
+    assert.equal(iosRuntimeCommands.slice(fieldTapIndex, fieldTapIndex + 5).some((command) => command.eraseText === 100), false);
+    assert.deepEqual(iosRuntimeCommands[fieldTapIndex + 5], {
+      assertVisible: { id: field.id, text: `^${iosRuntimeCommands[fieldTapIndex + 4].inputText}$` },
     });
   }
 }

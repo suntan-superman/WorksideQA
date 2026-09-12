@@ -211,8 +211,6 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
               },
             },
             { tapOn: { id: field.id } },
-            { eraseText: 100 },
-            { eraseText: 100 },
             inputCommand
           );
         }
@@ -336,9 +334,12 @@ function buildMaestroTestArgs({ selectedDevice, artifactPath, junitPath, environ
   ];
 }
 
-function resolveMaestroProcessTimeoutMs(flow, maestro) {
+function resolveMaestroProcessTimeoutMs(flow, maestro, selectedDevice = null) {
   const flowTimeoutMs = Number(flow.timeoutMs || maestro.timeoutMs);
-  return flowTimeoutMs + Number(maestro.processStartupGraceMs || 0);
+  // Keep the flow timeout as the logical baseline while allowing slower device
+  // automation runtimes to opt into more execution time; CLI startup stays separate.
+  const runtimeMultiplier = Number(selectedDevice?.runtimeTimeoutMultiplier || 1);
+  return Math.ceil(flowTimeoutMs * runtimeMultiplier) + Number(maestro.processStartupGraceMs || 0);
 }
 
 function validateMaestroConfiguration(config) {
@@ -677,6 +678,7 @@ async function runMaestroFlows(config, options = {}) {
       launchDismissIfVisible: selectedDevice.launchDismissIfVisible,
       postActionDismissIfVisible: selectedDevice.postActionDismissIfVisible,
       deterministicTextEntry: selectedDevice.deterministicTextEntry,
+      runtimeTimeoutMultiplier: selectedDevice.runtimeTimeoutMultiplier,
     });
   }
   console.log(`Maestro ${String(version.stdout || version.stderr).trim()}`);
@@ -807,7 +809,7 @@ async function runMaestroFlows(config, options = {}) {
         env: runnerEnv,
         logStream,
         secretValues,
-        timeoutMs: resolveMaestroProcessTimeoutMs(flow, validated.maestro),
+        timeoutMs: resolveMaestroProcessTimeoutMs(flow, validated.maestro, selectedDevice),
       });
     } catch (error) {
       const result = {
