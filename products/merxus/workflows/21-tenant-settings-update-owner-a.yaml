@@ -49,6 +49,10 @@ appId: com.merxus.mobile.qa
     element:
       id: settings.sms.business-name
     direction: DOWN
+- extendedWaitUntil:
+    visible:
+      id: settings.sms.business-name
+    timeout: 5000
 - assertVisible:
     id: settings.sms.business-name
     text: '^Merxus Maestro Tenant A$'
@@ -69,6 +73,7 @@ appId: com.merxus.mobile.qa
     timeout: 5000
 - assertVisible:
     id: settings.sms.save
+    enabled: true
 - tapOn:
     id: settings.sms.save
 - extendedWaitUntil:

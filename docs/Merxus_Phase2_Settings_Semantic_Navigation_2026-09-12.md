@@ -11,7 +11,9 @@ Merxus Mobile now provides two controls in a small QA toolbar outside the Settin
 | `settings.sms.qa-scroll-to-save` | `settings.sms.save` |
 | `settings.sms.qa-scroll-to-business-name` | `settings.sms.business-name` |
 
-The controls are only rendered when the authoritative `RUNTIME_CONFIG` is Maestro, its existing runtime validation passes, SMS settings are loaded/expanded, and the current role already has SMS management access. Production, staging, development, malformed QA configuration, and non-manager roles do not expose these controls. Direct calls to the navigation helper also check the environment/readiness gate.
+The controls are rendered whenever the authoritative `RUNTIME_CONFIG` is Maestro and its existing runtime validation passes, using the same validator as `QaEnvironmentGate`. Exposure does not depend on SMS loading/expansion or tenant role: staff can see the navigation toolbar in Maestro too. Production, staging, development and malformed QA configurations never expose it. Direct calls recheck the runtime gate; action readiness depends only on mounted native scroll/anchor refs. A missing anchor returns false without changing anything.
+
+Lifecycle correction: the original implementation incorrectly combined runtime exposure with transient SMS readiness. These are now separate. The toolbar remains mounted before SMS expansion; its existing ref objects become usable when the form mounts, and return to a no-op after unmount. No permission is granted by toolbar visibility. Authorization remains solely on the real input and Save handler/button.
 
 ## Native navigation, not a save shortcut
 
@@ -25,9 +27,9 @@ The helper has no save, form-update, backend, Firestore, revision, operation-ID,
 
 Only `21-tenant-settings-update-owner-a.yaml` changes:
 
-1. After the unchanged Business name edit and keyboard dismissal, tap `settings.sms.qa-scroll-to-save`.
+1. After opening SMS, traverse to and explicitly wait for the real Business name field before editing. That field and the Save anchor mount together in the same non-virtualized form. After the unchanged edit and keyboard dismissal, tap `settings.sms.qa-scroll-to-save`.
 2. Wait at most 5 seconds for `settings.sms.save`.
-3. Assert visibility, then tap the real Save button by its semantic selector.
+3. Assert visibility and `enabled: true`, then tap the real Save button by its semantic selector.
 4. Preserve saved-result checks, request/operation correlation, screenshot and reload.
 5. After reload completes, tap `settings.sms.qa-scroll-to-business-name`.
 6. Wait at most 5 seconds for the real field and assert the exact persisted branding value.
@@ -46,7 +48,7 @@ Unit coverage checks real component rendering against production/staging/develop
 
 Validation completed:
 
-- Mobile Phase 2 settings/navigation tests: 7 passed.
+- Mobile Phase 2 settings/navigation tests: 8 passed (including pre-expansion/staff visibility, missing-anchor no-op and mount/unmount lifecycle).
 - Mobile Phase 1, including Phase 0 runtime safety and login reset: 14 passed.
 - Existing mobile Node suite: 77 passed.
 - Android Maestro offline Hermes export: passed (1,913 modules), with local QA environment and external providers disabled. This did not rebuild/install the native app or restart the existing Metro service.

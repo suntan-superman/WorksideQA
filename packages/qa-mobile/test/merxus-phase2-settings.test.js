@@ -31,6 +31,8 @@ for (const [index, helper, target] of [
   assert.equal(commands[offset + 2].assertVisible.optional, undefined, 'missing target must fail closed');
 }
 const editIndex = commands.findIndex((command) => command.tapOn?.id === 'settings.sms.business-name');
+assert.deepEqual(commands[editIndex - 2], { extendedWaitUntil: { visible: { id: 'settings.sms.business-name' }, timeout: 5000 } }, 'real form readiness precedes editing and shortcut use');
+assert.ok(commands.findIndex((command) => command.tapOn?.id === 'settings.sms.open') < editIndex - 2);
 assert.deepEqual(commands.slice(editIndex, editIndex + 5), [
   { tapOn: { id: 'settings.sms.business-name' } },
   { eraseText: 100 },
@@ -41,6 +43,7 @@ assert.deepEqual(commands.slice(editIndex, editIndex + 5), [
 assert.equal(commands[editIndex + 5], navigation[0]);
 const saveTap = commands.findIndex((command) => command.tapOn?.id === 'settings.sms.save');
 assert.deepEqual(commands[saveTap], { tapOn: { id: 'settings.sms.save' } }, 'Save tap must be semantic, never coordinates');
+assert.deepEqual(commands[saveTap - 1], { assertVisible: { id: 'settings.sms.save', enabled: true } }, 'real Save must remain authorized and enabled');
 assert.equal(saveTap, commands.indexOf(navigation[0]) + 3);
 assert.equal(commands[commands.indexOf(navigation[1]) - 1].extendedWaitUntil.visible.id, 'settings.sms.reloaded');
 assert.deepEqual(commands[commands.indexOf(navigation[1]) + 2], { assertVisible: { id: 'settings.sms.business-name', text: '^Merxus Maestro Tenant A QA Branding$' } });
