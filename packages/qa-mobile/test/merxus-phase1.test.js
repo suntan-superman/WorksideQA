@@ -153,6 +153,10 @@ for (const [index, label] of ['Continue', 'Close'].entries()) {
   assert.deepEqual(iosRuntimeCommands[index].runFlow.commands, [{ tapOn: label }]);
 }
 assert.equal(iosRuntimeCommands.some((command) => command.tapOn === 'Reload' || command.tapOn === 'Go home'), false);
+assert.equal(iosRuntimeCommands.some((command) => command.longPressOn), false);
+for (const forbiddenText of ['"Select All"', '"Select"', '"Paste"', '"AutoFill"']) {
+  assert.equal(JSON.stringify(iosRuntimeCommands).includes(forbiddenText), false);
+}
 const passwordSweepers = iosRuntimeCommands.filter((command) => JSON.stringify(command) === JSON.stringify(passwordSweeper));
 assert.equal(passwordSweepers.length, 4);
 const simulateSweep = (appearances) => Array.from({ length: passwordSweeper.repeat.times }, (_, index) => Boolean(appearances[index])).some(Boolean);
@@ -163,29 +167,22 @@ assert.equal(simulateSweep([false, false, false, false, false]), false);
 for (const field of iosDescriptor.deterministicTextEntry) {
   const fieldTapIndex = iosRuntimeCommands.findIndex((command) => command.tapOn?.id === field.id);
   assert.ok(fieldTapIndex >= 0);
+  const entryCommands = iosRuntimeCommands.slice(fieldTapIndex, fieldTapIndex + 3);
+  assert.deepEqual(entryCommands.slice(0, 2), [
+    { tapOn: { id: field.id } },
+    { eraseText: 100 },
+  ]);
+  assert.equal(entryCommands.filter((command) => Object.hasOwn(command, 'eraseText')).length, 1);
+  for (const forbidden of ['longPressOn', 'Select All', 'Select', 'Paste', 'AutoFill']) {
+    assert.equal(JSON.stringify(entryCommands).includes(forbidden), false);
+  }
   if (field.secure) {
-    const secureCommands = iosRuntimeCommands.slice(fieldTapIndex, fieldTapIndex + 3);
-    assert.deepEqual(secureCommands.slice(0, 2), [
-      { tapOn: { id: field.id } },
-      { eraseText: 100 },
-    ]);
-    assert.match(String(secureCommands[2].inputText), /^\$\{MERXUS_MAESTRO_OWNER_[AB]_PASSWORD\}$/);
-    assert.equal(secureCommands.filter((command) => Object.hasOwn(command, 'eraseText')).length, 1);
-    assert.equal(JSON.stringify(secureCommands).includes('longPressOn'), false);
-    for (const forbidden of ['Select All', 'Paste', 'AutoFill']) assert.equal(JSON.stringify(secureCommands).includes(forbidden), false);
+    assert.match(String(entryCommands[2].inputText), /^\$\{MERXUS_MAESTRO_OWNER_[AB]_PASSWORD\}$/);
     assert.equal(iosRuntimeCommands.some((command) => command.assertVisible?.id === field.id && command.assertVisible?.text), false);
   } else {
-    assert.deepEqual(iosRuntimeCommands.slice(fieldTapIndex, fieldTapIndex + 5), [
-      { tapOn: { id: field.id } },
-      { longPressOn: { id: field.id } },
-      { runFlow: { when: { visible: 'Select All' }, commands: [{ tapOn: 'Select All' }, { eraseText: 1 }] } },
-      { tapOn: { id: field.id } },
-      iosRuntimeCommands[fieldTapIndex + 4],
-    ]);
-    assert.match(String(iosRuntimeCommands[fieldTapIndex + 4].inputText), /^\$\{MERXUS_MAESTRO_OWNER_[AB]_EMAIL\}$/);
-    assert.equal(iosRuntimeCommands.slice(fieldTapIndex, fieldTapIndex + 5).some((command) => command.eraseText === 100), false);
-    assert.deepEqual(iosRuntimeCommands[fieldTapIndex + 5], {
-      assertVisible: { id: field.id, text: `^${iosRuntimeCommands[fieldTapIndex + 4].inputText}$` },
+    assert.match(String(entryCommands[2].inputText), /^\$\{MERXUS_MAESTRO_OWNER_[AB]_EMAIL\}$/);
+    assert.deepEqual(iosRuntimeCommands[fieldTapIndex + 3], {
+      assertVisible: { id: field.id, text: `^${entryCommands[2].inputText}$` },
     });
   }
 }
