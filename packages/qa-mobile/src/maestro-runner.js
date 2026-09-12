@@ -219,14 +219,20 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
 
   for (let commandIndex = 0; commandIndex < commands.length; commandIndex += 1) {
     const command = commands[commandIndex];
-    // Replace only a configured field's post-input, post-value-assertion dismiss.
-    // Common YAML, login keyboard handling, and other platforms stay untouched.
-    const dismissRule = (command === 'hideKeyboard' || (command && Object.hasOwn(command, 'hideKeyboard')))
-      ? keyboardDismissRules.find((rule) => commands[commandIndex - 1]?.assertVisible?.id === rule.fieldId &&
-          Object.hasOwn(commands[commandIndex - 2] || {}, 'inputText')) : null;
+    // On configured iOS simulator fields dismiss BEFORE the value assertion:
+    // the keyboard can hide an otherwise correctly edited input. Consume only
+    // the exact input -> assertion -> hideKeyboard pair; other flows stay intact.
+    const nextCommand = commands[commandIndex + 1];
+    const dismissRule = command?.assertVisible &&
+      (nextCommand === 'hideKeyboard' || (nextCommand && Object.hasOwn(nextCommand, 'hideKeyboard')))
+      ? keyboardDismissRules.find((rule) => command.assertVisible.id === rule.fieldId &&
+          Object.hasOwn(commands[commandIndex - 1] || {}, 'inputText')) : null;
     if (dismissRule) {
       if (dismissRule.scrollToTarget) runtimeCommands.push({ scrollUntilVisible: { element: { id: dismissRule.targetId }, direction: 'UP', timeout: 5000 } });
+      runtimeCommands.push({ extendedWaitUntil: { visible: { id: dismissRule.targetId }, timeout: 5000 } });
       runtimeCommands.push({ tapOn: { id: dismissRule.targetId } });
+      runtimeCommands.push(command);
+      commandIndex += 1;
       continue;
     }
     if (!command || typeof command !== "object" || !("launchApp" in command)) {

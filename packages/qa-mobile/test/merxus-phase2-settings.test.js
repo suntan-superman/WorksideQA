@@ -57,10 +57,11 @@ try {
   const iosResume = YAML.parseAllDocuments(fs.readFileSync(ios.stages[2].path, 'utf8'))[1].toJS();
   const dismissalId = 'settings.sms.qa-dismiss-keyboard';
   const iosEditIndex = iosResume.findIndex((command) => command.tapOn?.id === field);
-  assert.deepEqual(iosResume.slice(iosEditIndex, iosEditIndex + 5), [
+  assert.deepEqual(iosResume.slice(iosEditIndex, iosEditIndex + 6), [
     { tapOn: { id: field } }, { eraseText: 100 }, { inputText: '18:30' },
-    { assertVisible: { id: field, text: '^18:30$' } }, { tapOn: { id: dismissalId } },
-  ], 'iOS dismisses semantically only after the exact daily digest edit');
+    { extendedWaitUntil: { visible: { id: dismissalId }, timeout: 5000 } },
+    { tapOn: { id: dismissalId } }, { assertVisible: { id: field, text: '^18:30$' } },
+  ], 'iOS waits for fixed helper and dismisses before asserting edited value');
   const originalStages = ios.stages.map((stage) => fs.readFileSync(stage.path, 'utf8'));
   const unconfigured = { ...config.mobile.devices.iosSimulator, id: 'explicit-udid' };
   delete unconfigured.keyboardDismissAfterEdit;
@@ -69,8 +70,11 @@ try {
   assert.equal(originalStages[0], baselineStages[0], 'login remains byte-for-byte unchanged');
   assert.equal(originalStages[1], baselineStages[1], 'external overlay remains byte-for-byte unchanged');
   const baselineResume = YAML.parseAllDocuments(baselineStages[2])[1].toJS();
-  baselineResume[iosEditIndex + 4] = { tapOn: { id: dismissalId } };
-  assert.deepEqual(iosResume, baselineResume, 'exactly one resume command changes; no coordinates, sleeps, timeouts or mutations added');
+  baselineResume.splice(iosEditIndex + 3, 2,
+    { extendedWaitUntil: { visible: { id: dismissalId }, timeout: 5000 } },
+    { tapOn: { id: dismissalId } },
+    { assertVisible: { id: field, text: '^18:30$' } });
+  assert.deepEqual(iosResume, baselineResume, 'only configured dismiss/assert ordering changes; no coordinates, sleeps or mutations');
   for (const phase1Flow of selectFlows(config, { suite: 'phase1' })) {
     const before = buildDeviceLaunchFlow(phase1Flow, unconfigured, path.join(directory, 'phase1-before', 'runtime.yaml'));
     const beforeContents = before.stages.map((stage) => fs.readFileSync(stage.path, 'utf8'));
@@ -140,10 +144,11 @@ for (const spec of [
     const index = resume.findIndex((command) => command.tapOn?.id === retryField);
     assert.deepEqual(resume.slice(index, index + 6), [
       { tapOn: { id: retryField } }, { eraseText: 100 }, { inputText: spec.after },
-      { assertVisible: { id: retryField, text: `^${spec.after}$` } },
-      { scrollUntilVisible: { element: { id: 'settings.sms.qa-dismiss-keyboard' }, direction: 'UP', timeout: 5000 } },
+      { extendedWaitUntil: { visible: { id: 'settings.sms.qa-dismiss-keyboard' }, timeout: 5000 } },
       { tapOn: { id: 'settings.sms.qa-dismiss-keyboard' } },
+      { assertVisible: { id: retryField, text: `^${spec.after}$` } },
     ]);
+    assert.ok(!resume.some((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.qa-dismiss-keyboard'), 'fixed helper never needs form scrolling');
     assert.equal(resume.some((command) => command === 'hideKeyboard'), false);
     assert.ok(JSON.stringify(resume).includes('WORKSIDEQA_CORRELATION='));
     assert.ok(JSON.stringify(resume).includes('settings.sms.reload'));

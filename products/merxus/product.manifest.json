@@ -145,13 +145,11 @@
           },
           {
             "fieldId": "settings.sms.notification-retry-max-attempts",
-            "targetId": "settings.sms.qa-dismiss-keyboard",
-            "scrollToTarget": true
+            "targetId": "settings.sms.qa-dismiss-keyboard"
           },
           {
             "fieldId": "settings.sms.notification-retry-delay-minutes",
-            "targetId": "settings.sms.qa-dismiss-keyboard",
-            "scrollToTarget": true
+            "targetId": "settings.sms.qa-dismiss-keyboard"
           }
         ],
         "externalSystemOverlay": {
