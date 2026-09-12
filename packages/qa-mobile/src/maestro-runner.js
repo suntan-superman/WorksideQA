@@ -198,8 +198,6 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
           runtimeCommands.push(
             command,
             { eraseText: 100 },
-            { eraseText: 100 },
-            { eraseText: 100 },
             inputCommand
           );
         } else {
@@ -338,6 +336,11 @@ function buildMaestroTestArgs({ selectedDevice, artifactPath, junitPath, environ
   ];
 }
 
+function resolveMaestroProcessTimeoutMs(flow, maestro) {
+  const flowTimeoutMs = Number(flow.timeoutMs || maestro.timeoutMs);
+  return flowTimeoutMs + Number(maestro.processStartupGraceMs || 0);
+}
+
 function validateMaestroConfiguration(config) {
   const mobile = config.mobile;
   if (!mobile?.enabled) throw new Error(`Mobile testing is not enabled for ${config.key}.`);
@@ -375,6 +378,9 @@ function validateMaestroConfiguration(config) {
   }
   if (!maestro.defaultSuite || !maestro.suites?.[maestro.defaultSuite]) {
     throw new Error("mobile.maestro.defaultSuite must reference a configured suite.");
+  }
+  if (maestro.processStartupGraceMs != null && (!Number.isInteger(maestro.processStartupGraceMs) || maestro.processStartupGraceMs < 0)) {
+    throw new Error("mobile.maestro.processStartupGraceMs must be a non-negative integer.");
   }
 
   const flows = (mobile.flows || []).map((flow) => validateFlowFile(flow, mobile));
@@ -801,7 +807,7 @@ async function runMaestroFlows(config, options = {}) {
         env: runnerEnv,
         logStream,
         secretValues,
-        timeoutMs: flow.timeoutMs || validated.maestro.timeoutMs,
+        timeoutMs: resolveMaestroProcessTimeoutMs(flow, validated.maestro),
       });
     } catch (error) {
       const result = {
@@ -925,6 +931,7 @@ module.exports = {
   buildFixtureResetPlan,
   collectEnvironmentReferences,
   normalizeFlowName,
+  resolveMaestroProcessTimeoutMs,
   runProcess,
   runMaestroFlows,
   selectFlows,

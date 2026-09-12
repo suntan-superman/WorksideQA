@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { loadProductManifest } = require('../../qa-config/src');
-const { buildBackendVerificationPlan, buildDeviceLaunchFlow, buildFixtureResetPlan, buildMaestroTestArgs, selectFlows, validateMaestroConfiguration } = require('../src/maestro-runner');
+const { buildBackendVerificationPlan, buildDeviceLaunchFlow, buildFixtureResetPlan, buildMaestroTestArgs, resolveMaestroProcessTimeoutMs, selectFlows, validateMaestroConfiguration } = require('../src/maestro-runner');
 
 const manifest = loadProductManifest('merxus');
 const validated = validateMaestroConfiguration(manifest);
@@ -30,6 +30,11 @@ assert.deepEqual(iosDescriptor.deterministicTextEntry, [
   { id: 'auth.login.password', secure: true, assertExact: false },
 ]);
 assert.deepEqual(selectFlows(validated, { suite: 'phase1' }).map((flow) => flow.name), ['00-launch-environment', '01-login-owner-a', '02-tenant-isolation', '03-logout']);
+const launchEnvironmentFlow = selectFlows(validated, { flow: '00-launch-environment' })[0];
+assert.equal(launchEnvironmentFlow.timeoutMs, 60000);
+assert.equal(validated.maestro.processStartupGraceMs, 15000);
+assert.equal(resolveMaestroProcessTimeoutMs(launchEnvironmentFlow, validated.maestro), 75000);
+assert.equal(resolveMaestroProcessTimeoutMs({ timeoutMs: 60000 }, { timeoutMs: 90000 }), 60000);
 
 const yaml = require('yaml');
 const loginFlows = validated.flows.filter((candidate) => /MERXUS_MAESTRO_OWNER_[AB]_EMAIL/.test(fs.readFileSync(candidate.path, 'utf8')));
@@ -122,16 +127,16 @@ for (const field of iosDescriptor.deterministicTextEntry) {
   const fieldTapIndex = iosRuntimeCommands.findIndex((command) => command.tapOn?.id === field.id);
   assert.ok(fieldTapIndex >= 0);
   if (field.secure) {
-    const secureCommands = iosRuntimeCommands.slice(fieldTapIndex, fieldTapIndex + 5);
-    assert.deepEqual(secureCommands.slice(0, 4), [
+    const secureCommands = iosRuntimeCommands.slice(fieldTapIndex, fieldTapIndex + 3);
+    assert.deepEqual(secureCommands.slice(0, 2), [
       { tapOn: { id: field.id } },
       { eraseText: 100 },
-      { eraseText: 100 },
-      { eraseText: 100 },
     ]);
-    assert.match(String(secureCommands[4].inputText), /^\$\{MERXUS_MAESTRO_OWNER_[AB]_PASSWORD\}$/);
+    assert.match(String(secureCommands[2].inputText), /^\$\{MERXUS_MAESTRO_OWNER_[AB]_PASSWORD\}$/);
+    assert.equal(secureCommands.filter((command) => Object.hasOwn(command, 'eraseText')).length, 1);
     assert.equal(JSON.stringify(secureCommands).includes('longPressOn'), false);
     for (const forbidden of ['Select All', 'Paste', 'AutoFill']) assert.equal(JSON.stringify(secureCommands).includes(forbidden), false);
+    assert.equal(iosRuntimeCommands.some((command) => command.assertVisible?.id === field.id && command.assertVisible?.text), false);
   } else {
     assert.deepEqual(iosRuntimeCommands.slice(fieldTapIndex, fieldTapIndex + 7), [
       { tapOn: { id: field.id } },

@@ -243,6 +243,7 @@
     "maestro": {
       "defaultSuite": "phase1",
       "timeoutMs": 90000,
+      "processStartupGraceMs": 15000,
       "reportDirectory": "reports/mobile/merxus/maestro",
       "suites": {
         "phase1": ["00-launch-environment", "01-login-owner-a", "02-tenant-isolation", "03-logout"]

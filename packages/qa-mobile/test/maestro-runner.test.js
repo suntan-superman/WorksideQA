@@ -7,6 +7,7 @@ const {
   buildBackendVerificationPlan,
   buildFixtureResetPlan,
   collectEnvironmentReferences,
+  resolveMaestroProcessTimeoutMs,
   selectFlows,
   validateMaestroConfiguration,
 } = require("../src/maestro-runner");
@@ -17,6 +18,7 @@ function clone(value) {
 
 const manifest = loadProductManifest("sageset");
 const validated = validateMaestroConfiguration(manifest);
+assert.equal(resolveMaestroProcessTimeoutMs({ timeoutMs: 90000 }, validated.maestro), 90000);
 
 assert.equal(validated.mobile.appId, "com.workside.sageset");
 assert.equal(validated.mobile.productionAppId, "com.sageset.fitness");
@@ -135,6 +137,7 @@ for (const mutate of [
   (value) => { value.mobile.environment.firebaseProjectId = value.firebase.projectId; },
   (value) => { value.mobile.environment.externalNotificationsAllowed = true; },
   (value) => { value.mobile.orchestrationAuthority = "sageset"; },
+  (value) => { value.mobile.maestro.processStartupGraceMs = -1; },
 ]) {
   const unsafeManifest = clone(manifest);
   mutate(unsafeManifest);
@@ -347,6 +350,7 @@ assert.match(runnerSource, /UI WORKOUT FLOW FAILED/);
 assert.match(runnerSource, /UI COACHING FLOW FAILED/);
 assert.match(runnerSource, /UI PASS \/ BACKEND ADAPTATION FAIL/);
 assert.match(runnerSource, /UI PASS \/ BACKEND NON-MUTATION PASS/);
+assert.match(runnerSource, /timeoutMs: resolveMaestroProcessTimeoutMs\(flow, validated\.maestro\)/);
 fs.rmSync(fixtureRoot, { recursive: true, force: true });
 
 console.log("SageSet Maestro runner contract verified.");
