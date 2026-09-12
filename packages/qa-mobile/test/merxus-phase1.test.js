@@ -19,6 +19,29 @@ assert.match(androidDescriptor.launchUri, /%3FdisableOnboarding%3D1$/);
 assert.equal(validated.mobile.devices.iosSimulator.launchUri, undefined);
 assert.deepEqual(selectFlows(validated, { suite: 'phase1' }).map((flow) => flow.name), ['00-launch-environment', '01-login-owner-a', '02-tenant-isolation', '03-logout']);
 
+const yaml = require('yaml');
+const loginFlows = validated.flows.filter((candidate) => /MERXUS_MAESTRO_OWNER_[AB]_EMAIL/.test(fs.readFileSync(candidate.path, 'utf8')));
+assert.equal(loginFlows.length, 4);
+for (const loginFlow of loginFlows) {
+  const commands = yaml.parseAllDocuments(fs.readFileSync(loginFlow.path, 'utf8'))[1].toJS();
+  const findAfter = (start, predicate) => commands.findIndex((command, index) => index > start && predicate(command));
+  const emailTap = commands.findIndex((command) => command.tapOn?.id === 'auth.login.email');
+  const emailErase = findAfter(emailTap, (command) => Number(command.eraseText) >= 64);
+  const emailInput = findAfter(emailErase, (command) => /^\$\{MERXUS_MAESTRO_OWNER_[AB]_EMAIL\}$/.test(command.inputText || ''));
+  const passwordTap = findAfter(emailInput, (command) => command.tapOn?.id === 'auth.login.password');
+  const passwordErase = findAfter(passwordTap, (command) => Number(command.eraseText) >= 64);
+  const passwordInput = findAfter(passwordErase, (command) => /^\$\{MERXUS_MAESTRO_OWNER_[AB]_PASSWORD\}$/.test(command.inputText || ''));
+  const hideKeyboard = findAfter(passwordInput, (command) => command === 'hideKeyboard' || (command && typeof command === 'object' && Object.hasOwn(command, 'hideKeyboard')));
+  const submitAssertion = findAfter(hideKeyboard, (command) => command.assertVisible?.id === 'auth.login.submit' && command.assertVisible.enabled === true);
+  const submitTap = findAfter(submitAssertion, (command) => command.tapOn?.id === 'auth.login.submit');
+  const dashboardWait = findAfter(submitTap, (command) => command.extendedWaitUntil?.visible?.id === 'screen.dashboard.ready');
+  assert.ok(emailTap >= 0 && emailTap < emailErase, `${loginFlow.name} must erase the email field before input`);
+  assert.ok(emailErase < emailInput && emailInput < passwordTap, `${loginFlow.name} must enter deterministic email before password`);
+  assert.ok(passwordTap < passwordErase && passwordErase < passwordInput, `${loginFlow.name} must erase the password field before input`);
+  assert.ok(passwordInput < hideKeyboard && hideKeyboard < submitAssertion, `${loginFlow.name} must hide the keyboard before asserting submit`);
+  assert.ok(submitAssertion < submitTap && submitTap < dashboardWait, `${loginFlow.name} must submit and wait for dashboard readiness`);
+}
+
 const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'worksideqa-merxus-fixture-'));
 fs.writeFileSync(path.join(fixtureRoot, 'package.json'), '{}\n');
 const env = {
@@ -41,12 +64,12 @@ const runtimeFlow = buildDeviceLaunchFlow(flow, {
   launchReadySelector: androidDescriptor.launchReadySelector,
   launchReadyTimeoutMs: androidDescriptor.launchReadyTimeoutMs,
 }, runtimeFlowPath);
-const runtimeDocuments = require('yaml').parseAllDocuments(fs.readFileSync(runtimeFlowPath, 'utf8'));
+const runtimeDocuments = yaml.parseAllDocuments(fs.readFileSync(runtimeFlowPath, 'utf8'));
 const runtimeCommands = runtimeDocuments[1].toJS();
 assert.deepEqual(runtimeCommands.slice(0, 3), [
   { extendedWaitUntil: { visible: { id: 'qa-environment-root' }, timeout: 30000 } },
   { tapOn: { id: 'auth.login.email' } },
-  { inputText: '${MERXUS_MAESTRO_OWNER_A_EMAIL}' },
+  { eraseText: 128 },
 ]);
 assert.equal(runtimeFlow.path, runtimeFlowPath);
 assert.equal(runtimeFlow.launchPlan.clearState, true);

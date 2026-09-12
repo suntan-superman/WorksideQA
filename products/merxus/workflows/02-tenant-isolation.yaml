@@ -4,15 +4,21 @@ appId: com.merxus.mobile.qa
     clearState: true
 - tapOn:
     id: auth.login.email
+- eraseText: 128
 - inputText: ${MERXUS_MAESTRO_OWNER_A_EMAIL}
 - tapOn:
     id: auth.login.password
+- eraseText: 128
 - inputText: ${MERXUS_MAESTRO_OWNER_A_PASSWORD}
+- hideKeyboard
+- assertVisible:
+    id: auth.login.submit
+    enabled: true
 - tapOn:
     id: auth.login.submit
 - extendedWaitUntil:
     visible:
-      id: dashboard.tenant.name
+      id: screen.dashboard.ready
     timeout: 20000
 - assertVisible:
     id: dashboard.tenant.name

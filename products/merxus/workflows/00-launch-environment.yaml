@@ -18,10 +18,16 @@ appId: com.merxus.mobile.qa
     id: qa-configuration-error
 - tapOn:
     id: auth.login.email
+- eraseText: 128
 - inputText: ${MERXUS_MAESTRO_OWNER_A_EMAIL}
 - tapOn:
     id: auth.login.password
+- eraseText: 128
 - inputText: ${MERXUS_MAESTRO_OWNER_A_PASSWORD}
+- hideKeyboard
+- assertVisible:
+    id: auth.login.submit
+    enabled: true
 - tapOn:
     id: auth.login.submit
 - extendedWaitUntil:
