@@ -50,6 +50,9 @@ appId: com.merxus.mobile.qa
       id: settings.sms.notification-retry-delay-minutes
     direction: DOWN
     timeout: 20000
+    # The Android keyboard covered the focused field at the viewport bottom.
+    # Bring the real input away from the edge before tapping/typing/asserting.
+    centerElement: true
 - extendedWaitUntil:
     visible:
       id: settings.sms.notification-retry-delay-minutes

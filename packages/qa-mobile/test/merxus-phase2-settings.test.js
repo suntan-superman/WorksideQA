@@ -108,8 +108,21 @@ for (const spec of [
   assert.deepEqual(retryFlow.authoritativeResult, flow.authoritativeResult);
   const retryField = spec.field;
   const expectedRetryCommands = JSON.parse(JSON.stringify(commands).replaceAll(field, retryField).replaceAll('18:00', spec.before).replaceAll('18:30', spec.after));
+  if (spec.suite === 'phase2-retry-delay') {
+    // Native failure evidence had text=20, focused=true, visible=false: the
+    // keyboard hid the correctly edited field. Only center its initial scroll.
+    const scroll = expectedRetryCommands.find((command) => command.scrollUntilVisible?.element?.id === retryField);
+    scroll.scrollUntilVisible.centerElement = true;
+  }
   const retryCommands = YAML.parseAllDocuments(fs.readFileSync(retryFlow.path, 'utf8'))[1].toJS();
   assert.deepEqual(retryCommands, expectedRetryCommands, 'same Save/reload/correlation and no enabling retry, Send SMS, scheduling or providers');
+  if (spec.suite === 'phase2-retry-delay') {
+    const scrollIndex = retryCommands.findIndex((command) => command.scrollUntilVisible?.element?.id === retryField);
+    const tapIndex = retryCommands.findIndex((command) => command.tapOn?.id === retryField);
+    assert.ok(scrollIndex < tapIndex);
+    assert.deepEqual(retryCommands[scrollIndex], { scrollUntilVisible: { element: { id: retryField }, direction: 'DOWN', timeout: 20000, centerElement: true } });
+    assert.equal(retryCommands.filter((command) => command.scrollUntilVisible?.centerElement).length, 1);
+  }
   const retryDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'phase2-retry-'));
   try {
     const android = buildDeviceLaunchFlow(retryFlow, { ...config.mobile.devices.androidEmulator, id: 'emulator-5554' }, path.join(retryDirectory, 'android.yaml'));
