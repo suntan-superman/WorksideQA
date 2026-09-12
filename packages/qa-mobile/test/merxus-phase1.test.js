@@ -25,6 +25,10 @@ assert.deepEqual(iosDescriptor.launchDismissIfVisible, ['Continue', 'Close']);
 assert.deepEqual(iosDescriptor.postActionDismissIfVisible, [
   { afterTapId: 'auth.login.submit', visible: 'Save Password?', tap: 'Not Now' },
 ]);
+assert.deepEqual(iosDescriptor.deterministicTextEntry, [
+  { id: 'auth.login.email', assertExact: true },
+  { id: 'auth.login.password', assertExact: false },
+]);
 assert.deepEqual(selectFlows(validated, { suite: 'phase1' }).map((flow) => flow.name), ['00-launch-environment', '01-login-owner-a', '02-tenant-isolation', '03-logout']);
 
 const yaml = require('yaml');
@@ -114,6 +118,25 @@ for (const [index, label] of ['Continue', 'Close'].entries()) {
   assert.deepEqual(iosRuntimeCommands[index].runFlow.commands, [{ tapOn: label }]);
 }
 assert.equal(iosRuntimeCommands.some((command) => command.tapOn === 'Reload' || command.tapOn === 'Go home'), false);
+for (const field of iosDescriptor.deterministicTextEntry) {
+  const fieldTapIndex = iosRuntimeCommands.findIndex((command) => command.tapOn?.id === field.id);
+  assert.ok(fieldTapIndex >= 0);
+  assert.deepEqual(iosRuntimeCommands.slice(fieldTapIndex, fieldTapIndex + 7), [
+    { tapOn: { id: field.id } },
+    { longPressOn: { id: field.id } },
+    { runFlow: { when: { visible: 'Select All' }, commands: [{ tapOn: 'Select All' }, { eraseText: 1 }] } },
+    { tapOn: { id: field.id } },
+    { eraseText: 100 },
+    { eraseText: 100 },
+    iosRuntimeCommands[fieldTapIndex + 6],
+  ]);
+  assert.match(String(iosRuntimeCommands[fieldTapIndex + 6].inputText), /^\$\{MERXUS_MAESTRO_OWNER_[AB]_(?:EMAIL|PASSWORD)\}$/);
+  if (field.assertExact) {
+    assert.deepEqual(iosRuntimeCommands[fieldTapIndex + 7], {
+      assertVisible: { id: field.id, text: `^${iosRuntimeCommands[fieldTapIndex + 6].inputText}$` },
+    });
+  }
+}
 const iosSubmitIndex = iosRuntimeCommands.findIndex((command) => command.tapOn?.id === 'auth.login.submit');
 assert.ok(iosSubmitIndex >= 0);
 assert.deepEqual(iosRuntimeCommands[iosSubmitIndex + 1], {
@@ -135,6 +158,19 @@ assert.equal(iosRuntimeFlow.launchPlan.launchCommand, 'xcrun');
 assert.deepEqual(iosRuntimeFlow.launchPlan.launchArgs, [
   'simctl', 'openurl', '3C029085-0B3D-49B6-AB7D-2943DA45F695', iosDescriptor.launchUri,
 ]);
+const ownerBRoot = path.join(runtimeRoot, 'future owner b');
+fs.mkdirSync(ownerBRoot, { recursive: true });
+const ownerBFlowPath = path.join(ownerBRoot, 'owner-b.yaml');
+fs.writeFileSync(ownerBFlowPath, originalFlowSource.replaceAll('MERXUS_MAESTRO_OWNER_A_', 'MERXUS_MAESTRO_OWNER_B_'));
+const ownerBRuntimePath = path.join(ownerBRoot, 'runtime.yaml');
+buildDeviceLaunchFlow({ ...flow, name: 'future-owner-b', path: ownerBFlowPath }, {
+  ...iosDescriptor,
+  id: '3C029085-0B3D-49B6-AB7D-2943DA45F695',
+}, ownerBRuntimePath);
+const ownerBRuntimeCommands = yaml.parseAllDocuments(fs.readFileSync(ownerBRuntimePath, 'utf8'))[1].toJS();
+assert.ok(ownerBRuntimeCommands.some((command) => command.inputText === '${MERXUS_MAESTRO_OWNER_B_EMAIL}'));
+assert.ok(ownerBRuntimeCommands.some((command) => command.inputText === '${MERXUS_MAESTRO_OWNER_B_PASSWORD}'));
+assert.ok(ownerBRuntimeCommands.some((command) => command.assertVisible?.text === '^${MERXUS_MAESTRO_OWNER_B_EMAIL}$'));
 const clearFlowPath = path.join(runtimeRoot, 'clear-state.yaml');
 const clearDocuments = yaml.parseAllDocuments(fs.readFileSync(clearFlowPath, 'utf8'));
 assert.deepEqual(clearDocuments[0].toJS(), { appId: 'com.merxus.mobile.qa' });

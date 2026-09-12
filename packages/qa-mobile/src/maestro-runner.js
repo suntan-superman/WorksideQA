@@ -182,9 +182,38 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
   const postActionDismissals = selectedDevice.platform === 'ios' && Array.isArray(selectedDevice.postActionDismissIfVisible)
     ? selectedDevice.postActionDismissIfVisible
     : [];
+  const deterministicTextFields = selectedDevice.platform === 'ios' && Array.isArray(selectedDevice.deterministicTextEntry)
+    ? selectedDevice.deterministicTextEntry
+    : [];
 
-  for (const command of commands) {
+  for (let commandIndex = 0; commandIndex < commands.length; commandIndex += 1) {
+    const command = commands[commandIndex];
     if (!command || typeof command !== "object" || !("launchApp" in command)) {
+      const field = deterministicTextFields.find((candidate) => command?.tapOn?.id === candidate.id);
+      const eraseCommand = commands[commandIndex + 1];
+      const inputCommand = commands[commandIndex + 2];
+      if (field && eraseCommand && typeof eraseCommand === 'object' && Object.hasOwn(eraseCommand, 'eraseText') && inputCommand && typeof inputCommand === 'object' && Object.hasOwn(inputCommand, 'inputText')) {
+        const inputValue = typeof inputCommand.inputText === 'string' ? inputCommand.inputText : inputCommand.inputText?.text;
+        runtimeCommands.push(
+          command,
+          { longPressOn: { id: field.id } },
+          {
+            runFlow: {
+              when: { visible: 'Select All' },
+              commands: [{ tapOn: 'Select All' }, { eraseText: 1 }],
+            },
+          },
+          { tapOn: { id: field.id } },
+          { eraseText: 100 },
+          { eraseText: 100 },
+          inputCommand
+        );
+        if (field.assertExact && typeof inputValue === 'string' && inputValue) {
+          runtimeCommands.push({ assertVisible: { id: field.id, text: `^${inputValue}$` } });
+        }
+        commandIndex += 2;
+        continue;
+      }
       runtimeCommands.push(command);
       for (const rule of postActionDismissals.filter((candidate) => command?.tapOn?.id === candidate.afterTapId)) {
         runtimeCommands.push({
@@ -631,6 +660,7 @@ async function runMaestroFlows(config, options = {}) {
       launchReadySelector: selectedDevice.launchReadySelector,
       launchDismissIfVisible: selectedDevice.launchDismissIfVisible,
       postActionDismissIfVisible: selectedDevice.postActionDismissIfVisible,
+      deterministicTextEntry: selectedDevice.deterministicTextEntry,
     });
   }
   console.log(`Maestro ${String(version.stdout || version.stderr).trim()}`);

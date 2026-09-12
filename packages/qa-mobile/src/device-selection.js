@@ -87,6 +87,7 @@ function resolveConfiguredDevice(mobile, requestedName, environment = process.en
     launchReadyTimeoutMs: descriptor.launchReadyTimeoutMs || null,
     launchDismissIfVisible: descriptor.launchDismissIfVisible || null,
     postActionDismissIfVisible: descriptor.postActionDismissIfVisible || null,
+    deterministicTextEntry: descriptor.deterministicTextEntry || null,
     ...inspectDeviceMetadata(selected, appId, options.execute || spawnCommandSync),
   };
 }
@@ -127,6 +128,19 @@ function validateDeviceDescriptors(mobile) {
           typeof rule.tap !== 'string' || !rule.tap.trim()
         ))) {
           throw new Error(`Device ${name} postActionDismissIfVisible requires one or more valid afterTapId, visible, and tap labels.`);
+        }
+      }
+      if (descriptor.deterministicTextEntry != null) {
+        if (descriptor.platform !== 'ios' || descriptor.kind !== 'simulator') {
+          throw new Error(`Device ${name} deterministicTextEntry is supported only for iOS simulators.`);
+        }
+        const fields = descriptor.deterministicTextEntry;
+        if (!Array.isArray(fields) || fields.length === 0 || fields.some((field) => (
+          !field || typeof field !== 'object' ||
+          typeof field.id !== 'string' || !field.id.trim() ||
+          (field.assertExact != null && typeof field.assertExact !== 'boolean')
+        ))) {
+          throw new Error(`Device ${name} deterministicTextEntry requires one or more valid field IDs.`);
         }
       }
     }

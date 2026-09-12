@@ -143,6 +143,16 @@
             "visible": "Save Password?",
             "tap": "Not Now"
           }
+        ],
+        "deterministicTextEntry": [
+          {
+            "id": "auth.login.email",
+            "assertExact": true
+          },
+          {
+            "id": "auth.login.password",
+            "assertExact": false
+          }
         ]
       },
       "androidEmulator": {
