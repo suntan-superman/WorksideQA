@@ -1,0 +1,93 @@
+appId: com.merxus.mobile.qa
+---
+- launchApp:
+    clearState: true
+- assertVisible:
+    id: screen.auth.login
+- tapOn:
+    id: auth.login.email
+- eraseText: 128
+- inputText: ${MERXUS_MAESTRO_OWNER_A_EMAIL}
+- tapOn:
+    id: auth.login.password
+- eraseText: 128
+- inputText: ${MERXUS_MAESTRO_OWNER_A_PASSWORD}
+- hideKeyboard
+- assertVisible:
+    id: auth.login.submit
+    enabled: true
+- tapOn:
+    id: auth.login.submit
+- extendedWaitUntil:
+    visible:
+      id: screen.dashboard.ready
+    timeout: 20000
+- assertVisible:
+    id: dashboard.tenant.name
+    text: 'Merxus Maestro Tenant A'
+- assertVisible:
+    id: dashboard.user.role
+- tapOn:
+    id: settings.open
+- extendedWaitUntil:
+    visible:
+      id: screen.settings.ready
+    timeout: 15000
+- assertVisible:
+    id: settings.tenant.id
+    text: 'merxus-maestro-tenant-a'
+- assertVisible:
+    id: settings.user.role
+    text: 'owner'
+- scrollUntilVisible:
+    element:
+      id: settings.sms.open
+    direction: DOWN
+- tapOn:
+    id: settings.sms.open
+- scrollUntilVisible:
+    element:
+      id: settings.sms.business-name
+    direction: DOWN
+- assertVisible:
+    id: settings.sms.business-name
+    text: '^Merxus Maestro Tenant A$'
+- tapOn:
+    id: settings.sms.business-name
+- eraseText: 100
+- inputText: 'Merxus Maestro Tenant A QA Branding'
+- assertVisible:
+    id: settings.sms.business-name
+    text: '^Merxus Maestro Tenant A QA Branding$'
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: settings.sms.save
+    direction: DOWN
+- tapOn:
+    id: settings.sms.save
+- extendedWaitUntil:
+    visible:
+      id: settings.sms.saved
+    timeout: 15000
+- copyTextFrom:
+    id: settings.sms.request-id
+- evalScript: ${output.settingsRequestId = maestro.copiedText}
+- copyTextFrom:
+    id: settings.sms.operation-id
+- evalScript: >-
+    ${console.log('WORKSIDEQA_CORRELATION=' + JSON.stringify({requestId: output.settingsRequestId, operationId: maestro.copiedText}))}
+- takeScreenshot: settings-mutation-saved
+- tapOn:
+    id: settings.sms.reload
+- extendedWaitUntil:
+    visible:
+      id: settings.sms.reloaded
+    timeout: 15000
+- scrollUntilVisible:
+    element:
+      id: settings.sms.business-name
+    direction: UP
+- assertVisible:
+    id: settings.sms.business-name
+    text: '^Merxus Maestro Tenant A QA Branding$'

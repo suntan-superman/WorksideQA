@@ -50,7 +50,7 @@ assert.equal(resolveMaestroProcessTimeoutMs(launchEnvironmentFlow, validated.mae
 assert.equal(resolveMaestroProcessTimeoutMs({ timeoutMs: 60000 }, { timeoutMs: 90000 }), 60000);
 
 const yaml = require('yaml');
-const loginFlows = validated.flows.filter((candidate) => /MERXUS_MAESTRO_OWNER_[AB]_EMAIL/.test(fs.readFileSync(candidate.path, 'utf8')));
+const loginFlows = selectFlows(validated, { suite: 'phase1' }).filter((candidate) => /MERXUS_MAESTRO_OWNER_[AB]_EMAIL/.test(fs.readFileSync(candidate.path, 'utf8')));
 assert.equal(loginFlows.length, 4);
 for (const loginFlow of loginFlows) {
   const commands = yaml.parseAllDocuments(fs.readFileSync(loginFlow.path, 'utf8'))[1].toJS();
@@ -86,7 +86,7 @@ const flow = selectFlows(validated, { flow: '02-tenant-isolation' })[0];
 const runtimeRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'worksideqa merxus runtime '));
 const runtimeFlowPath = path.join(runtimeRoot, 'runtime flow.yaml');
 const originalFlowSource = fs.readFileSync(flow.path, 'utf8');
-for (const phaseFlow of validated.flows) {
+for (const phaseFlow of selectFlows(validated, { suite: 'phase1' })) {
   assert.doesNotMatch(fs.readFileSync(phaseFlow.path, 'utf8'), /\b(?:adb|xcrun|openurl|launchUri)\b/);
 }
 const runtimeFlow = buildDeviceLaunchFlow(flow, {

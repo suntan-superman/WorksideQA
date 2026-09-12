@@ -1,0 +1,30 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const { loadProductManifest } = require('../../qa-config/src');
+const { validateMaestroConfiguration, selectFlows, buildDeviceLaunchFlow } = require('../src/maestro-runner');
+const { parseAuthoritativeResult } = require('../src/authoritative-result');
+const config = validateMaestroConfiguration(loadProductManifest('merxus'));
+const flows = selectFlows(config, { suite: 'phase2-settings' });
+assert.equal(flows.length, 1);
+const flow = flows[0];
+assert.equal(flow.name, '21-tenant-settings-update-owner-a');
+const source = fs.readFileSync(flow.path, 'utf8');
+assert.ok(!/maestro.platform|Save Password|Not Now|10\.0\.2\.2/.test(source));
+for (const id of ['settings.sms.saved', 'settings.sms.request-id', 'settings.sms.operation-id', 'settings.sms.reload']) assert.ok(source.includes(id));
+assert.ok(!source.includes('settings.sms.test'));
+const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'phase2-settings-'));
+try {
+  const ios = buildDeviceLaunchFlow(flow, { ...config.mobile.devices.iosSimulator, id: 'explicit-udid', descriptorName: 'iosSimulator' }, path.join(directory, 'runtime.yaml'));
+  assert.equal(ios.stages.length, 3);
+  assert.ok(ios.launchPlan.launchArgs.includes('explicit-udid'));
+  assert.ok(!fs.readFileSync(ios.stages[0].path, 'utf8').includes('eraseText'));
+  assert.ok(!fs.readFileSync(ios.stages[0].path, 'utf8').includes('Save Password'));
+  const result = { ok: true, generation: 'generation-1', ...flow.authoritativeResult, requestId: 'request-1', operationId: 'operation-1' };
+  const ui = 'WORKSIDEQA_CORRELATION={"requestId":"request-1","operationId":"operation-1"}';
+  assert.equal(parseAuthoritativeResult(JSON.stringify(result), flow.authoritativeResult, ui, 'generation-1').successAuditCount, 1);
+  for (const extra of [{ successAuditCount: 2 }, { crossTenantLeakageCount: undefined }, { externalProviderInvocationCount: 1 }, { generation: 'stale' }, { requestId: 'wrong' }]) assert.throws(() => parseAuthoritativeResult(JSON.stringify({ ...result, ...extra }), flow.authoritativeResult, ui, 'generation-1'));
+  assert.throws(() => parseAuthoritativeResult(JSON.stringify(result), flow.authoritativeResult, '', 'generation-1'));
+  console.log('PASS Merxus Phase 2 isolated flow, certified iOS split, authoritative counters and UI correlation contracts');
+} finally { fs.rmSync(directory, { recursive: true, force: true }); }

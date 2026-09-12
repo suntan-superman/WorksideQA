@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const YAML = require("yaml");
+const { parseAuthoritativeResult } = require('./authoritative-result');
 const { ensureDir, fileExists, fromRoot, spawnCommand, terminateProcessTree, toPosixPath, writeJson } = require("../../qa-utils/src");
 const { resolveConfiguredDevice, validateDeviceDescriptors } = require('./device-selection');
 const { spawnMaestro, spawnMaestroSync, terminateMaestro } = require("./maestro-process");
@@ -665,6 +666,7 @@ function runProcess(command, args, options) {
     const stderr = createOutputSink(process.stderr, options.logStream, options.secretValues);
     const timeoutMs = Number(options.timeoutMs || 10 * 60 * 1000);
     let timedOut = false;
+    let capturedOutput = '';
     const terminate = (signal) => command === "maestro"
       ? terminateMaestro(child, signal)
       : terminateProcessTree(child, signal);
@@ -677,7 +679,10 @@ function runProcess(command, args, options) {
     }, timeoutMs);
     const cancel = () => terminate('SIGTERM');
     process.once('SIGINT', cancel);
-    child.stdout.on("data", (chunk) => stdout.write(chunk));
+    child.stdout.on("data", (chunk) => {
+      stdout.write(chunk);
+      if (options.captureOutput) capturedOutput = (capturedOutput + chunk.toString()).slice(-1024 * 1024);
+    });
     child.stderr.on("data", (chunk) => stderr.write(chunk));
     child.on("error", reject);
     child.on("close", (code, signal) => {
@@ -685,7 +690,7 @@ function runProcess(command, args, options) {
       process.removeListener('SIGINT', cancel);
       stdout.flush();
       stderr.flush();
-      resolve({ code, signal, timedOut });
+      resolve({ code, signal, timedOut, ...(options.captureOutput ? { stdout: redact(capturedOutput, options.secretValues) } : {}) });
     });
   });
 }
@@ -840,6 +845,7 @@ async function runMaestroFlows(config, options = {}) {
     }
 
     let outcome;
+    let uiOutput = '';
     try {
       if (runtimeFlow.launchPlan) {
         if (runtimeFlow.launchPlan.clearState) {
@@ -881,7 +887,9 @@ async function runMaestroFlows(config, options = {}) {
           logStream,
           secretValues,
           timeoutMs: resolveMaestroProcessTimeoutMs(flow, validated.maestro, selectedDevice),
+          captureOutput: Boolean(flow.authoritativeResult),
         });
+        uiOutput += outcome.stdout || '';
         if (outcome.code !== 0) break;
       }
     } catch (error) {
@@ -926,6 +934,7 @@ async function runMaestroFlows(config, options = {}) {
     }
 
     let backendStatus = backendPlan ? "pending" : "skipped";
+    let authoritativeResult;
     if (backendPlan) {
       console.log(`[Backend] Verifying ${backendPlan.verificationKind} ${backendPlan.verificationName}`);
       let backendOutcome;
@@ -936,7 +945,11 @@ async function runMaestroFlows(config, options = {}) {
           logStream,
           secretValues,
           timeoutMs: validated.maestro.timeoutMs,
+          captureOutput: Boolean(flow.authoritativeResult),
         });
+        if (backendOutcome.code === 0 && flow.authoritativeResult) {
+          authoritativeResult = parseAuthoritativeResult(backendOutcome.stdout, flow.authoritativeResult, uiOutput, generation);
+        }
       } catch (error) {
         backendOutcome = { code: null, signal: null, error };
       }
@@ -974,6 +987,7 @@ async function runMaestroFlows(config, options = {}) {
     const result = {
       flow: flow.name,
       generation,
+      ...(authoritativeResult ? { authoritativeResult } : {}),
       status: "passed",
       exitCode: outcome.code,
       signal: outcome.signal || null,
