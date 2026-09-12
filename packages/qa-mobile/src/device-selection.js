@@ -89,6 +89,7 @@ function resolveConfiguredDevice(mobile, requestedName, environment = process.en
     systemOverlaySweepers: descriptor.systemOverlaySweepers || null,
     deterministicTextReset: descriptor.deterministicTextReset || null,
     deterministicTextEntry: descriptor.deterministicTextEntry || null,
+    keyboardDismissAfterEdit: descriptor.keyboardDismissAfterEdit || null,
     runtimeTimeoutMultiplier: descriptor.runtimeTimeoutMultiplier || null,
     externalSystemOverlay: descriptor.externalSystemOverlay || null,
     ...inspectDeviceMetadata(selected, appId, options.execute || spawnCommandSync),
@@ -102,6 +103,15 @@ function validateDeviceDescriptors(mobile) {
     if (!allowedKinds.includes(descriptor.kind)) throw new Error(`Phase 0 device ${name} must be an iOS simulator or Android emulator.`);
     if (!descriptor.idEnvKey || !descriptor.appId) throw new Error(`Device ${name} requires idEnvKey and appId.`);
     if (descriptor.appId !== mobile.appId) throw new Error(`Device ${name} must target the manifest QA appId.`);
+    if (descriptor.keyboardDismissAfterEdit != null) {
+      const rules = descriptor.keyboardDismissAfterEdit;
+      if (descriptor.platform !== 'ios' || descriptor.kind !== 'simulator' || !descriptor.launchUri ||
+          !Array.isArray(rules) || rules.length === 0 || rules.some((rule) => (
+            !rule || !['fieldId', 'targetId'].every((key) => typeof rule[key] === 'string' && /^[A-Za-z0-9_.-]+$/.test(rule[key]))
+          )) || new Set(rules.map((rule) => rule.fieldId)).size !== rules.length) {
+        throw new Error(`Device ${name} keyboardDismissAfterEdit requires unique semantic field/target IDs on an iOS simulator launchUri device.`);
+      }
+    }
     if (descriptor.externalSystemOverlay != null) {
       if (descriptor.platform !== 'ios' || descriptor.kind !== 'simulator') {
         throw new Error(`Device ${name} externalSystemOverlay is supported only for iOS simulators.`);

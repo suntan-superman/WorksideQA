@@ -191,6 +191,8 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
     ? selectedDevice.deterministicTextReset
     : null;
   let deterministicTextResetApplied = false;
+  const keyboardDismissRules = selectedDevice.platform === 'ios' && selectedDevice.kind === 'simulator'
+    ? selectedDevice.keyboardDismissAfterEdit || [] : [];
   const buildOverlaySweeper = (rule) => ({
     repeat: {
       times: rule.attempts,
@@ -217,6 +219,15 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
 
   for (let commandIndex = 0; commandIndex < commands.length; commandIndex += 1) {
     const command = commands[commandIndex];
+    // Replace only a configured field's post-input, post-value-assertion dismiss.
+    // Common YAML, login keyboard handling, and other platforms stay untouched.
+    const dismissRule = (command === 'hideKeyboard' || (command && Object.hasOwn(command, 'hideKeyboard')))
+      ? keyboardDismissRules.find((rule) => commands[commandIndex - 1]?.assertVisible?.id === rule.fieldId &&
+          Object.hasOwn(commands[commandIndex - 2] || {}, 'inputText')) : null;
+    if (dismissRule) {
+      runtimeCommands.push({ tapOn: { id: dismissRule.targetId } });
+      continue;
+    }
     if (!command || typeof command !== "object" || !("launchApp" in command)) {
       appendOverlaySweepers((rule) => rule.checkpoints.beforeAssertIds?.includes(command?.assertVisible?.id));
       const field = deterministicTextFields.find((candidate) => command?.tapOn?.id === candidate.id);

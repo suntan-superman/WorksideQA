@@ -55,9 +55,34 @@ try {
   assert.ok(!fs.readFileSync(ios.stages[0].path, 'utf8').includes('eraseText'));
   assert.ok(!fs.readFileSync(ios.stages[0].path, 'utf8').includes('Save Password'));
   const iosResume = YAML.parseAllDocuments(fs.readFileSync(ios.stages[2].path, 'utf8'))[1].toJS();
+  const dismissalId = 'settings.sms.qa-dismiss-keyboard';
+  const iosEditIndex = iosResume.findIndex((command) => command.tapOn?.id === field);
+  assert.deepEqual(iosResume.slice(iosEditIndex, iosEditIndex + 5), [
+    { tapOn: { id: field } }, { eraseText: 100 }, { inputText: '18:30' },
+    { assertVisible: { id: field, text: '^18:30$' } }, { tapOn: { id: dismissalId } },
+  ], 'iOS dismisses semantically only after the exact daily digest edit');
+  const originalStages = ios.stages.map((stage) => fs.readFileSync(stage.path, 'utf8'));
+  const unconfigured = { ...config.mobile.devices.iosSimulator, id: 'explicit-udid' };
+  delete unconfigured.keyboardDismissAfterEdit;
+  const baselineIos = buildDeviceLaunchFlow(flow, unconfigured, path.join(directory, 'baseline', 'runtime.yaml'));
+  const baselineStages = baselineIos.stages.map((stage) => fs.readFileSync(stage.path, 'utf8'));
+  assert.equal(originalStages[0], baselineStages[0], 'login remains byte-for-byte unchanged');
+  assert.equal(originalStages[1], baselineStages[1], 'external overlay remains byte-for-byte unchanged');
+  const baselineResume = YAML.parseAllDocuments(baselineStages[2])[1].toJS();
+  baselineResume[iosEditIndex + 4] = { tapOn: { id: dismissalId } };
+  assert.deepEqual(iosResume, baselineResume, 'exactly one resume command changes; no coordinates, sleeps, timeouts or mutations added');
+  for (const phase1Flow of selectFlows(config, { suite: 'phase1' })) {
+    const before = buildDeviceLaunchFlow(phase1Flow, unconfigured, path.join(directory, 'phase1-before', 'runtime.yaml'));
+    const beforeContents = before.stages.map((stage) => fs.readFileSync(stage.path, 'utf8'));
+    const after = buildDeviceLaunchFlow(phase1Flow, { ...config.mobile.devices.iosSimulator, id: 'explicit-udid' }, path.join(directory, 'phase1-after', 'runtime.yaml'));
+    assert.deepEqual(after.stages.map((stage) => fs.readFileSync(stage.path, 'utf8')), beforeContents, `${phase1Flow.name} unchanged`);
+  }
   assert.deepEqual(iosResume.filter(isQaNavigation), navigation, 'iOS resume preserves common semantic navigation');
   const android = buildDeviceLaunchFlow(flow, { ...config.mobile.devices.androidEmulator, id: 'emulator-5554', descriptorName: 'androidEmulator' }, path.join(directory, 'android.yaml'));
   const androidCommands = YAML.parseAllDocuments(fs.readFileSync(android.path, 'utf8'))[1].toJS();
+  assert.ok(!JSON.stringify(androidCommands).includes(dismissalId));
+  const androidEditIndex = androidCommands.findIndex((command) => command.tapOn?.id === field);
+  assert.deepEqual(androidCommands.slice(androidEditIndex, androidEditIndex + 5), commands.slice(editIndex, editIndex + 5), 'certified Android edit and hideKeyboard unchanged');
   assert.deepEqual(androidCommands.filter(isQaNavigation), navigation, 'Android runtime preserves semantic shortcuts');
   const result = { ok: true, generation: 'generation-1', ...flow.authoritativeResult, requestId: 'request-1', operationId: 'operation-1' };
   const ui = 'WORKSIDEQA_CORRELATION={"requestId":"request-1","operationId":"operation-1"}';

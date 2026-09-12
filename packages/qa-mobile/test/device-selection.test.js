@@ -70,4 +70,14 @@ assert.equal(validateDeviceDescriptors({ ...mobile, devices: { iosSimulator: { p
 assert.throws(() => validateDeviceDescriptors({ ...mobile, devices: { androidEmulator: { ...mobile.devices.androidEmulator, deterministicTextEntry: deterministicFields } } }), /only for iOS simulators/);
 assert.throws(() => validateDeviceDescriptors({ ...mobile, devices: { iosSimulator: { platform: 'ios', kind: 'simulator', idEnvKey: 'IOS_ID', appId: mobile.appId, launchUri, launchReadySelector: 'qa-environment-root', deterministicTextEntry: [{ id: '', assertExact: true }] } } }), /valid field IDs/);
 assert.throws(() => validateDeviceDescriptors({ ...mobile, devices: { iosSimulator: { platform: 'ios', kind: 'simulator', idEnvKey: 'IOS_ID', appId: mobile.appId, launchUri, launchReadySelector: 'qa-environment-root', deterministicTextEntry: [{ id: 'auth.login.password', secure: true, assertExact: true }] } } }), /valid field IDs/);
+const keyboardDismissAfterEdit = [{ fieldId: 'settings.sms.daily-digest-time', targetId: 'settings.sms.qa-dismiss-keyboard' }];
+const keyboardMobile = { ...iosMobile, devices: { iosSimulator: { ...iosMobile.devices.iosSimulator, launchUri, launchReadySelector: 'qa-environment-root', keyboardDismissAfterEdit } } };
+assert.equal(validateDeviceDescriptors(keyboardMobile), true);
+const keyboardDevice = resolveConfiguredDevice(keyboardMobile, 'iosSimulator', { IOS_ID: 'IOS-A' }, { execute: executeIos });
+assert.equal(keyboardDevice.id, 'IOS-A');
+assert.deepEqual(keyboardDevice.keyboardDismissAfterEdit, keyboardDismissAfterEdit);
+for (const invalid of [[], [{ fieldId: '', targetId: 'target' }], [{ fieldId: 'field', targetId: '50%,50%' }], [...keyboardDismissAfterEdit, ...keyboardDismissAfterEdit]]) {
+  assert.throws(() => validateDeviceDescriptors({ ...keyboardMobile, devices: { iosSimulator: { ...keyboardMobile.devices.iosSimulator, keyboardDismissAfterEdit: invalid } } }), /keyboardDismissAfterEdit/);
+}
+assert.throws(() => validateDeviceDescriptors({ ...mobile, devices: { androidEmulator: { ...mobile.devices.androidEmulator, keyboardDismissAfterEdit } } }), /keyboardDismissAfterEdit/);
 console.log('Cross-platform explicit device selection contract verified.');
