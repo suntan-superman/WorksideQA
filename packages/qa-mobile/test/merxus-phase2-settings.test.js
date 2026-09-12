@@ -91,3 +91,44 @@ try {
   assert.throws(() => parseAuthoritativeResult(JSON.stringify(result), flow.authoritativeResult, '', 'generation-1'));
   console.log('PASS Merxus Phase 2 isolated flow, certified iOS split, authoritative counters and UI correlation contracts');
 } finally { fs.rmSync(directory, { recursive: true, force: true }); }
+
+// Second slice reuses the certified flow, mutation verification, launch and
+// correlation architecture; only the real field/value and fixture case differ.
+const retryFlows = selectFlows(config, { suite: 'phase2-retry' });
+assert.equal(retryFlows.length, 1);
+const retryFlow = retryFlows[0];
+assert.equal(retryFlow.name, '22-tenant-settings-retry-owner-a');
+assert.equal(retryFlow.fixtureScenario, 'phase2-settings-retry-owner-a');
+assert.equal(retryFlow.backendVerification, retryFlow.fixtureScenario);
+assert.equal(retryFlow.timeoutMs, 180000);
+assert.deepEqual(retryFlow.authoritativeResult, flow.authoritativeResult);
+const retryField = 'settings.sms.notification-retry-max-attempts';
+const expectedRetryCommands = JSON.parse(JSON.stringify(commands).replaceAll(field, retryField).replaceAll('18:00', '2').replaceAll('18:30', '3'));
+const retryCommands = YAML.parseAllDocuments(fs.readFileSync(retryFlow.path, 'utf8'))[1].toJS();
+assert.deepEqual(retryCommands, expectedRetryCommands, 'same Save/reload/correlation and no enabling retry, Send SMS, scheduling or providers');
+const retryDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'phase2-retry-'));
+try {
+  const android = buildDeviceLaunchFlow(retryFlow, { ...config.mobile.devices.androidEmulator, id: 'emulator-5554' }, path.join(retryDirectory, 'android.yaml'));
+  const androidCommands = YAML.parseAllDocuments(fs.readFileSync(android.path, 'utf8'))[1].toJS();
+  const androidIndex = androidCommands.findIndex((command) => command.tapOn?.id === retryField);
+  assert.deepEqual(androidCommands.slice(androidIndex, androidIndex + 5), [
+    { tapOn: { id: retryField } }, { eraseText: 100 }, { inputText: '3' },
+    { assertVisible: { id: retryField, text: '^3$' } }, 'hideKeyboard',
+  ]);
+  assert.ok(android.launchPlan.launchArgs.includes('emulator-5554'));
+  const ios = buildDeviceLaunchFlow(retryFlow, { ...config.mobile.devices.iosSimulator, id: 'explicit-retry-udid' }, path.join(retryDirectory, 'ios.yaml'));
+  assert.equal(ios.stages.length, 3);
+  assert.ok(ios.launchPlan.launchArgs.includes('explicit-retry-udid'));
+  const resume = YAML.parseAllDocuments(fs.readFileSync(ios.stages[2].path, 'utf8'))[1].toJS();
+  const index = resume.findIndex((command) => command.tapOn?.id === retryField);
+  assert.deepEqual(resume.slice(index, index + 6), [
+    { tapOn: { id: retryField } }, { eraseText: 100 }, { inputText: '3' },
+    { assertVisible: { id: retryField, text: '^3$' } },
+    { scrollUntilVisible: { element: { id: 'settings.sms.qa-dismiss-keyboard' }, direction: 'UP', timeout: 5000 } },
+    { tapOn: { id: 'settings.sms.qa-dismiss-keyboard' } },
+  ]);
+  assert.equal(resume.some((command) => command === 'hideKeyboard'), false);
+  assert.ok(JSON.stringify(resume).includes('WORKSIDEQA_CORRELATION='));
+  assert.ok(JSON.stringify(resume).includes('settings.sms.reload'));
+  console.log('PASS isolated retry max attempts slice, safe real controls, existing iOS dismiss target, platform launch and correlation');
+} finally { fs.rmSync(retryDirectory, { recursive: true, force: true }); }

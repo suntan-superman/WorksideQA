@@ -225,6 +225,7 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
       ? keyboardDismissRules.find((rule) => commands[commandIndex - 1]?.assertVisible?.id === rule.fieldId &&
           Object.hasOwn(commands[commandIndex - 2] || {}, 'inputText')) : null;
     if (dismissRule) {
+      if (dismissRule.scrollToTarget) runtimeCommands.push({ scrollUntilVisible: { element: { id: dismissRule.targetId }, direction: 'UP', timeout: 5000 } });
       runtimeCommands.push({ tapOn: { id: dismissRule.targetId } });
       continue;
     }

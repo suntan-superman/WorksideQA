@@ -107,7 +107,8 @@ function validateDeviceDescriptors(mobile) {
       const rules = descriptor.keyboardDismissAfterEdit;
       if (descriptor.platform !== 'ios' || descriptor.kind !== 'simulator' || !descriptor.launchUri ||
           !Array.isArray(rules) || rules.length === 0 || rules.some((rule) => (
-            !rule || !['fieldId', 'targetId'].every((key) => typeof rule[key] === 'string' && /^[A-Za-z0-9_.-]+$/.test(rule[key]))
+            !rule || !['fieldId', 'targetId'].every((key) => typeof rule[key] === 'string' && /^[A-Za-z0-9_.-]+$/.test(rule[key])) ||
+            (rule.scrollToTarget != null && typeof rule.scrollToTarget !== 'boolean')
           )) || new Set(rules.map((rule) => rule.fieldId)).size !== rules.length) {
         throw new Error(`Device ${name} keyboardDismissAfterEdit requires unique semantic field/target IDs on an iOS simulator launchUri device.`);
       }
