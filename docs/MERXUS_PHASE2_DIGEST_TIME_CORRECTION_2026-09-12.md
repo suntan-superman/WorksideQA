@@ -96,6 +96,19 @@ above describe the inspected working trees, not a fresh production deployment.
 
 ## Rerun only the corrected slice
 
+### Delivery status
+
+- Mobile `49dc380`: pushed to origin/main.
+- Web `4d25dd0`: pushed to origin/main.
+- WorksideQA implementation `790080d`: pushed to origin/main.
+- Backend `8154490`: committed locally; push BLOCKED by GitHub secret scanning
+  in older ancestor commits `f04039d` and `ddae7b7` (files `update-secrets.bat`
+  and `recent-logs.json`). The new digest-time changes are not the reported source.
+  No push-protection bypass, force push, history rewrite or credential rotation
+  was performed. Rotate the flagged credentials and separately authorize safe
+  history remediation before publishing the backend history. Do not assume a
+  backend pull on another computer includes this local commit.
+
 Use the existing credential-configured QA terminal with the unchanged Owner A/B
 fixture variables, MERXUS_MOBILE_REPO, MERXUS_BACKEND_REPO and explicit Android
 serial configured. Keep the existing local Firebase emulator services and Metro.
