@@ -47,26 +47,30 @@ appId: com.merxus.mobile.qa
     id: settings.sms.open
 - scrollUntilVisible:
     element:
-      id: settings.sms.business-name
+      id: settings.sms.daily-digest-time
     direction: DOWN
+    timeout: 20000
 - extendedWaitUntil:
     visible:
-      id: settings.sms.business-name
+      id: settings.sms.daily-digest-time
     timeout: 5000
 - assertVisible:
-    id: settings.sms.business-name
-    text: '^Merxus Maestro Tenant A$'
+    id: settings.sms.daily-digest-time
+    text: '^18:00$'
 - tapOn:
-    id: settings.sms.business-name
+    id: settings.sms.daily-digest-time
 - eraseText: 100
-- inputText: 'Merxus Maestro Tenant A QA Branding'
+- inputText: '18:30'
 - assertVisible:
-    id: settings.sms.business-name
-    text: '^Merxus Maestro Tenant A QA Branding$'
+    id: settings.sms.daily-digest-time
+    text: '^18:30$'
 - hideKeyboard
-# QA navigation only; the actual mutation still uses the real Save button.
-- tapOn:
-    id: settings.sms.qa-scroll-to-save
+# Ordinary bounded semantic navigation, verified on the Android QA emulator.
+- scrollUntilVisible:
+    element:
+      id: settings.sms.save
+    direction: DOWN
+    timeout: 20000
 - extendedWaitUntil:
     visible:
       id: settings.sms.save
@@ -94,13 +98,16 @@ appId: com.merxus.mobile.qa
     visible:
       id: settings.sms.reloaded
     timeout: 15000
-# Re-measure the existing field after fetching persisted settings.
-- tapOn:
-    id: settings.sms.qa-scroll-to-business-name
+# Return to the real digest-time field after fetching persisted settings.
+- scrollUntilVisible:
+    element:
+      id: settings.sms.daily-digest-time
+    direction: UP
+    timeout: 20000
 - extendedWaitUntil:
     visible:
-      id: settings.sms.business-name
+      id: settings.sms.daily-digest-time
     timeout: 5000
 - assertVisible:
-    id: settings.sms.business-name
-    text: '^Merxus Maestro Tenant A QA Branding$'
+    id: settings.sms.daily-digest-time
+    text: '^18:30$'

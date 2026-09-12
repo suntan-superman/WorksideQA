@@ -18,35 +18,26 @@ assert.ok(!source.includes('settings.sms.test'));
 const commands = YAML.parseAllDocuments(source)[1].toJS();
 const isQaNavigation = (command) => command?.tapOn?.id?.startsWith('settings.sms.qa-scroll-to-');
 const navigation = commands.filter(isQaNavigation);
-assert.equal(navigation.length, 2);
+assert.equal(navigation.length, 0, 'ordinary navigation is attempted before retaining shortcut usage');
+assert.doesNotMatch(source, /qa-scroll-to-business-name|settings\.sms\.business-name|QA Branding/);
 assert.doesNotMatch(source, /\b(?:repeat|swipe|longPressOn):/, 'no brute-force or coordinate navigation');
-for (const [index, helper, target] of [
-  [0, 'settings.sms.qa-scroll-to-save', 'settings.sms.save'],
-  [1, 'settings.sms.qa-scroll-to-business-name', 'settings.sms.business-name'],
-]) {
-  const offset = commands.indexOf(navigation[index]);
-  assert.deepEqual(commands[offset], { tapOn: { id: helper } });
-  assert.deepEqual(commands[offset + 1], { extendedWaitUntil: { visible: { id: target }, timeout: 5000 } });
-  assert.equal(commands[offset + 2].assertVisible.id, target);
-  assert.equal(commands[offset + 2].assertVisible.optional, undefined, 'missing target must fail closed');
-}
-const editIndex = commands.findIndex((command) => command.tapOn?.id === 'settings.sms.business-name');
-assert.deepEqual(commands[editIndex - 2], { extendedWaitUntil: { visible: { id: 'settings.sms.business-name' }, timeout: 5000 } }, 'real form readiness precedes editing and shortcut use');
-assert.ok(commands.findIndex((command) => command.tapOn?.id === 'settings.sms.open') < editIndex - 2);
+const field = 'settings.sms.daily-digest-time';
+const editIndex = commands.findIndex((command) => command.tapOn?.id === field);
+assert.deepEqual(commands[editIndex - 1], { assertVisible: { id: field, text: '^18:00$' } });
 assert.deepEqual(commands.slice(editIndex, editIndex + 5), [
-  { tapOn: { id: 'settings.sms.business-name' } },
-  { eraseText: 100 },
-  { inputText: 'Merxus Maestro Tenant A QA Branding' },
-  { assertVisible: { id: 'settings.sms.business-name', text: '^Merxus Maestro Tenant A QA Branding$' } },
-  'hideKeyboard',
-], 'business-name input, exact assertion and keyboard dismissal remain unchanged');
-assert.equal(commands[editIndex + 5], navigation[0]);
+  { tapOn: { id: field } }, { eraseText: 100 }, { inputText: '18:30' },
+  { assertVisible: { id: field, text: '^18:30$' } }, 'hideKeyboard',
+]);
+for (const [id, direction] of [[field, 'DOWN'], ['settings.sms.save', 'DOWN'], [field, 'UP']]) {
+  const scroll = commands.find((command) => command.scrollUntilVisible?.element?.id === id && command.scrollUntilVisible.direction === direction);
+  assert.ok(scroll);
+  assert.equal(scroll.scrollUntilVisible.timeout, 20000, 'semantic traversal is bounded');
+}
 const saveTap = commands.findIndex((command) => command.tapOn?.id === 'settings.sms.save');
-assert.deepEqual(commands[saveTap], { tapOn: { id: 'settings.sms.save' } }, 'Save tap must be semantic, never coordinates');
-assert.deepEqual(commands[saveTap - 1], { assertVisible: { id: 'settings.sms.save', enabled: true } }, 'real Save must remain authorized and enabled');
-assert.equal(saveTap, commands.indexOf(navigation[0]) + 3);
-assert.equal(commands[commands.indexOf(navigation[1]) - 1].extendedWaitUntil.visible.id, 'settings.sms.reloaded');
-assert.deepEqual(commands[commands.indexOf(navigation[1]) + 2], { assertVisible: { id: 'settings.sms.business-name', text: '^Merxus Maestro Tenant A QA Branding$' } });
+assert.deepEqual(commands[saveTap], { tapOn: { id: 'settings.sms.save' } });
+assert.deepEqual(commands[saveTap - 1], { assertVisible: { id: 'settings.sms.save', enabled: true } });
+assert.deepEqual(commands.at(-1), { assertVisible: { id: field, text: '^18:30$' } });
+assert.ok(commands.findIndex((command) => command.tapOn?.id === 'settings.sms.reload') > saveTap);
 assert.equal(flow.backendVerification, 'phase2-settings-update-owner-a');
 assert.equal(flow.fixtureScenario, 'phase2-settings-update-owner-a');
 assert.equal(flow.account, 'user-a');
