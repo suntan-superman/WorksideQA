@@ -60,10 +60,21 @@ appId: com.merxus.mobile.qa
     id: settings.sms.business-name
     text: '^Merxus Maestro Tenant A QA Branding$'
 - hideKeyboard
-- scrollUntilVisible:
-    element:
-      id: settings.sms.save
-    direction: DOWN
+# Long SMS form: re-check visibility after each bounded directional gesture.
+# Once visible, remaining iterations do not swipe past the semantic target.
+- repeat:
+    times: 12
+    commands:
+      - runFlow:
+          when:
+            notVisible:
+              id: settings.sms.save
+          commands:
+            - swipe:
+                direction: UP
+                duration: 500
+- assertVisible:
+    id: settings.sms.save
 - tapOn:
     id: settings.sms.save
 - extendedWaitUntil:
@@ -84,10 +95,18 @@ appId: com.merxus.mobile.qa
     visible:
       id: settings.sms.reloaded
     timeout: 15000
-- scrollUntilVisible:
-    element:
-      id: settings.sms.business-name
-    direction: UP
+# Return through the same long form after fetching the persisted settings.
+- repeat:
+    times: 12
+    commands:
+      - runFlow:
+          when:
+            notVisible:
+              id: settings.sms.business-name
+          commands:
+            - swipe:
+                direction: DOWN
+                duration: 500
 - assertVisible:
     id: settings.sms.business-name
     text: '^Merxus Maestro Tenant A QA Branding$'
