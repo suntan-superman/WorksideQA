@@ -107,8 +107,11 @@ function validateDeviceDescriptors(mobile) {
         if (descriptor.platform !== 'ios' || descriptor.kind !== 'simulator') {
           throw new Error(`Device ${name} launchDismissIfVisible is supported only for iOS simulators.`);
         }
-        if (typeof descriptor.launchDismissIfVisible !== 'string' || !descriptor.launchDismissIfVisible.trim()) {
-          throw new Error(`Device ${name} launchDismissIfVisible must be a non-empty accessibility label.`);
+        const labels = Array.isArray(descriptor.launchDismissIfVisible)
+          ? descriptor.launchDismissIfVisible
+          : [descriptor.launchDismissIfVisible];
+        if (labels.length === 0 || labels.some((label) => typeof label !== 'string' || !label.trim())) {
+          throw new Error(`Device ${name} launchDismissIfVisible must contain one or more non-empty accessibility labels.`);
         }
       }
     }

@@ -186,11 +186,16 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
       continue;
     }
     launches.push(command.launchApp);
-    if (selectedDevice.platform === 'ios' && selectedDevice.launchDismissIfVisible) {
+    const dismissLabels = Array.isArray(selectedDevice.launchDismissIfVisible)
+      ? selectedDevice.launchDismissIfVisible
+      : selectedDevice.launchDismissIfVisible
+        ? [selectedDevice.launchDismissIfVisible]
+        : [];
+    for (const label of selectedDevice.platform === 'ios' ? dismissLabels : []) {
       runtimeCommands.push({
         runFlow: {
-          when: { visible: selectedDevice.launchDismissIfVisible },
-          commands: [{ tapOn: selectedDevice.launchDismissIfVisible }],
+          when: { visible: label },
+          commands: [{ tapOn: label }],
         },
       });
     }

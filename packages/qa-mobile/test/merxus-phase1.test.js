@@ -21,7 +21,7 @@ assert.equal(iosDescriptor.appId, 'com.merxus.mobile.qa');
 assert.equal(iosDescriptor.kind, 'simulator');
 assert.equal(iosDescriptor.launchReadySelector, 'qa-environment-root');
 assert.equal(iosDescriptor.launchUri, 'exp+merxus-mobile://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081');
-assert.equal(iosDescriptor.launchDismissIfVisible, 'Continue');
+assert.deepEqual(iosDescriptor.launchDismissIfVisible, ['Continue', 'Close']);
 assert.deepEqual(selectFlows(validated, { suite: 'phase1' }).map((flow) => flow.name), ['00-launch-environment', '01-login-owner-a', '02-tenant-isolation', '03-logout']);
 
 const yaml = require('yaml');
@@ -98,11 +98,17 @@ const iosRuntimeFlow = buildDeviceLaunchFlow(flow, {
 }, iosRuntimePath);
 const iosRuntimeDocuments = yaml.parseAllDocuments(fs.readFileSync(iosRuntimePath, 'utf8'));
 const iosRuntimeCommands = iosRuntimeDocuments[1].toJS();
-assert.deepEqual(iosRuntimeCommands.slice(0, 3), [
+assert.deepEqual(iosRuntimeCommands.slice(0, 4), [
   { runFlow: { when: { visible: 'Continue' }, commands: [{ tapOn: 'Continue' }] } },
+  { runFlow: { when: { visible: 'Close' }, commands: [{ tapOn: 'Close' }] } },
   { extendedWaitUntil: { visible: { id: 'qa-environment-root' }, timeout: 30000 } },
   { tapOn: { id: 'auth.login.email' } },
 ]);
+for (const [index, label] of ['Continue', 'Close'].entries()) {
+  assert.deepEqual(iosRuntimeCommands[index].runFlow.when, { visible: label });
+  assert.deepEqual(iosRuntimeCommands[index].runFlow.commands, [{ tapOn: label }]);
+}
+assert.equal(iosRuntimeCommands.some((command) => command.tapOn === 'Reload' || command.tapOn === 'Go home'), false);
 assert.equal(iosRuntimeFlow.path, iosRuntimePath);
 assert.equal(iosRuntimeFlow.launchPlan.platform, 'ios');
 assert.equal(iosRuntimeFlow.launchPlan.clearState, true);

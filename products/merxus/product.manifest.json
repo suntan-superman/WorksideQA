@@ -136,7 +136,7 @@
         "launchUri": "exp+merxus-mobile://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081",
         "launchReadySelector": "qa-environment-root",
         "launchReadyTimeoutMs": 30000,
-        "launchDismissIfVisible": "Continue"
+        "launchDismissIfVisible": ["Continue", "Close"]
       },
       "androidEmulator": {
         "platform": "android",
