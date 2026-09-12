@@ -85,6 +85,7 @@ function resolveConfiguredDevice(mobile, requestedName, environment = process.en
     launchUri: descriptor.launchUri || null,
     launchReadySelector: descriptor.launchReadySelector || null,
     launchReadyTimeoutMs: descriptor.launchReadyTimeoutMs || null,
+    launchDismissIfVisible: descriptor.launchDismissIfVisible || null,
     ...inspectDeviceMetadata(selected, appId, options.execute || spawnCommandSync),
   };
 }
@@ -101,6 +102,14 @@ function validateDeviceDescriptors(mobile) {
       if (!descriptor.launchReadySelector) throw new Error(`Device ${name} requires launchReadySelector when launchUri is configured.`);
       if (descriptor.launchReadyTimeoutMs != null && (!Number.isInteger(descriptor.launchReadyTimeoutMs) || descriptor.launchReadyTimeoutMs <= 0)) {
         throw new Error(`Device ${name} launchReadyTimeoutMs must be a positive integer.`);
+      }
+      if (descriptor.launchDismissIfVisible != null) {
+        if (descriptor.platform !== 'ios' || descriptor.kind !== 'simulator') {
+          throw new Error(`Device ${name} launchDismissIfVisible is supported only for iOS simulators.`);
+        }
+        if (typeof descriptor.launchDismissIfVisible !== 'string' || !descriptor.launchDismissIfVisible.trim()) {
+          throw new Error(`Device ${name} launchDismissIfVisible must be a non-empty accessibility label.`);
+        }
       }
     }
   }

@@ -186,6 +186,14 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
       continue;
     }
     launches.push(command.launchApp);
+    if (selectedDevice.platform === 'ios' && selectedDevice.launchDismissIfVisible) {
+      runtimeCommands.push({
+        runFlow: {
+          when: { visible: selectedDevice.launchDismissIfVisible },
+          commands: [{ tapOn: selectedDevice.launchDismissIfVisible }],
+        },
+      });
+    }
     runtimeCommands.push({
       extendedWaitUntil: {
         visible: { id: selectedDevice.launchReadySelector },
@@ -603,6 +611,7 @@ async function runMaestroFlows(config, options = {}) {
       appBuild: selectedDevice.appBuild,
       launchUri: selectedDevice.launchUri,
       launchReadySelector: selectedDevice.launchReadySelector,
+      launchDismissIfVisible: selectedDevice.launchDismissIfVisible,
     });
   }
   console.log(`Maestro ${String(version.stdout || version.stderr).trim()}`);
