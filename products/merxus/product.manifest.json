@@ -128,7 +128,15 @@
       "emulators": { "auth": 9099, "firestore": 8080, "storage": 9199 }
     },
     "devices": {
-      "iosSimulator": { "platform": "ios", "kind": "simulator", "idEnvKey": "MERXUS_IOS_SIMULATOR_ID", "appId": "com.merxus.mobile.qa" },
+      "iosSimulator": {
+        "platform": "ios",
+        "kind": "simulator",
+        "idEnvKey": "MERXUS_IOS_SIMULATOR_ID",
+        "appId": "com.merxus.mobile.qa",
+        "launchUri": "exp+merxus-mobile://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081",
+        "launchReadySelector": "qa-environment-root",
+        "launchReadyTimeoutMs": 30000
+      },
       "androidEmulator": {
         "platform": "android",
         "kind": "emulator",

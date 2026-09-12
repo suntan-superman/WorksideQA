@@ -2,15 +2,19 @@
 
 Merxus includes web, Firebase, Cloud Run, Twilio, and AI conversation validation targets.
 
-## Android Expo Development Build Launch
+## Expo Development Build Launch
 
-The Android emulator descriptor owns the Expo Development Client launch URI. During execution, WorksideQA keeps the checked-in Maestro flows platform-neutral, performs the requested state clear through the selected device, opens the configured URI with an explicit Android intent, and writes a runtime flow that waits for the React Native readiness selector instead of relaunching the package. This bypasses the development-server chooser deterministically. The explicit device serial is used by both `adb -s` and Maestro's `--device` argument.
+The Android emulator and iOS Simulator descriptors own their Expo Development Client launch URIs. During execution, WorksideQA keeps the checked-in Maestro flows platform-neutral, performs the requested state clear through the selected device, opens the configured URI, and writes a runtime flow that waits for the React Native readiness selector instead of relaunching the package. This bypasses the development-server chooser deterministically.
 
-The configured URI targets `127.0.0.1:8081`, disables the first-launch Dev Menu onboarding overlay, and therefore requires the standard emulator reverse mapping:
+Android uses the explicit serial for both `adb -s` and Maestro's `--device` argument. iOS preserves Maestro's `clearState` behavior in a generated prelaunch flow, then uses the explicit Simulator UDID with `xcrun simctl openurl`.
+
+The Android URI targets `127.0.0.1:8081`, disables the first-launch Dev Menu onboarding overlay, and therefore requires the standard emulator reverse mapping:
 
 ```powershell
 adb -s emulator-5554 reverse tcp:8081 tcp:8081
 ```
+
+The iOS Simulator reaches Metro directly at `127.0.0.1:8081` and does not require Android port reversal.
 
 ## Review Canary
 

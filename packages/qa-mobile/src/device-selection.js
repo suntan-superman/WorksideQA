@@ -97,7 +97,6 @@ function validateDeviceDescriptors(mobile) {
     if (!descriptor.idEnvKey || !descriptor.appId) throw new Error(`Device ${name} requires idEnvKey and appId.`);
     if (descriptor.appId !== mobile.appId) throw new Error(`Device ${name} must target the manifest QA appId.`);
     if (descriptor.launchUri) {
-      if (descriptor.platform !== 'android') throw new Error(`Device ${name} launchUri is currently supported only for Android.`);
       if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(descriptor.launchUri)) throw new Error(`Device ${name} launchUri must be an absolute application URI.`);
       if (!descriptor.launchReadySelector) throw new Error(`Device ${name} requires launchReadySelector when launchUri is configured.`);
       if (descriptor.launchReadyTimeoutMs != null && (!Number.isInteger(descriptor.launchReadyTimeoutMs) || descriptor.launchReadyTimeoutMs <= 0)) {

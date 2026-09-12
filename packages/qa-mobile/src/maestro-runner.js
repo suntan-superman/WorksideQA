@@ -163,8 +163,14 @@ function validateFlowFile(flow, mobile) {
 }
 
 function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
-  if (!selectedDevice?.launchUri || selectedDevice.platform !== "android") {
+  if (!selectedDevice?.launchUri) {
     return { path: flow.path, launchPlan: null };
+  }
+  if (!['android', 'ios'].includes(selectedDevice.platform)) {
+    throw new Error(`Device launchUri is unsupported for platform ${selectedDevice.platform}.`);
+  }
+  if (selectedDevice.platform === 'ios' && selectedDevice.kind !== 'simulator') {
+    throw new Error('iOS launchUri execution requires an explicitly selected simulator.');
   }
 
   const source = fs.readFileSync(flow.path, "utf8");
@@ -201,18 +207,51 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
     `${YAML.stringify(header).trimEnd()}\n---\n${YAML.stringify(runtimeCommands)}`,
     "utf8"
   );
+  const clearState = Boolean(launches[0]?.clearState);
+  let clearCommand = null;
+  let clearArgs = [];
+  let launchCommand;
+  let launchArgs;
+
+  if (selectedDevice.platform === 'android') {
+    clearCommand = 'adb';
+    clearArgs = ["-s", selectedDevice.id, "shell", "pm", "clear", selectedDevice.appId];
+    launchCommand = 'adb';
+    launchArgs = [
+      "-s", selectedDevice.id, "shell", "am", "start", "-W",
+      "-a", "android.intent.action.VIEW",
+      "-d", selectedDevice.launchUri,
+      "-p", selectedDevice.appId,
+    ];
+  } else {
+    const clearFlowPath = path.join(path.dirname(destinationPath), 'clear-state.yaml');
+    if (clearState) {
+      fs.writeFileSync(
+        clearFlowPath,
+        `${YAML.stringify(header).trimEnd()}\n---\n${YAML.stringify([{ launchApp: launches[0] }])}`,
+        'utf8'
+      );
+      clearCommand = 'maestro';
+      clearArgs = [
+        '--device', selectedDevice.id,
+        'test',
+        '--no-ansi',
+        toPosixPath(path.relative(fromRoot(), clearFlowPath)),
+      ];
+    }
+    launchCommand = 'xcrun';
+    launchArgs = ['simctl', 'openurl', selectedDevice.id, selectedDevice.launchUri];
+  }
+
   return {
     path: destinationPath,
     launchPlan: {
-      command: "adb",
-      clearState: Boolean(launches[0]?.clearState),
-      clearArgs: ["-s", selectedDevice.id, "shell", "pm", "clear", selectedDevice.appId],
-      launchArgs: [
-        "-s", selectedDevice.id, "shell", "am", "start", "-W",
-        "-a", "android.intent.action.VIEW",
-        "-d", selectedDevice.launchUri,
-        "-p", selectedDevice.appId,
-      ],
+      platform: selectedDevice.platform,
+      clearState,
+      clearCommand,
+      clearArgs,
+      launchCommand,
+      launchArgs,
     },
   };
 }
@@ -671,23 +710,23 @@ async function runMaestroFlows(config, options = {}) {
     try {
       if (runtimeFlow.launchPlan) {
         if (runtimeFlow.launchPlan.clearState) {
-          const clearOutcome = await runProcess(runtimeFlow.launchPlan.command, runtimeFlow.launchPlan.clearArgs, {
+          const clearOutcome = await runProcess(runtimeFlow.launchPlan.clearCommand, runtimeFlow.launchPlan.clearArgs, {
             cwd: fromRoot(),
             env: runnerEnv,
             logStream,
             secretValues,
             timeoutMs: flow.timeoutMs || validated.maestro.timeoutMs,
           });
-          if (clearOutcome.code !== 0) throw new Error(`Android QA state clear exited with ${clearOutcome.code ?? "unknown"}.`);
+          if (clearOutcome.code !== 0) throw new Error(`${runtimeFlow.launchPlan.platform} QA state clear exited with ${clearOutcome.code ?? "unknown"}.`);
         }
-        const launchOutcome = await runProcess(runtimeFlow.launchPlan.command, runtimeFlow.launchPlan.launchArgs, {
+        const launchOutcome = await runProcess(runtimeFlow.launchPlan.launchCommand, runtimeFlow.launchPlan.launchArgs, {
           cwd: fromRoot(),
           env: runnerEnv,
           logStream,
           secretValues,
           timeoutMs: flow.timeoutMs || validated.maestro.timeoutMs,
         });
-        if (launchOutcome.code !== 0) throw new Error(`Android QA launch URI exited with ${launchOutcome.code ?? "unknown"}.`);
+        if (launchOutcome.code !== 0) throw new Error(`${runtimeFlow.launchPlan.platform} QA launch URI exited with ${launchOutcome.code ?? "unknown"}.`);
       }
       outcome = await runProcess("maestro", args, {
         cwd: fromRoot(),

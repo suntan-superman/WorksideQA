@@ -16,7 +16,11 @@ assert.equal(androidDescriptor.appId, 'com.merxus.mobile.qa');
 assert.equal(androidDescriptor.launchReadySelector, 'qa-environment-root');
 assert.match(androidDescriptor.launchUri, /^exp\+merxus-mobile:\/\/expo-development-client\/\?url=/);
 assert.match(androidDescriptor.launchUri, /%3FdisableOnboarding%3D1$/);
-assert.equal(validated.mobile.devices.iosSimulator.launchUri, undefined);
+const iosDescriptor = validated.mobile.devices.iosSimulator;
+assert.equal(iosDescriptor.appId, 'com.merxus.mobile.qa');
+assert.equal(iosDescriptor.kind, 'simulator');
+assert.equal(iosDescriptor.launchReadySelector, 'qa-environment-root');
+assert.equal(iosDescriptor.launchUri, 'exp+merxus-mobile://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081');
 assert.deepEqual(selectFlows(validated, { suite: 'phase1' }).map((flow) => flow.name), ['00-launch-environment', '01-login-owner-a', '02-tenant-isolation', '03-logout']);
 
 const yaml = require('yaml');
@@ -56,6 +60,9 @@ const flow = selectFlows(validated, { flow: '02-tenant-isolation' })[0];
 const runtimeRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'worksideqa merxus runtime '));
 const runtimeFlowPath = path.join(runtimeRoot, 'runtime flow.yaml');
 const originalFlowSource = fs.readFileSync(flow.path, 'utf8');
+for (const phaseFlow of validated.flows) {
+  assert.doesNotMatch(fs.readFileSync(phaseFlow.path, 'utf8'), /\b(?:adb|xcrun|openurl|launchUri)\b/);
+}
 const runtimeFlow = buildDeviceLaunchFlow(flow, {
   platform: 'android',
   id: 'emulator-5554',
@@ -73,14 +80,37 @@ assert.deepEqual(runtimeCommands.slice(0, 3), [
 ]);
 assert.equal(runtimeFlow.path, runtimeFlowPath);
 assert.equal(runtimeFlow.launchPlan.clearState, true);
+assert.equal(runtimeFlow.launchPlan.platform, 'android');
+assert.equal(runtimeFlow.launchPlan.clearCommand, 'adb');
 assert.deepEqual(runtimeFlow.launchPlan.clearArgs, ['-s', 'emulator-5554', 'shell', 'pm', 'clear', 'com.merxus.mobile.qa']);
+assert.equal(runtimeFlow.launchPlan.launchCommand, 'adb');
 assert.deepEqual(runtimeFlow.launchPlan.launchArgs, [
   '-s', 'emulator-5554', 'shell', 'am', 'start', '-W',
   '-a', 'android.intent.action.VIEW', '-d', androidDescriptor.launchUri,
   '-p', 'com.merxus.mobile.qa',
 ]);
 assert.equal(fs.readFileSync(flow.path, 'utf8'), originalFlowSource);
-assert.deepEqual(buildDeviceLaunchFlow(flow, { platform: 'ios', id: 'IOS-A' }, path.join(runtimeRoot, 'ios.yaml')), { path: flow.path, launchPlan: null });
+const iosRuntimePath = path.join(runtimeRoot, 'ios runtime flow.yaml');
+const iosRuntimeFlow = buildDeviceLaunchFlow(flow, {
+  ...iosDescriptor,
+  id: '3C029085-0B3D-49B6-AB7D-2943DA45F695',
+}, iosRuntimePath);
+assert.equal(iosRuntimeFlow.path, iosRuntimePath);
+assert.equal(iosRuntimeFlow.launchPlan.platform, 'ios');
+assert.equal(iosRuntimeFlow.launchPlan.clearState, true);
+assert.equal(iosRuntimeFlow.launchPlan.clearCommand, 'maestro');
+assert.deepEqual(iosRuntimeFlow.launchPlan.clearArgs.slice(0, 3), ['--device', '3C029085-0B3D-49B6-AB7D-2943DA45F695', 'test']);
+assert.equal(iosRuntimeFlow.launchPlan.launchCommand, 'xcrun');
+assert.deepEqual(iosRuntimeFlow.launchPlan.launchArgs, [
+  'simctl', 'openurl', '3C029085-0B3D-49B6-AB7D-2943DA45F695', iosDescriptor.launchUri,
+]);
+const clearFlowPath = path.join(runtimeRoot, 'clear-state.yaml');
+const clearDocuments = yaml.parseAllDocuments(fs.readFileSync(clearFlowPath, 'utf8'));
+assert.deepEqual(clearDocuments[0].toJS(), { appId: 'com.merxus.mobile.qa' });
+const clearCommands = clearDocuments[1].toJS();
+assert.deepEqual(clearCommands, [{ launchApp: { clearState: true } }]);
+assert.deepEqual(buildDeviceLaunchFlow(flow, { platform: 'ios', kind: 'simulator', id: 'IOS-A' }, path.join(runtimeRoot, 'ios-no-uri.yaml')), { path: flow.path, launchPlan: null });
+assert.throws(() => buildDeviceLaunchFlow(flow, { ...iosDescriptor, kind: 'physical', id: 'IOS-PHYSICAL' }, path.join(runtimeRoot, 'ios-physical.yaml')), /explicitly selected simulator/);
 const maestroArgs = buildMaestroTestArgs({
   selectedDevice: { id: 'emulator-5554', platform: 'android' },
   artifactPath: 'reports/mobile/merxus/path with spaces/artifacts',
