@@ -147,6 +147,11 @@
             "fieldId": "settings.sms.notification-retry-max-attempts",
             "targetId": "settings.sms.qa-dismiss-keyboard",
             "scrollToTarget": true
+          },
+          {
+            "fieldId": "settings.sms.notification-retry-delay-minutes",
+            "targetId": "settings.sms.qa-dismiss-keyboard",
+            "scrollToTarget": true
           }
         ],
         "externalSystemOverlay": {
@@ -198,7 +203,7 @@
       "args": ["run", "qa:maestro:reset", "--"],
       "projectId": "merxus-maestro-local",
       "passGeneration": true,
-      "scenarios": ["login-owner-a", "phase2-settings-update-owner-a", "phase2-settings-retry-owner-a"],
+      "scenarios": ["login-owner-a", "phase2-settings-update-owner-a", "phase2-settings-retry-owner-a", "phase2-settings-retry-delay-owner-a"],
       "environment": {
         "MERXUS_QA_ENVIRONMENT": "maestro",
         "MERXUS_MAESTRO_FIREBASE_PROJECT_ID": "merxus-maestro-local",
@@ -217,10 +222,28 @@
         "args": ["run", "qa:maestro:verify", "--"],
         "argumentName": "--case",
         "includeScenario": true,
-        "mutations": ["login-owner-a", "tenant-isolation-a-b", "logout-no-mutation", "phase2-settings-update-owner-a", "phase2-settings-retry-owner-a"]
+        "mutations": ["login-owner-a", "tenant-isolation-a-b", "logout-no-mutation", "phase2-settings-update-owner-a", "phase2-settings-retry-owner-a", "phase2-settings-retry-delay-owner-a"]
       }
     },
     "flows": [
+      {
+        "name": "23-tenant-settings-retry-delay-owner-a",
+        "path": "products/merxus/workflows/23-tenant-settings-retry-delay-owner-a.yaml",
+        "fixtureScenario": "phase2-settings-retry-delay-owner-a",
+        "backendVerification": "phase2-settings-retry-delay-owner-a",
+        "account": "user-a",
+        "requiredEnv": ["MERXUS_MAESTRO_OWNER_A_EMAIL", "MERXUS_MAESTRO_OWNER_A_PASSWORD"],
+        "timeoutMs": 180000,
+        "authoritativeResult": {
+          "externalProviderInvocationCount": 0,
+          "blockedProviderAttemptCount": 0,
+          "crossTenantLeakageCount": 0,
+          "successAuditCount": 1,
+          "operationReceiptCount": 1,
+          "tenantBUnchanged": true,
+          "revision": 2
+        }
+      },
       {
         "name": "22-tenant-settings-retry-owner-a",
         "path": "products/merxus/workflows/22-tenant-settings-retry-owner-a.yaml",
@@ -302,6 +325,7 @@
       "suites": {
         "phase2-settings": ["21-tenant-settings-update-owner-a"],
         "phase2-retry": ["22-tenant-settings-retry-owner-a"],
+        "phase2-retry-delay": ["23-tenant-settings-retry-delay-owner-a"],
         "phase1": ["00-launch-environment", "01-login-owner-a", "02-tenant-isolation", "03-logout"]
       }
     }
