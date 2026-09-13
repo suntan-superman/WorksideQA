@@ -1057,6 +1057,10 @@ async function runMaestroFlows(config, options = {}) {
           const sources = await collectCorrelationSources({ stdout: uiOutput, stderr: uiErrorOutput, artifactDirectory, applicationFlowNames, notBeforeMs: applicationStartedAt });
           authoritativeResult = parseAuthoritativeResult(backendOutcome.stdout, flow.authoritativeResult, sources, generation);
           correlationDiagnostics = Object.fromEntries(Object.keys(emptyCorrelationDiagnostics()).map((key) => [key, authoritativeResult[key]]));
+          if (authoritativeResult.uiCorrelations) {
+            correlationDiagnostics.uiCorrelations = authoritativeResult.uiCorrelations;
+            correlationDiagnostics.backendCorrelations = authoritativeResult.backendCorrelations;
+          }
         }
       } catch (error) {
         if (error.correlationDiagnostics) correlationDiagnostics = error.correlationDiagnostics;

@@ -1,0 +1,141 @@
+appId: com.merxus.mobile.qa
+---
+- launchApp:
+    clearState: true
+- assertVisible:
+    id: screen.auth.login
+- tapOn:
+    id: auth.login.email
+- eraseText: 128
+- inputText: ${MERXUS_MAESTRO_OWNER_A_EMAIL}
+- tapOn:
+    id: auth.login.password
+- eraseText: 128
+- inputText: ${MERXUS_MAESTRO_OWNER_A_PASSWORD}
+- hideKeyboard
+- assertVisible:
+    id: auth.login.submit
+    enabled: true
+- tapOn:
+    id: auth.login.submit
+- extendedWaitUntil:
+    visible:
+      id: screen.dashboard.ready
+    timeout: 20000
+- assertVisible:
+    id: dashboard.tenant.name
+    text: 'Merxus Maestro Tenant A'
+- assertVisible:
+    id: dashboard.user.role
+- tapOn:
+    id: settings.open
+- extendedWaitUntil:
+    visible:
+      id: screen.settings.ready
+    timeout: 15000
+- assertVisible:
+    id: settings.tenant.id
+    text: 'merxus-maestro-tenant-a'
+- assertVisible:
+    id: settings.user.role
+    text: 'owner'
+- scrollUntilVisible:
+    element:
+      id: settings.sms.open
+    direction: DOWN
+- tapOn:
+    id: settings.sms.open
+- scrollUntilVisible:
+    element:
+      id: settings.sms.daily-digest-enabled
+    direction: DOWN
+    timeout: 20000
+- assertVisible:
+    id: settings.sms.daily-digest-enabled
+    checked: false
+# Leg a: real toggle, save, captured receipt and authoritative reload.
+- tapOn:
+    id: settings.sms.daily-digest-enabled
+    enabled: true
+- assertVisible:
+    id: settings.sms.daily-digest-enabled
+    checked: true
+- scrollUntilVisible:
+    element:
+      id: settings.sms.save
+    direction: DOWN
+    timeout: 20000
+- assertVisible:
+    id: settings.sms.save
+    enabled: true
+- tapOn:
+    id: settings.sms.save
+- extendedWaitUntil:
+    visible:
+      id: settings.sms.saved
+    timeout: 15000
+- copyTextFrom:
+    id: settings.sms.request-id
+- evalScript: ${output.settingsRequestId = maestro.copiedText}
+- copyTextFrom:
+    id: settings.sms.operation-id
+- evalScript: >-
+    ${console.log('WORKSIDEQA_CORRELATION=' + JSON.stringify({requestId: output.settingsRequestId, operationId: maestro.copiedText}))}
+- takeScreenshot: digest-toggle-a-saved
+- tapOn:
+    id: settings.sms.reload
+- extendedWaitUntil:
+    visible:
+      id: settings.sms.reloaded
+    timeout: 15000
+- scrollUntilVisible:
+    element:
+      id: settings.sms.daily-digest-enabled
+    direction: UP
+    timeout: 20000
+- assertVisible:
+    id: settings.sms.daily-digest-enabled
+    checked: true
+# Leg b: real toggle, save, captured receipt and authoritative reload.
+- tapOn:
+    id: settings.sms.daily-digest-enabled
+    enabled: true
+- assertVisible:
+    id: settings.sms.daily-digest-enabled
+    checked: false
+- scrollUntilVisible:
+    element:
+      id: settings.sms.save
+    direction: DOWN
+    timeout: 20000
+- assertVisible:
+    id: settings.sms.save
+    enabled: true
+- tapOn:
+    id: settings.sms.save
+- extendedWaitUntil:
+    visible:
+      id: settings.sms.saved
+    timeout: 15000
+- copyTextFrom:
+    id: settings.sms.request-id
+- evalScript: ${output.settingsRequestId = maestro.copiedText}
+- copyTextFrom:
+    id: settings.sms.operation-id
+- evalScript: >-
+    ${console.log('WORKSIDEQA_CORRELATION=' + JSON.stringify({requestId: output.settingsRequestId, operationId: maestro.copiedText}))}
+- takeScreenshot: digest-toggle-b-saved
+- tapOn:
+    id: settings.sms.reload
+- extendedWaitUntil:
+    visible:
+      id: settings.sms.reloaded
+    timeout: 15000
+- scrollUntilVisible:
+    element:
+      id: settings.sms.daily-digest-enabled
+    direction: UP
+    timeout: 20000
+- assertVisible:
+    id: settings.sms.daily-digest-enabled
+    checked: false

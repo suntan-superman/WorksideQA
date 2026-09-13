@@ -11,8 +11,9 @@ function correlationError(message, diagnostics) {
   return error;
 }
 
-function parseCorrelationSources(sources) {
+function parseCorrelationSources(sources, expectedCount = 1) {
   const diagnostics = emptyCorrelationDiagnostics();
+  if (![1, 2].includes(expectedCount)) throw correlationError('Unsupported correlation count', diagnostics);
   const records = new Map();
   let invalid = false;
   for (const { source, output } of sources) {
@@ -37,9 +38,11 @@ function parseCorrelationSources(sources) {
   diagnostics.correlationCaptureSources = [...new Set(diagnostics.correlationCaptureSources)];
   diagnostics.correlationUniqueCount = records.size;
   if (records.size === 1) diagnostics.uiCorrelation = [...records.values()][0];
+  if (expectedCount === 2) diagnostics.uiCorrelations = [...records.values()];
   // Never include malformed marker payloads or unrelated log text in errors.
   if (invalid) throw correlationError('Malformed UI correlation marker', diagnostics);
-  if (records.size !== 1) throw correlationError('Expected exactly one unique UI correlation capture', diagnostics);
+  if (records.size !== expectedCount) throw correlationError(`Expected exactly ${expectedCount === 1 ? 'one' : expectedCount} unique UI correlation capture`, diagnostics);
+  if (new Set([...records.values()].map((pair) => pair.requestId)).size !== expectedCount || new Set([...records.values()].map((pair) => pair.operationId)).size !== expectedCount) throw correlationError('Correlation identifiers must be distinct', diagnostics);
   return diagnostics;
 }
 
