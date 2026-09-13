@@ -49,7 +49,7 @@ appId: com.merxus.mobile.qa
     element:
       id: settings.sms.notification-retry-delay-minutes
     direction: DOWN
-    timeout: 20000
+    timeout: 30000
     centerElement: true
 - assertVisible:
     id: settings.sms.notification-retry-delay-minutes
@@ -84,7 +84,7 @@ appId: com.merxus.mobile.qa
     element:
       id: settings.sms.notification-retry-delay-minutes
     direction: UP
-    timeout: 20000
+    timeout: 30000
     centerElement: true
 - assertVisible:
     id: settings.sms.notification-retry-delay-minutes

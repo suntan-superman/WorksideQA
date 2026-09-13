@@ -114,6 +114,11 @@ for (const spec of [
   assert.deepEqual(retryFlow.authoritativeResult, flow.authoritativeResult);
   const retryField = spec.field;
   const expectedRetryCommands = JSON.parse(JSON.stringify(commands).replaceAll(field, retryField).replaceAll('18:00', spec.before).replaceAll('18:30', spec.after));
+  // Slice 25 has a dedicated 30s discovery budget; certified mutation slices
+  // retain their existing 20s traversal contract.
+  for (const command of expectedRetryCommands) {
+    if (command.scrollUntilVisible?.element?.id === retryField) command.scrollUntilVisible.timeout = 20000;
+  }
   if (spec.suite === 'phase2-retry-delay') {
     // Native failure evidence had text=20, focused=true, visible=false: the
     // keyboard hid the correctly edited field. Only center its initial scroll.

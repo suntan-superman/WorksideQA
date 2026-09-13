@@ -25,6 +25,7 @@ const field = 'settings.sms.notification-retry-delay-minutes';
 const traversals = commands.filter((command) => command.scrollUntilVisible?.element?.id === field);
 assert.equal(traversals.length, 2);
 assert.ok(traversals.every((command) => command.scrollUntilVisible.centerElement === true));
+assert.ok(traversals.every((command) => command.scrollUntilVisible.timeout === 30000), 'Slice 25 retry-delay traversal uses its dedicated 30s bound');
 const edit = commands.findIndex((command) => command.tapOn?.id === field);
 assert.deepEqual(commands.slice(edit, edit + 6), [
   { tapOn: { id: field } }, { eraseText: 100 }, { inputText: '20' },
