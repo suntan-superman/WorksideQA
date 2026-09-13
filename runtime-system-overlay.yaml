@@ -1,0 +1,15 @@
+appId: com.merxus.mobile.qa
+---
+- repeat:
+    times: 12
+    commands:
+      - runFlow:
+          when:
+            visible: Save Password?
+          commands:
+            - tapOn:
+                text: Not Now
+                below:
+                  text: Save Password?
+      - waitForAnimationToEnd:
+          timeout: 250

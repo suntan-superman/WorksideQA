@@ -1,0 +1,4 @@
+appId: com.merxus.mobile.qa
+---
+- launchApp:
+    clearState: true

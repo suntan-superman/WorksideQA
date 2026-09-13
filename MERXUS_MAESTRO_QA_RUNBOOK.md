@@ -90,14 +90,23 @@ Initialize-MerxusAndroidQa
 
 ## T5 – WorksideQA
 The startup script loads `.maestro.local.ps1`, validates the tools, checks the
-selected emulator, and verifies both Auth users plus tenant/role mappings. Run:
+selected emulator, and verifies both Auth users plus tenant/role mappings. It
+also POSTs both canonical emails to the exact backend endpoint used by Mobile
+(`/api/auth/check-email`) and requires `exists=true`, `provider=email`, and
+`hasWorkspace=true`. Run:
 ```powershell
 Set-Location C:\Users\sjroy\Source\WorksideQA
 . .\setup-maestro-qa.ps1
 Test-MerxusMaestroQa
 ```
 `Test-MerxusMaestroQa` must pass before any Maestro flow is launched. The
-standalone backend check is also available after T1/T2 are ready:
+same backend identity gate is repeated by the WorksideQA runner after each
+scenario fixture reset, immediately before the UI process starts. This keeps
+the preflight authoritative even when a long-lived backend or emulator was
+restarted between T5 and a flow. A failed gate aborts before UI launch and
+reports only safe status/identity/configuration diagnostics; it does not retry
+or reset fixtures silently. The standalone Auth check remains available after
+T1/T2 are ready:
 ```powershell
 Set-Location C:\Users\sjroy\Source\Merxus\merxus-ai-backend
 npm run qa:maestro:auth:verify
@@ -125,13 +134,14 @@ npm run qa:merxus:maestro:phase2:unsaved-reload:android
 4. T4: boot the explicitly configured emulator and run `Initialize-MerxusAndroidQa`.
 5. T5: dot-source `setup-maestro-qa.ps1` and run `Test-MerxusMaestroQa`.
 6. If auth verification reports missing users/documents, run the fixture reset for the intended scenario, then rerun `npm run qa:maestro:auth:verify`.
-7. Launch the requested Maestro flow only after startup validation passes.
+7. Launch the requested Maestro flow. Its WorksideQA preflight performs the fixture reset (when configured), Auth verification, and both backend `check-email` identity checks before starting Maestro UI.
 
 ## Troubleshooting
 
 | Symptom | Check / correction |
 | --- | --- |
 | `Account not found` | Run `npm run qa:maestro:auth:verify`; if either user is absent, run the scenario reset. Do not recover credentials from old reports. |
+| Backend identity preflight failed | Inspect the safe `check-email` status/result and project/emulator/backend diagnostics printed by T5 or `result.json`. Fix T1/T2/configuration or run the intended fixture reset, then start the flow again; there are no silent retries. |
 | Email/password contract rejected | Compare the local env keys with `maestroFixtureConfig.js`; passwords are fixed QA-only values and must not be replaced with production credentials. |
 | Auth/Firestore emulator unreachable | Confirm T1 is running with `--project merxus-maestro-local` and hosts `127.0.0.1:9099` / `127.0.0.1:8080`. |
 | Tenant/role mapping failure | Run the fixture reset, then rerun auth verification; it checks Auth claims and `users`, `tenants`, `offices`, and settings documents. |

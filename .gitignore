@@ -14,3 +14,5 @@ screenshots/diff/
 playwright-report/
 test-results/
 *.log
+
+.maestro.local.ps1

@@ -1,0 +1,39 @@
+appId: com.merxus.mobile.qa
+---
+- runFlow:
+    when:
+      visible: Continue
+    commands:
+      - tapOn: Continue
+- runFlow:
+    when:
+      visible: Close
+    commands:
+      - tapOn: Close
+- extendedWaitUntil:
+    visible:
+      id: qa-environment-root
+    timeout: 30000
+- assertVisible:
+    id: screen.auth.login
+- extendedWaitUntil:
+    visible:
+      id: screen.auth.login
+    timeout: 30000
+- tapOn:
+    id: auth.login.qa-reset
+- tapOn:
+    id: auth.login.email
+- inputText: ${MERXUS_MAESTRO_OWNER_A_EMAIL}
+- assertVisible:
+    id: auth.login.email
+    text: ^${MERXUS_MAESTRO_OWNER_A_EMAIL}$
+- tapOn:
+    id: auth.login.password
+- inputText: ${MERXUS_MAESTRO_OWNER_A_PASSWORD}
+- hideKeyboard
+- assertVisible:
+    id: auth.login.submit
+    enabled: true
+- tapOn:
+    id: auth.login.submit

@@ -192,6 +192,11 @@
       "backendSourceEnvKey": "MERXUS_BACKEND_REPO",
       "preflightCommand": ["npm", "run", "qa:maestro:preflight"],
       "authPreflightCommand": ["npm", "run", "qa:maestro:auth:verify"],
+      "backendIdentityVerify": {
+        "owners": ["ownerA", "ownerB"],
+        "endpointPath": "/api/auth/check-email",
+        "expected": { "exists": true, "provider": "email", "hasWorkspace": true }
+      },
       "fixtureConfigRelativePath": "src/services/qa/maestroFixtureConfig.js",
       "authoritativeFirebaseRoot": "../web"
     },

@@ -56,6 +56,40 @@ function Invoke-MerxusMaestroAuthVerify {
     return $true
 }
 
+function Invoke-MerxusMaestroBackendIdentityVerify {
+    $endpoint = "$CanonicalBackendUrl/api/auth/check-email"
+    $backendPid = $null
+    try {
+      $connection = Get-NetTCPConnection -LocalPort 8787 -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1
+      if ($connection) { $backendPid = $connection.OwningProcess }
+    } catch { }
+
+    $identities = @(
+      @{ Name = "Owner A"; Email = $env:MERXUS_MAESTRO_OWNER_A_EMAIL },
+      @{ Name = "Owner B"; Email = $env:MERXUS_MAESTRO_OWNER_B_EMAIL }
+    )
+    foreach ($identity in $identities) {
+      $safe = $null
+      try {
+        $payload = @{ email = $identity.Email } | ConvertTo-Json -Compress
+        $response = Invoke-WebRequest -Method Post -Uri $endpoint -ContentType "application/json" -Body $payload -TimeoutSec 5
+        $body = $response.Content | ConvertFrom-Json
+        $safe = "status=$($response.StatusCode) exists=$($body.exists) provider=$($body.provider) hasWorkspace=$($body.hasWorkspace)"
+        if ($response.StatusCode -ne 200 -or $body.exists -ne $true -or $body.provider -ne "email" -or $body.hasWorkspace -ne $true) {
+          throw "unexpected check-email result ($safe)"
+        }
+        Write-Host "Backend identity: $($identity.Name) passed ($safe)" -ForegroundColor Green
+      } catch {
+        $pidText = if ($backendPid) { $backendPid } else { "unknown" }
+        $status = $null
+        try { $status = $_.Exception.Response.StatusCode.value__ } catch { }
+        $safeError = if ($safe) { $safe } elseif ($status) { "status=$status" } else { "requestError=$($_.Exception.GetType().Name)" }
+        throw "Backend identity preflight failed for $($identity.Name): $safeError. endpoint=$endpoint project=$CanonicalFirebaseProject auth=$CanonicalAuthEmulator firestore=$CanonicalFirestoreEmulator backendPid=$pidText"
+      }
+    }
+    return $true
+}
+
 function Test-MerxusMaestroQa {
     Add-MaestroToCurrentPath
     Import-MerxusMaestroLocalConfig
@@ -104,6 +138,7 @@ function Test-MerxusMaestroQa {
       return $false
     }
     Invoke-MerxusMaestroAuthVerify | Out-Null
+    Invoke-MerxusMaestroBackendIdentityVerify | Out-Null
     Write-Host "`nMerxus Maestro QA validation PASSED." -ForegroundColor Green
     return $true
 }

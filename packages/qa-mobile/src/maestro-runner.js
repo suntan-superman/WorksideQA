@@ -6,6 +6,7 @@ const { collectCorrelationSources, emptyCorrelationDiagnostics } = require('./ui
 const { ensureDir, fileExists, fromRoot, spawnCommand, terminateProcessTree, toPosixPath, writeJson } = require("../../qa-utils/src");
 const { resolveConfiguredDevice, validateDeviceDescriptors } = require('./device-selection');
 const { spawnMaestro, spawnMaestroSync, terminateMaestro } = require("./maestro-process");
+const { runBackendIdentityPreflight, validateBackendIdentityContract } = require('./backend-identity-preflight');
 
 const FORBIDDEN_FLOW_TARGETS = [
   { pattern: /https?:\/\//i, description: "network endpoint" },
@@ -481,6 +482,15 @@ function validateMaestroConfiguration(config) {
   if (mobile.devices) validateDeviceDescriptors(mobile);
 
   const fixtures = validateFixtureConfiguration(mobile, config.key);
+  if (mobile.phase0?.backendIdentityVerify) {
+    if (!fixtures || !Array.isArray(mobile.phase0.backendIdentityVerify.owners) || mobile.phase0.backendIdentityVerify.owners.length === 0) {
+      throw new Error('Backend identity preflight requires product-owned fixtures and a bounded owner list.');
+    }
+    if (!Array.isArray(mobile.phase0.authPreflightCommand) || mobile.phase0.authPreflightCommand.length < 2) {
+      throw new Error('Backend identity preflight requires phase0.authPreflightCommand.');
+    }
+    validateBackendIdentityContract(mobile, mobile.phase0);
+  }
 
   const maestro = mobile.maestro;
   if (!maestro?.reportDirectory || path.isAbsolute(maestro.reportDirectory) || maestro.reportDirectory.includes("..")) {
@@ -818,6 +828,7 @@ function requireFlowEnvironment(flow) {
 
 async function runMaestroFlows(config, options = {}) {
   const validated = validateMaestroConfiguration(config);
+  const { mobile } = validated;
   const selected = selectFlows(validated, options);
   if (options.validateOnly) return { validated, selected };
   const selectedDevice = validated.mobile.devices
@@ -934,6 +945,8 @@ async function runMaestroFlows(config, options = {}) {
         fixtureStatus = "passed";
         console.log(`[Fixture] Applied ${flow.fixtureScenario}`);
       } catch (error) {
+        const preflightDiagnostics = error.preflightDiagnostics || {};
+        console.error(`[Preflight] ${JSON.stringify(preflightDiagnostics)}`);
         const result = {
           flow: flow.name,
           status: "failed",
@@ -952,6 +965,47 @@ async function runMaestroFlows(config, options = {}) {
         writeJson(path.join(runDirectory, "summary.json"), { status: "failed", results });
         logStream.end();
         throw new Error(`FIXTURE FAILED: ${flow.name}\n${error.message}. See ${relativeArtifacts}.`);
+      }
+    }
+
+    let backendPreflightStatus = "skipped";
+    let backendPreflight = null;
+    if (mobile.phase0?.backendIdentityVerify && fixturePlan) {
+      backendPreflightStatus = "pending";
+      try {
+        console.log('[Preflight] Verifying canonical backend identities');
+        backendPreflight = await runBackendIdentityPreflight({
+          validated,
+          flow,
+          fixturePlan,
+          runProcess,
+          logStream,
+          secretValues,
+          generation,
+        });
+        backendPreflightStatus = "passed";
+        console.log('[Preflight] Canonical backend identities passed');
+      } catch (error) {
+        const result = {
+          flow: flow.name,
+          generation,
+          status: "failed",
+          failureStage: "backend-preflight",
+          preflight: { status: "failed", ...(error.preflightDiagnostics || {}) },
+          stages: {
+            fixture: { status: fixtureStatus, scenario: flow.fixtureScenario || null },
+            backendPreflight: { status: "failed" },
+            ui: { status: "not-run" },
+            backend: { status: "not-run", verification: backendName },
+          },
+          report: toPosixPath(path.relative(fromRoot(), junitPath)),
+          artifacts: relativeArtifacts,
+        };
+        results.push(result);
+        writeJson(path.join(flowDirectory, "result.json"), result);
+        writeJson(path.join(runDirectory, "summary.json"), { status: "failed", results });
+        logStream.end();
+        throw new Error(`BACKEND PREFLIGHT FAILED: ${flow.name}\n${error.message}\n${JSON.stringify(preflightDiagnostics)}\nSee ${relativeArtifacts}.`);
       }
     }
 
@@ -1025,6 +1079,7 @@ async function runMaestroFlows(config, options = {}) {
         ...processFailureMetadata(error),
         stages: {
           fixture: { status: fixtureStatus, scenario: flow.fixtureScenario || null },
+          backendPreflight: { status: backendPreflightStatus },
           ui: { status: "failed" },
           backend: { status: "not-run", verification: backendName },
         },
@@ -1047,6 +1102,7 @@ async function runMaestroFlows(config, options = {}) {
         signal: outcome.signal || null,
         stages: {
           fixture: { status: fixtureStatus, scenario: flow.fixtureScenario || null },
+          backendPreflight: { status: backendPreflightStatus },
           ui: { status: "failed", exitCode: outcome.code, ...processFailureMetadata(outcome) },
           backend: { status: "not-run", verification: backendName },
         },
@@ -1101,6 +1157,7 @@ async function runMaestroFlows(config, options = {}) {
           backendExitCode: backendOutcome.code,
           stages: {
             fixture: { status: fixtureStatus, scenario: flow.fixtureScenario || null },
+            backendPreflight: { status: backendPreflightStatus },
             ui: { status: "passed", exitCode: outcome.code },
             backend: { status: "failed", verification: backendName, kind: backendPlan.verificationKind, exitCode: backendOutcome.code },
           },
@@ -1134,6 +1191,7 @@ async function runMaestroFlows(config, options = {}) {
       device: selectedDevice ? { descriptor: selectedDevice.descriptorName, id: selectedDevice.id, platform: selectedDevice.platform, kind: selectedDevice.kind, appId: selectedDevice.appId, osVersion: selectedDevice.osVersion, appVersion: selectedDevice.appVersion, appBuild: selectedDevice.appBuild } : null,
       stages: {
         fixture: { status: fixtureStatus, scenario: flow.fixtureScenario || null },
+        backendPreflight: { status: backendPreflightStatus, ...(backendPreflight ? { identities: backendPreflight.identities } : {}) },
         ui: { status: "passed", exitCode: outcome.code },
         backend: { status: backendStatus, verification: backendName, kind: backendPlan?.verificationKind || null },
       },
@@ -1154,6 +1212,7 @@ async function runMaestroFlows(config, options = {}) {
 }
 
 module.exports = {
+  runBackendIdentityPreflight,
   buildBackendVerificationPlan,
   buildDeviceLaunchFlow,
   buildMaestroTestArgs,
