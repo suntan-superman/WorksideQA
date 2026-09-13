@@ -191,6 +191,8 @@
     "phase0": {
       "backendSourceEnvKey": "MERXUS_BACKEND_REPO",
       "preflightCommand": ["npm", "run", "qa:maestro:preflight"],
+      "authPreflightCommand": ["npm", "run", "qa:maestro:auth:verify"],
+      "fixtureConfigRelativePath": "src/services/qa/maestroFixtureConfig.js",
       "authoritativeFirebaseRoot": "../web"
     },
     "fixtures": {
