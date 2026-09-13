@@ -31,6 +31,11 @@ assert.deepEqual(commands.slice(edit, edit + 6), [
   { assertVisible: { id: field, text: '^20$' } }, 'hideKeyboard',
   { scrollUntilVisible: { element: { id: 'settings.sms.reload' }, direction: 'DOWN', timeout: 20000, centerElement: true } },
 ]);
+const reloadScroll = commands.findIndex((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.reload');
+assert.deepEqual(commands.slice(reloadScroll, reloadScroll + 2), [
+  { scrollUntilVisible: { element: { id: 'settings.sms.reload' }, direction: 'DOWN', timeout: 20000, centerElement: true } },
+  { waitForAnimationToEnd: { timeout: 2000 } },
+]);
 assert.equal(commands.at(-1).assertVisible.text, '^15$');
 assert.doesNotMatch(serialized, /qa-scroll|send|save/);
 for (const [name, id] of [['androidEmulator', 'emulator-5554'], ['iosSimulator', 'explicit-udid']]) {
@@ -42,11 +47,12 @@ for (const [name, id] of [['androidEmulator', 'emulator-5554'], ['iosSimulator',
   assert.doesNotMatch(JSON.stringify(generated), /WORKSIDEQA_CORRELATION|settings\.sms\.save/);
   const generatedEdit = generated.findIndex((command) => command.tapOn?.id === field);
   if (name === 'androidEmulator') {
-    assert.deepEqual(generated.slice(generatedEdit, generatedEdit + 6), [
+    assert.deepEqual(generated.slice(generatedEdit, generatedEdit + 7), [
       { tapOn: { id: field } }, { eraseText: 100 }, { inputText: '20' },
       { assertVisible: { id: field, text: '^20$' } },
       { tapOn: { id: 'screen.settings.ready' } },
       { scrollUntilVisible: { element: { id: 'settings.sms.reload' }, direction: 'DOWN', timeout: 20000, centerElement: true } },
+      { waitForAnimationToEnd: { timeout: 2000 } },
     ]);
     assert.equal(generated.slice(generatedEdit).findIndex((command) => command === 'hideKeyboard'), -1, 'Android Slice 25 does not hide via Back after retry-delay edit');
   } else {

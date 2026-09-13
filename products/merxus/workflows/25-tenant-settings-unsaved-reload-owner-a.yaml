@@ -68,6 +68,8 @@ appId: com.merxus.mobile.qa
     direction: DOWN
     timeout: 20000
     centerElement: true
+- waitForAnimationToEnd:
+    timeout: 2000
 - extendedWaitUntil:
     visible:
       id: settings.sms.reload
