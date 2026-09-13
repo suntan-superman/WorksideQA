@@ -10,6 +10,10 @@ const [flow] = selectFlows(config, { suite: 'phase2-unsaved-reload' });
 assert.equal(flow.name, '25-tenant-settings-unsaved-reload-owner-a');
 assert.equal(flow.mutationExpected, false);
 assert.equal(flow.timeoutMs, 180000);
+assert.deepEqual(flow.androidKeyboardDismissAfterEdit, [{
+  fieldId: 'settings.sms.notification-retry-delay-minutes',
+  targetId: 'screen.settings.ready',
+}]);
 assert.equal(flow.authoritativeResult.correlationCount, 0);
 const commands = YAML.parseAllDocuments(fs.readFileSync(flow.path, 'utf8'))[1].toJS();
 const serialized = JSON.stringify(commands);
@@ -36,6 +40,20 @@ for (const [name, id] of [['androidEmulator', 'emulator-5554'], ['iosSimulator',
   const generatedPath = name === 'iosSimulator' ? runtime.stages[2].path : runtime.path;
   const generated = YAML.parseAllDocuments(fs.readFileSync(generatedPath, 'utf8'))[1].toJS();
   assert.doesNotMatch(JSON.stringify(generated), /WORKSIDEQA_CORRELATION|settings\.sms\.save/);
+  const generatedEdit = generated.findIndex((command) => command.tapOn?.id === field);
+  if (name === 'androidEmulator') {
+    assert.deepEqual(generated.slice(generatedEdit, generatedEdit + 6), [
+      { tapOn: { id: field } }, { eraseText: 100 }, { inputText: '20' },
+      { assertVisible: { id: field, text: '^20$' } },
+      { tapOn: { id: 'screen.settings.ready' } },
+      { scrollUntilVisible: { element: { id: 'settings.sms.reload' }, direction: 'DOWN', timeout: 20000, centerElement: true } },
+    ]);
+    assert.equal(generated.slice(generatedEdit).findIndex((command) => command === 'hideKeyboard'), -1, 'Android Slice 25 does not hide via Back after retry-delay edit');
+  } else {
+    assert.equal(generated.slice(generatedEdit).findIndex((command) => command === 'hideKeyboard'), -1, 'iOS runtime replaces hideKeyboard');
+    assert.ok(generated.slice(generatedEdit).some((command) => command.tapOn?.id === 'settings.sms.qa-dismiss-keyboard'));
+    assert.equal(generated.slice(generatedEdit).some((command) => command.tapOn?.id === 'screen.settings.ready'), false, 'iOS keeps its existing dismiss helper');
+  }
 }
 for (const key of ['mutationExpected', 'uiCorrelationCount', 'externalProviderInvocationCount', 'blockedProviderAttemptCount', 'crossTenantLeakageCount', 'successAuditCount', 'operationReceiptCount', 'tenantBUnchanged', 'revision']) assert.ok(Object.hasOwn(flow.authoritativeResult, key), key);
 const result = { ok: true, generation: 'generation', verificationCase: flow.backendVerification, ...flow.authoritativeResult, unexpectedDomainRecords: [] };

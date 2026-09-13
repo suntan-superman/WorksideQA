@@ -230,6 +230,12 @@
         "fixtureScenario": "phase2-settings-unsaved-reload-owner-a",
         "backendVerification": "phase2-settings-unsaved-reload-owner-a",
         "mutationExpected": false,
+        "androidKeyboardDismissAfterEdit": [
+          {
+            "fieldId": "settings.sms.notification-retry-delay-minutes",
+            "targetId": "screen.settings.ready"
+          }
+        ],
         "account": "user-a",
         "requiredEnv": ["MERXUS_MAESTRO_OWNER_A_EMAIL", "MERXUS_MAESTRO_OWNER_A_PASSWORD"],
         "timeoutMs": 180000,

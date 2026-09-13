@@ -193,6 +193,8 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
   let deterministicTextResetApplied = false;
   const keyboardDismissRules = selectedDevice.platform === 'ios' && selectedDevice.kind === 'simulator'
     ? selectedDevice.keyboardDismissAfterEdit || [] : [];
+  const androidKeyboardDismissRules = selectedDevice.platform === 'android'
+    ? flow.androidKeyboardDismissAfterEdit || [] : [];
   const buildOverlaySweeper = (rule) => ({
     repeat: {
       times: rule.attempts,
@@ -227,7 +229,20 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
       (nextCommand === 'hideKeyboard' || (nextCommand && Object.hasOwn(nextCommand, 'hideKeyboard')))
       ? keyboardDismissRules.find((rule) => command.assertVisible.id === rule.fieldId &&
           Object.hasOwn(commands[commandIndex - 1] || {}, 'inputText')) : null;
-    if (dismissRule) {
+    const androidDismissRule = command?.assertVisible &&
+      (nextCommand === 'hideKeyboard' || (nextCommand && Object.hasOwn(nextCommand, 'hideKeyboard')))
+      ? androidKeyboardDismissRules.find((rule) => command.assertVisible.id === rule.fieldId &&
+          Object.hasOwn(commands[commandIndex - 1] || {}, 'inputText')) : null;
+    if (dismissRule || androidDismissRule) {
+      if (androidDismissRule) {
+        // Android Maestro hideKeyboard is implemented as a Back event. For
+        // explicitly opted-in flows, tap a stable Settings semantic marker so
+        // the field blurs without popping the Settings screen.
+        runtimeCommands.push(command);
+        runtimeCommands.push({ tapOn: { id: androidDismissRule.targetId } });
+        commandIndex += 1;
+        continue;
+      }
       if (dismissRule.scrollToTarget) runtimeCommands.push({ scrollUntilVisible: { element: { id: dismissRule.targetId }, direction: 'UP', timeout: 5000 } });
       runtimeCommands.push({ extendedWaitUntil: { visible: { id: dismissRule.targetId }, timeout: 5000 } });
       runtimeCommands.push({ tapOn: { id: dismissRule.targetId } });
@@ -485,6 +500,14 @@ function validateMaestroConfiguration(config) {
   const flowNames = flows.map((flow) => flow.name);
   if (unique(flowNames).length !== flowNames.length) throw new Error("Maestro flow names must be unique.");
   for (const flow of flows) {
+    if (flow.androidKeyboardDismissAfterEdit != null) {
+      const rules = flow.androidKeyboardDismissAfterEdit;
+      if (!Array.isArray(rules) || rules.length === 0 || rules.some((rule) => (
+        !rule || !['fieldId', 'targetId'].every((key) => typeof rule[key] === 'string' && /^[A-Za-z0-9_.-]+$/.test(rule[key]))
+      )) || unique(rules.map((rule) => rule.fieldId)).length !== rules.length) {
+        throw new Error(`Flow ${flow.name} androidKeyboardDismissAfterEdit requires unique semantic field/target IDs.`);
+      }
+    }
     if (flow.fixtureScenario && !fixtures) {
       throw new Error(`Flow ${flow.name} declares a fixture scenario without product-owned fixture configuration.`);
     }
