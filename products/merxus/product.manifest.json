@@ -201,7 +201,7 @@
       "args": ["run", "qa:maestro:reset", "--"],
       "projectId": "merxus-maestro-local",
       "passGeneration": true,
-      "scenarios": ["login-owner-a", "phase2-settings-update-owner-a", "phase2-settings-retry-owner-a", "phase2-settings-retry-delay-owner-a", "phase2-settings-digest-enabled-roundtrip-owner-a"],
+      "scenarios": ["login-owner-a", "phase2-settings-update-owner-a", "phase2-settings-retry-owner-a", "phase2-settings-retry-delay-owner-a", "phase2-settings-digest-enabled-roundtrip-owner-a", "phase2-settings-unsaved-reload-owner-a"],
       "environment": {
         "MERXUS_QA_ENVIRONMENT": "maestro",
         "MERXUS_MAESTRO_FIREBASE_PROJECT_ID": "merxus-maestro-local",
@@ -220,10 +220,32 @@
         "args": ["run", "qa:maestro:verify", "--"],
         "argumentName": "--case",
         "includeScenario": true,
-        "mutations": ["login-owner-a", "tenant-isolation-a-b", "logout-no-mutation", "phase2-settings-update-owner-a", "phase2-settings-retry-owner-a", "phase2-settings-retry-delay-owner-a", "phase2-settings-digest-enabled-roundtrip-owner-a"]
+        "mutations": ["login-owner-a", "tenant-isolation-a-b", "logout-no-mutation", "phase2-settings-update-owner-a", "phase2-settings-retry-owner-a", "phase2-settings-retry-delay-owner-a", "phase2-settings-digest-enabled-roundtrip-owner-a", "phase2-settings-unsaved-reload-owner-a"]
       }
     },
     "flows": [
+      {
+        "name": "25-tenant-settings-unsaved-reload-owner-a",
+        "path": "products/merxus/workflows/25-tenant-settings-unsaved-reload-owner-a.yaml",
+        "fixtureScenario": "phase2-settings-unsaved-reload-owner-a",
+        "backendVerification": "phase2-settings-unsaved-reload-owner-a",
+        "mutationExpected": false,
+        "account": "user-a",
+        "requiredEnv": ["MERXUS_MAESTRO_OWNER_A_EMAIL", "MERXUS_MAESTRO_OWNER_A_PASSWORD"],
+        "timeoutMs": 180000,
+        "authoritativeResult": {
+          "mutationExpected": false,
+          "uiCorrelationCount": 0,
+          "correlationCount": 0,
+          "externalProviderInvocationCount": 0,
+          "blockedProviderAttemptCount": 0,
+          "crossTenantLeakageCount": 0,
+          "successAuditCount": 0,
+          "operationReceiptCount": 0,
+          "tenantBUnchanged": true,
+          "revision": 1
+        }
+      },
       {
         "name": "24-tenant-settings-digest-enabled-roundtrip-owner-a",
         "path": "products/merxus/workflows/24-tenant-settings-digest-enabled-roundtrip-owner-a.yaml",
@@ -343,6 +365,7 @@
       "reportDirectory": "reports/mobile/merxus/maestro",
       "suites": {
         "phase2-digest-toggle": ["24-tenant-settings-digest-enabled-roundtrip-owner-a"],
+        "phase2-unsaved-reload": ["25-tenant-settings-unsaved-reload-owner-a"],
         "phase2-settings": ["21-tenant-settings-update-owner-a"],
         "phase2-retry": ["22-tenant-settings-retry-owner-a"],
         "phase2-retry-delay": ["23-tenant-settings-retry-delay-owner-a"],

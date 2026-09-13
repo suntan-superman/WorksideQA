@@ -1,0 +1,88 @@
+appId: com.merxus.mobile.qa
+---
+- launchApp:
+    clearState: true
+- assertVisible:
+    id: screen.auth.login
+- tapOn:
+    id: auth.login.email
+- eraseText: 128
+- inputText: ${MERXUS_MAESTRO_OWNER_A_EMAIL}
+- tapOn:
+    id: auth.login.password
+- eraseText: 128
+- inputText: ${MERXUS_MAESTRO_OWNER_A_PASSWORD}
+- hideKeyboard
+- assertVisible:
+    id: auth.login.submit
+    enabled: true
+- tapOn:
+    id: auth.login.submit
+- extendedWaitUntil:
+    visible:
+      id: screen.dashboard.ready
+    timeout: 20000
+- assertVisible:
+    id: dashboard.tenant.name
+    text: 'Merxus Maestro Tenant A'
+- assertVisible:
+    id: dashboard.user.role
+- tapOn:
+    id: settings.open
+- extendedWaitUntil:
+    visible:
+      id: screen.settings.ready
+    timeout: 15000
+- assertVisible:
+    id: settings.tenant.id
+    text: 'merxus-maestro-tenant-a'
+- assertVisible:
+    id: settings.user.role
+    text: 'owner'
+- scrollUntilVisible:
+    element:
+      id: settings.sms.open
+    direction: DOWN
+- tapOn:
+    id: settings.sms.open
+- scrollUntilVisible:
+    element:
+      id: settings.sms.notification-retry-delay-minutes
+    direction: DOWN
+    timeout: 20000
+    centerElement: true
+- assertVisible:
+    id: settings.sms.notification-retry-delay-minutes
+    text: '^15$'
+- tapOn:
+    id: settings.sms.notification-retry-delay-minutes
+- eraseText: 100
+- inputText: '20'
+- assertVisible:
+    id: settings.sms.notification-retry-delay-minutes
+    text: '^20$'
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: settings.sms.reload
+    direction: DOWN
+    timeout: 20000
+- extendedWaitUntil:
+    visible:
+      id: settings.sms.reload
+    timeout: 5000
+- tapOn:
+    id: settings.sms.reload
+- extendedWaitUntil:
+    visible:
+      id: settings.sms.reloaded
+    timeout: 15000
+- scrollUntilVisible:
+    element:
+      id: settings.sms.notification-retry-delay-minutes
+    direction: UP
+    timeout: 20000
+    centerElement: true
+- assertVisible:
+    id: settings.sms.notification-retry-delay-minutes
+    text: '^15$'

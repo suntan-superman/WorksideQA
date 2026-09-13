@@ -1,5 +1,6 @@
 const assert = require('node:assert/strict');
 require('./merxus-phase2-digest-toggle.test');
+require('./merxus-phase2-unsaved-reload.test');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');

@@ -20,6 +20,11 @@ function parseAuthoritativeResult(stdout, expected, uiOutput, generation) {
   if (result?.ok !== true || result.generation !== generation) throw correlationError('Invalid authoritative verifier result/generation', diagnostics);
   for (const [key, value] of Object.entries(expected)) if (result[key] !== value) throw correlationError(`Authoritative verifier mismatch: ${key}`, diagnostics);
   if (captureError) throw correlationError(captureError.message, diagnostics);
+  if (expected.correlationCount === 0) {
+    if (diagnostics.correlationUniqueCount !== 0 || result.uiCorrelationCount !== 0 || result.mutationExpected !== false) throw correlationError('Non-mutation flow emitted correlation or mutation evidence', diagnostics);
+    diagnostics.correlationMatched = true;
+    return { ...Object.fromEntries(['generation', 'verificationCase', 'mutationExpected', 'uiCorrelationCount', 'externalProviderInvocationCount', 'blockedProviderAttemptCount', 'crossTenantLeakageCount', 'successAuditCount', 'operationReceiptCount', 'tenantBUnchanged', 'revision', 'unexpectedDomainRecords'].map((key) => [key, result[key]])), ...diagnostics };
+  }
   if (expected.correlationCount === 2) {
     if (!Array.isArray(result.correlations) || result.correlations.length !== 2 || result.correlations.some((pair) => !validId(pair?.requestId) || !validId(pair?.operationId))) throw correlationError('Invalid backend round-trip correlations', diagnostics);
     diagnostics.backendCorrelations = result.correlations.map(({ requestId, operationId }) => ({ requestId, operationId }));

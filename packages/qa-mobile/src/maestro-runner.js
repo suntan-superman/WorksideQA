@@ -635,7 +635,7 @@ function buildBackendVerificationPlan(validated, flow, environment = process.env
     verificationName,
     verificationKind: coachingPath
       ? (flow.coachingNonMutation ? "coaching-non-mutation" : "coaching")
-      : workoutPath ? "workout" : negativePath ? "non-mutation" : "mutation",
+      : workoutPath ? "workout" : negativePath ? "non-mutation" : flow.mutationExpected === false ? "non-mutation" : "mutation",
   };
 }
 
