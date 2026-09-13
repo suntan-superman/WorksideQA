@@ -56,6 +56,40 @@ function Invoke-MerxusMaestroAuthVerify {
     return $true
 }
 
+function Import-MerxusMaestroMobileEnvironment {
+    $runtimeTool = Join-Path $WorksideQA 'packages\qa-mobile\src\merxus-mobile-runtime.js'
+    $json = & node $runtimeTool --mobile-root $MerxusMobile --print-env
+    if ($LASTEXITCODE -ne 0) { throw 'Could not load the canonical Mobile Maestro build profile.' }
+    $mobileEnvironment = $json | ConvertFrom-Json
+    foreach ($entry in $mobileEnvironment.PSObject.Properties) {
+      [Environment]::SetEnvironmentVariable($entry.Name, [string]$entry.Value, 'Process')
+    }
+    $env:MERXUS_MOBILE_REPO = $MerxusMobile
+}
+
+function Test-MerxusMaestroMobileRuntime {
+    param([switch]$ConfigOnly)
+    $runtimeTool = Join-Path $WorksideQA 'packages\qa-mobile\src\merxus-mobile-runtime.js'
+    $runtimeArgs = @($runtimeTool, '--mobile-root', $MerxusMobile)
+    if ($ConfigOnly) { $runtimeArgs += '--config-only' }
+    & node @runtimeArgs
+    if ($LASTEXITCODE -ne 0) { throw 'T3 must serve the Merxus Maestro runtime. Stop the incorrect Metro instance and run Start-MerxusMaestroMetro.' }
+}
+
+function Start-MerxusMaestroMetro {
+    Import-MerxusMaestroMobileEnvironment
+    Test-MerxusMaestroMobileRuntime -ConfigOnly
+    if (Get-NetTCPConnection -LocalPort 8081 -State Listen -ErrorAction SilentlyContinue) {
+      throw 'Port 8081 is already in use. Stop the existing T3 Metro before starting the canonical Maestro instance.'
+    }
+    Push-Location $MerxusMobile
+    try {
+      Write-Host 'Maestro config verified. T5 must verify the served Android manifest before UI certification.'
+      & npx expo start --dev-client --host lan --port 8081 --clear
+      if ($LASTEXITCODE -ne 0) { throw 'Maestro Metro exited unsuccessfully.' }
+    } finally { Pop-Location }
+}
+
 function Invoke-MerxusMaestroBackendIdentityVerify {
     $endpoint = "$CanonicalBackendUrl/api/auth/check-email"
     $backendPid = $null
@@ -72,7 +106,7 @@ function Invoke-MerxusMaestroBackendIdentityVerify {
       $safe = $null
       try {
         $payload = @{ email = $identity.Email } | ConvertTo-Json -Compress
-        $response = Invoke-WebRequest -Method Post -Uri $endpoint -ContentType "application/json" -Body $payload -TimeoutSec 5
+        $response = Invoke-WebRequest -UseBasicParsing -Method Post -Uri $endpoint -ContentType "application/json" -Body $payload -TimeoutSec 5
         $body = $response.Content | ConvertFrom-Json
         $safe = "status=$($response.StatusCode) exists=$($body.exists) provider=$($body.provider) hasWorkspace=$($body.hasWorkspace)"
         if ($response.StatusCode -ne 200 -or $body.exists -ne $true -or $body.provider -ne "email" -or $body.hasWorkspace -ne $true) {
@@ -93,6 +127,7 @@ function Invoke-MerxusMaestroBackendIdentityVerify {
 function Test-MerxusMaestroQa {
     Add-MaestroToCurrentPath
     Import-MerxusMaestroLocalConfig
+    Test-MerxusMaestroMobileRuntime
     $required = @(
       "MERXUS_MAESTRO_OWNER_A_EMAIL",
       "MERXUS_MAESTRO_OWNER_A_PASSWORD",
@@ -164,3 +199,4 @@ function Initialize-MerxusAndroidQa {
 
 Add-MaestroToCurrentPath
 Import-MerxusMaestroLocalConfig
+Import-MerxusMaestroMobileEnvironment

@@ -7,6 +7,8 @@
     "doc": "docs"
   },
   "scripts": {
+    "qa:merxus:maestro:mobile:verify": "node packages/qa-mobile/src/merxus-mobile-runtime.js",
+    "test:merxus:mobile-runtime": "node --test packages/qa-mobile/test/merxus-mobile-runtime.test.js",
     "qa:merxus:maestro:phase2:digest-toggle:validate": "node packages/qa-mobile/src/maestro-cli.js --product merxus --suite phase2-digest-toggle --validate",
     "qa:merxus:maestro:phase2:digest-toggle:android": "node packages/qa-mobile/src/maestro-cli.js --product merxus --suite phase2-digest-toggle --device androidEmulator",
     "qa:merxus:maestro:phase2:digest-toggle:ios": "node packages/qa-mobile/src/maestro-cli.js --product merxus --suite phase2-digest-toggle --device iosSimulator",
