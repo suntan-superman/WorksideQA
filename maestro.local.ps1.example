@@ -2,6 +2,7 @@
 # C:\Users\sjroy\Source\WorksideQA\.maestro.local.ps1
 # DO NOT COMMIT THE REAL .maestro.local.ps1
 
+$env:MERXUS_BACKEND_REPO = "C:\Users\sjroy\Source\Merxus\merxus-ai-backend"
 $env:MERXUS_MAESTRO_OWNER_A_EMAIL = "owner-a@merxus-maestro.test"
 $env:MERXUS_MAESTRO_OWNER_A_PASSWORD = "<SET LOCALLY: canonical QA password>"
 $env:MERXUS_MAESTRO_OWNER_B_EMAIL = "owner-b@merxus-maestro.test"
