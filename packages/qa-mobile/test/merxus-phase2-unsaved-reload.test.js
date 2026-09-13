@@ -25,7 +25,7 @@ const edit = commands.findIndex((command) => command.tapOn?.id === field);
 assert.deepEqual(commands.slice(edit, edit + 6), [
   { tapOn: { id: field } }, { eraseText: 100 }, { inputText: '20' },
   { assertVisible: { id: field, text: '^20$' } }, 'hideKeyboard',
-  { scrollUntilVisible: { element: { id: 'settings.sms.reload' }, direction: 'DOWN', timeout: 20000 } },
+  { scrollUntilVisible: { element: { id: 'settings.sms.reload' }, direction: 'DOWN', timeout: 20000, centerElement: true } },
 ]);
 assert.equal(commands.at(-1).assertVisible.text, '^15$');
 assert.doesNotMatch(serialized, /qa-scroll|send|save/);

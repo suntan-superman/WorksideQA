@@ -67,6 +67,7 @@ appId: com.merxus.mobile.qa
       id: settings.sms.reload
     direction: DOWN
     timeout: 20000
+    centerElement: true
 - extendedWaitUntil:
     visible:
       id: settings.sms.reload
