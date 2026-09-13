@@ -5,6 +5,26 @@ Single source of truth for starting and validating the Merxus Maestro QA environ
 
 The fixture/bootstrap contract is authoritative. Do not search historical reports for QA credentials.
 
+## One-command readiness check
+
+From a fresh shell, run the shared WorksideQA doctor before launching any
+Maestro flow:
+
+```powershell
+Set-Location C:\Users\sjroy\Source\WorksideQA
+npm run qa:doctor
+```
+
+The doctor loads `.maestro.local.ps1` without executing arbitrary setup code,
+validates both product manifests and canonical paths, checks Maestro/ADB/
+Firebase tooling, verifies the Merxus Maestro runtime configuration and served
+Metro manifest, probes the local emulator/backend services, checks both
+canonical identities through `/api/auth/check-email`, and confirms the
+configured Android QA app. It is read-only: it does not start or stop T1–T4,
+reset fixtures, launch an app, or print passwords. Use
+`npm run qa:doctor -- --offline` to validate the local contract before services
+are started. A normal run must report `PASS` before certification.
+
 ## Terminal map
 - T1 – Firebase emulators
 - T2 – Maestro QA backend

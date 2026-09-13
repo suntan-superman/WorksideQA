@@ -79,7 +79,17 @@ npm run qa:env:health
 npm run qa:env:health -- --product radiusiq
 npm run qa:env:health -- --require-ai
 npm run qa:env:health:offline
+npm run qa:doctor
 ```
+
+`qa:doctor` is the single read-only readiness gate for the local Maestro lab.
+It loads the ignored `.maestro.local.ps1`, validates the Merxus and SageSet
+manifests and paths, checks required tools, proves the Merxus Maestro runtime
+configuration served by Metro, verifies local emulator/backend identity
+readiness, and confirms the configured Android QA app. It never starts or
+stops a service, resets fixtures, launches a flow, or prints passwords. Use
+`npm run qa:doctor -- --offline` for a reboot-safe contract check before the
+local services are running; a normal run must pass before certification.
 
 Use `--update-baselines` after reviewing a clean screenshot to create missing visual regression baselines.
 
