@@ -50,6 +50,7 @@ appId: com.merxus.mobile.qa
       id: settings.sms.daily-digest-enabled
     direction: DOWN
     timeout: 20000
+    centerElement: true
 - assertVisible:
     id: settings.sms.daily-digest-enabled
     checked: false
@@ -93,6 +94,7 @@ appId: com.merxus.mobile.qa
       id: settings.sms.daily-digest-enabled
     direction: UP
     timeout: 20000
+    centerElement: true
 - assertVisible:
     id: settings.sms.daily-digest-enabled
     checked: true
@@ -136,6 +138,7 @@ appId: com.merxus.mobile.qa
       id: settings.sms.daily-digest-enabled
     direction: UP
     timeout: 20000
+    centerElement: true
 - assertVisible:
     id: settings.sms.daily-digest-enabled
     checked: false
