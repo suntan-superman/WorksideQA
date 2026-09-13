@@ -96,8 +96,11 @@ Start-MerxusMaestroMetro
 the profile before resolving Expo's public config, validates it through Mobile's
 real runtime mapper/validator, then starts foreground Metro on port 8081 with a
 cleared cache. It refuses an occupied port instead of switching ports or killing
-another instance. Stop old T3 with Ctrl+C in its owning terminal first (especially
-if the old terminal is elevated).
+another instance. A blocked start reports each listener's PID, process name and
+start time when accessible, and includes the served-runtime verification command.
+Stop old T3 with Ctrl+C in its owning terminal first (especially if the old
+terminal is elevated). An occupied port may belong to a healthy Metro; inspect
+the served configuration before deciding to replace it.
 
 | Mobile input from the Maestro profile | Value before Metro starts |
 | --- | --- |

@@ -76,12 +76,39 @@ function Test-MerxusMaestroMobileRuntime {
     if ($LASTEXITCODE -ne 0) { throw 'T3 must serve the Merxus Maestro runtime. Stop the incorrect Metro instance and run Start-MerxusMaestroMetro.' }
 }
 
+function Assert-MerxusMetroPortAvailable {
+    try {
+      $listeners = @(Get-NetTCPConnection -State Listen -ErrorAction Stop | Where-Object LocalPort -eq 8081)
+    } catch {
+      throw 'Cannot inspect port 8081. Metro was not started; check Windows networking permissions and retry.'
+    }
+    if ($listeners.Count -eq 0) { return }
+
+    $owners = foreach ($listenerPid in ($listeners.OwningProcess | Sort-Object -Unique)) {
+      $processName = '(unavailable: process exited or access denied)'
+      $started = 'unknown'
+      try {
+        $ownerProcess = Get-Process -Id $listenerPid -ErrorAction Stop
+        $processName = $ownerProcess.ProcessName
+        try { $started = $ownerProcess.StartTime.ToString('yyyy-MM-dd HH:mm:ss') } catch { }
+      } catch { }
+      "PID=$listenerPid process=$processName started=$started"
+    }
+    $details = $owners -join [Environment]::NewLine
+    throw @"
+T3 START BLOCKED: port 8081 is already occupied.
+$details
+An existing Metro may be stale or serving another runtime. No new Metro was started.
+Inspect the running server with: npm run qa:merxus:maestro:mobile:verify -- --served-only
+To replace it, press Ctrl+C in its owning T3 terminal, then run Start-MerxusMaestroMetro again.
+If that process is elevated, stop it from its elevated terminal. This helper does not kill processes or switch ports.
+"@
+}
+
 function Start-MerxusMaestroMetro {
+    Assert-MerxusMetroPortAvailable
     Import-MerxusMaestroMobileEnvironment
     Test-MerxusMaestroMobileRuntime -ConfigOnly
-    if (Get-NetTCPConnection -LocalPort 8081 -State Listen -ErrorAction SilentlyContinue) {
-      throw 'Port 8081 is already in use. Stop the existing T3 Metro before starting the canonical Maestro instance.'
-    }
     Push-Location $MerxusMobile
     try {
       Write-Host 'Maestro config verified. T5 must verify the served Android manifest before UI certification.'
