@@ -99,7 +99,7 @@ function commandVersion(command, env) {
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   const lines = String(outcome.stdout || outcome.stderr || '').trim().split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
-  return lines.find((line) => /\d+\.\d+\.\d+/.test(line)) || lines[0] || null;
+  return [...lines].reverse().find((line) => /\d+\.\d+\.\d+/.test(line)) || lines[0] || null;
 }
 
 function resolveMaestro(env) {
