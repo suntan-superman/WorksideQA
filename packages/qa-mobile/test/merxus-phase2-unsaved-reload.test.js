@@ -1,5 +1,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 const YAML = require('yaml');
 const { loadProductManifest } = require('../../qa-config/src');
 const { validateMaestroConfiguration, selectFlows, buildDeviceLaunchFlow } = require('../src/maestro-runner');
@@ -10,9 +12,10 @@ const [flow] = selectFlows(config, { suite: 'phase2-unsaved-reload' });
 assert.equal(flow.name, '25-tenant-settings-unsaved-reload-owner-a');
 assert.equal(flow.mutationExpected, false);
 assert.equal(flow.timeoutMs, 180000);
-assert.deepEqual(flow.androidKeyboardDismissAfterEdit, [{
+assert.deepEqual(flow.androidImeDismissAfterEdit, [{
   fieldId: 'settings.sms.notification-retry-delay-minutes',
-  targetId: 'screen.settings.ready',
+  strategy: 'android-keyevent-escape',
+  timeoutMs: 5000,
 }]);
 assert.equal(flow.authoritativeResult.correlationCount, 0);
 const commands = YAML.parseAllDocuments(fs.readFileSync(flow.path, 'utf8'))[1].toJS();
@@ -39,31 +42,58 @@ assert.deepEqual(commands.slice(reloadScroll, reloadScroll + 2), [
 ]);
 assert.equal(commands.at(-1).assertVisible.text, '^15$');
 assert.doesNotMatch(serialized, /qa-scroll|send|save/);
+const generationDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'worksideqa-unsaved-reload-'));
 for (const [name, id] of [['androidEmulator', 'emulator-5554'], ['iosSimulator', 'explicit-udid']]) {
-  const runtime = buildDeviceLaunchFlow(flow, { ...config.mobile.devices[name], id, descriptorName: name }, `./.tmp-unsaved-${name}.yaml`);
+  const runtime = buildDeviceLaunchFlow(flow, { ...config.mobile.devices[name], id, descriptorName: name }, path.join(generationDirectory, `${name}.yaml`));
   assert.ok(runtime.launchPlan.launchArgs.includes(id));
-  assert.equal(runtime.stages?.length || 1, name === 'iosSimulator' ? 3 : 1);
-  const generatedPath = name === 'iosSimulator' ? runtime.stages[2].path : runtime.path;
-  const generated = YAML.parseAllDocuments(fs.readFileSync(generatedPath, 'utf8'))[1].toJS();
-  assert.doesNotMatch(JSON.stringify(generated), /WORKSIDEQA_CORRELATION|settings\.sms\.save/);
-  const generatedEdit = generated.findIndex((command) => command.tapOn?.id === field);
   if (name === 'androidEmulator') {
-    assert.deepEqual(generated.slice(generatedEdit, generatedEdit + 7), [
+    assert.deepEqual(runtime.stages.map(({ name: stageName, kind }) => ({ name: stageName, kind })), [
+      { name: 'application-before-ime-dismiss', kind: 'application' },
+      { name: 'android-ime-dismiss', kind: 'android-ime-dismiss' },
+      { name: 'application-resume', kind: 'application' },
+    ]);
+    assert.deepEqual(runtime.stages[1].imeDismiss, {
+      strategy: 'android-keyevent-escape',
+      timeoutMs: 5000,
+    });
+    const beforeDismiss = YAML.parseAllDocuments(fs.readFileSync(runtime.stages[0].path, 'utf8'))[1].toJS();
+    const resume = YAML.parseAllDocuments(fs.readFileSync(runtime.stages[2].path, 'utf8'))[1].toJS();
+    const generatedEdit = beforeDismiss.findIndex((command) => command.tapOn?.id === field);
+    assert.deepEqual(beforeDismiss.slice(generatedEdit), [
       { tapOn: { id: field } }, { eraseText: 100 }, { inputText: '20' },
       { assertVisible: { id: field, text: '^20$' } },
-      { tapOn: { id: 'screen.settings.ready' } },
+    ]);
+    assert.deepEqual(resume.slice(0, 2), [
       { scrollUntilVisible: { element: { id: 'settings.sms.reload' }, direction: 'DOWN', timeout: 20000, centerElement: true } },
       { waitForAnimationToEnd: { timeout: 2000 } },
     ]);
-    assert.equal(generated.slice(generatedEdit).findIndex((command) => command === 'hideKeyboard'), -1, 'Android Slice 25 does not hide via Back after retry-delay edit');
+    assert.doesNotMatch(JSON.stringify([...beforeDismiss, ...resume]), /WORKSIDEQA_CORRELATION|settings\.sms\.save/);
+    assert.equal(beforeDismiss.slice(generatedEdit).some((command) => command === 'hideKeyboard' || Object.hasOwn(command || {}, 'hideKeyboard')), false, 'Android edit does not dismiss via Back');
+    assert.equal(beforeDismiss.slice(generatedEdit).some((command) => command.tapOn?.id === 'screen.settings.ready'), false, 'Android no longer relies on a background tap to close the IME');
   } else {
+    assert.equal(runtime.stages.length, 3);
+    const generated = YAML.parseAllDocuments(fs.readFileSync(runtime.stages[2].path, 'utf8'))[1].toJS();
+    assert.doesNotMatch(JSON.stringify(generated), /WORKSIDEQA_CORRELATION|settings\.sms\.save/);
+    const generatedEdit = generated.findIndex((command) => command.tapOn?.id === field);
     assert.equal(generated.slice(generatedEdit).findIndex((command) => command === 'hideKeyboard'), -1, 'iOS runtime replaces hideKeyboard');
     assert.ok(generated.slice(generatedEdit).some((command) => command.tapOn?.id === 'settings.sms.qa-dismiss-keyboard'));
     assert.equal(generated.slice(generatedEdit).some((command) => command.tapOn?.id === 'screen.settings.ready'), false, 'iOS keeps its existing dismiss helper');
   }
 }
+for (const suite of ['phase2-retry', 'phase2-retry-delay']) {
+  const [certifiedFlow] = selectFlows(config, { suite });
+  const runtime = buildDeviceLaunchFlow(certifiedFlow, {
+    ...config.mobile.devices.androidEmulator,
+    id: 'emulator-5554',
+    descriptorName: 'androidEmulator',
+  }, path.join(generationDirectory, `${suite}-android.yaml`));
+  assert.deepEqual(runtime.stages.map((stage) => stage.kind), ['application'], `${suite} Android stage architecture stays unchanged`);
+}
+fs.rmSync(generationDirectory, { recursive: true, force: true });
 for (const key of ['mutationExpected', 'uiCorrelationCount', 'externalProviderInvocationCount', 'blockedProviderAttemptCount', 'crossTenantLeakageCount', 'successAuditCount', 'operationReceiptCount', 'tenantBUnchanged', 'revision']) assert.ok(Object.hasOwn(flow.authoritativeResult, key), key);
-const result = { ok: true, generation: 'generation', verificationCase: flow.backendVerification, ...flow.authoritativeResult, unexpectedDomainRecords: [] };
+const { correlationCount: harnessCorrelationCount, ...backendExpected } = flow.authoritativeResult;
+assert.equal(harnessCorrelationCount, 0);
+const result = { ok: true, generation: 'generation', verificationCase: flow.backendVerification, ...backendExpected, unexpectedDomainRecords: [] };
 assert.equal(parseAuthoritativeResult(JSON.stringify(result), flow.authoritativeResult, '', 'generation').correlationMatched, true);
 assert.equal(parseAuthoritativeResult(JSON.stringify(result), flow.authoritativeResult, '', 'generation').correlationUniqueCount, 0);
 assert.throws(() => parseAuthoritativeResult(JSON.stringify(result), flow.authoritativeResult, 'WORKSIDEQA_CORRELATION={"requestId":"unexpected","operationId":"unexpected"}', 'generation'));

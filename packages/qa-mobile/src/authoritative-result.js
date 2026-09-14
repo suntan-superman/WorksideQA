@@ -18,7 +18,11 @@ function parseAuthoritativeResult(stdout, expected, uiOutput, generation) {
   const validId = (id) => typeof id === 'string' && /^[A-Za-z0-9_-]{1,128}$/.test(id) && id.trim() === id;
   if (validId(result?.requestId) && validId(result?.operationId)) diagnostics.backendCorrelation = { requestId: result.requestId, operationId: result.operationId };
   if (result?.ok !== true || result.generation !== generation) throw correlationError('Invalid authoritative verifier result/generation', diagnostics);
-  for (const [key, value] of Object.entries(expected)) if (result[key] !== value) throw correlationError(`Authoritative verifier mismatch: ${key}`, diagnostics);
+  // correlationCount describes UI artifact capture and is validated below;
+  // product-owned backend verifiers are not required to echo that harness-only field.
+  for (const [key, value] of Object.entries(expected)) {
+    if (key !== 'correlationCount' && result[key] !== value) throw correlationError(`Authoritative verifier mismatch: ${key}`, diagnostics);
+  }
   if (captureError) throw correlationError(captureError.message, diagnostics);
   if (expected.correlationCount === 0) {
     if (diagnostics.correlationUniqueCount !== 0 || result.uiCorrelationCount !== 0 || result.mutationExpected !== false) throw correlationError('Non-mutation flow emitted correlation or mutation evidence', diagnostics);

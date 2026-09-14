@@ -7,6 +7,8 @@ const { acquireObserverLock, ensureDir, fileExists, fromRoot, spawnCommand, term
 const { resolveConfiguredDevice, validateDeviceDescriptors } = require('./device-selection');
 const { spawnMaestro, spawnMaestroSync, terminateMaestro } = require("./maestro-process");
 const { runBackendIdentityPreflight, validateBackendIdentityContract } = require('./backend-identity-preflight');
+const { dismissAndroidIme } = require('./android-ime');
+const { resolveTool } = require('../../qa-core/src/tool-resolver');
 
 const FORBIDDEN_FLOW_TARGETS = [
   { pattern: /https?:\/\//i, description: "network endpoint" },
@@ -194,8 +196,9 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
   let deterministicTextResetApplied = false;
   const keyboardDismissRules = selectedDevice.platform === 'ios' && selectedDevice.kind === 'simulator'
     ? selectedDevice.keyboardDismissAfterEdit || [] : [];
-  const androidKeyboardDismissRules = selectedDevice.platform === 'android'
-    ? flow.androidKeyboardDismissAfterEdit || [] : [];
+  const androidImeDismissRules = selectedDevice.platform === 'android'
+    ? flow.androidImeDismissAfterEdit || [] : [];
+  const androidImeDismissBoundaries = [];
   const buildOverlaySweeper = (rule) => ({
     repeat: {
       times: rule.attempts,
@@ -232,15 +235,19 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
           Object.hasOwn(commands[commandIndex - 1] || {}, 'inputText')) : null;
     const androidDismissRule = command?.assertVisible &&
       (nextCommand === 'hideKeyboard' || (nextCommand && Object.hasOwn(nextCommand, 'hideKeyboard')))
-      ? androidKeyboardDismissRules.find((rule) => command.assertVisible.id === rule.fieldId &&
+      ? androidImeDismissRules.find((rule) => command.assertVisible.id === rule.fieldId &&
           Object.hasOwn(commands[commandIndex - 1] || {}, 'inputText')) : null;
     if (dismissRule || androidDismissRule) {
       if (androidDismissRule) {
-        // Android Maestro hideKeyboard is implemented as a Back event. For
-        // explicitly opted-in flows, tap a stable Settings semantic marker so
-        // the field blurs without popping the Settings screen.
+        // Android Maestro hideKeyboard is implemented as a Back event, while
+        // tapping a non-input marker can leave the native IME window active.
+        // End this application stage after the exact-value assertion so the
+        // runner can dismiss and verify the IME without a second UI observer.
         runtimeCommands.push(command);
-        runtimeCommands.push({ tapOn: { id: androidDismissRule.targetId } });
+        androidImeDismissBoundaries.push({
+          commandCount: runtimeCommands.length,
+          rule: androidDismissRule,
+        });
         commandIndex += 1;
         continue;
       }
@@ -364,6 +371,36 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
       { name: 'system-overlay', kind: 'system-overlay', path: overlayPath },
       { name: 'application-resume', kind: 'application', path: resumePath },
     ];
+  } else if (androidImeDismissBoundaries.length > 0) {
+    stages = [];
+    let commandStart = 0;
+    for (let index = 0; index < androidImeDismissBoundaries.length; index += 1) {
+      const boundary = androidImeDismissBoundaries[index];
+      const applicationPath = index === 0
+        ? destinationPath
+        : path.join(path.dirname(destinationPath), `runtime-application-${index + 1}.yaml`);
+      writeRuntimeFlow(applicationPath, runtimeCommands.slice(commandStart, boundary.commandCount));
+      stages.push({
+        name: index === 0 ? 'application-before-ime-dismiss' : `application-before-ime-dismiss-${index + 1}`,
+        kind: 'application',
+        path: applicationPath,
+      });
+      stages.push({
+        name: index === 0 ? 'android-ime-dismiss' : `android-ime-dismiss-${index + 1}`,
+        kind: 'android-ime-dismiss',
+        imeDismiss: {
+          strategy: boundary.rule.strategy,
+          timeoutMs: boundary.rule.timeoutMs,
+        },
+      });
+      commandStart = boundary.commandCount;
+    }
+    if (commandStart >= runtimeCommands.length) {
+      throw new Error(`Flow ${flow.name} Android IME dismissal must be followed by application commands.`);
+    }
+    const resumePath = path.join(path.dirname(destinationPath), 'runtime-resume.yaml');
+    writeRuntimeFlow(resumePath, runtimeCommands.slice(commandStart));
+    stages.push({ name: 'application-resume', kind: 'application', path: resumePath });
   } else {
     writeRuntimeFlow(destinationPath, runtimeCommands);
   }
@@ -510,12 +547,14 @@ function validateMaestroConfiguration(config) {
   const flowNames = flows.map((flow) => flow.name);
   if (unique(flowNames).length !== flowNames.length) throw new Error("Maestro flow names must be unique.");
   for (const flow of flows) {
-    if (flow.androidKeyboardDismissAfterEdit != null) {
-      const rules = flow.androidKeyboardDismissAfterEdit;
+    if (flow.androidImeDismissAfterEdit != null) {
+      const rules = flow.androidImeDismissAfterEdit;
       if (!Array.isArray(rules) || rules.length === 0 || rules.some((rule) => (
-        !rule || !['fieldId', 'targetId'].every((key) => typeof rule[key] === 'string' && /^[A-Za-z0-9_.-]+$/.test(rule[key]))
+        !rule || typeof rule.fieldId !== 'string' || !/^[A-Za-z0-9_.-]+$/.test(rule.fieldId) ||
+        rule.strategy !== 'android-keyevent-escape' || !Number.isInteger(rule.timeoutMs) ||
+        rule.timeoutMs <= 0 || rule.timeoutMs > 30000
       )) || unique(rules.map((rule) => rule.fieldId)).length !== rules.length) {
-        throw new Error(`Flow ${flow.name} androidKeyboardDismissAfterEdit requires unique semantic field/target IDs.`);
+        throw new Error(`Flow ${flow.name} androidImeDismissAfterEdit requires unique field IDs, android-keyevent-escape strategy and bounded timeoutMs.`);
       }
     }
     if (flow.fixtureScenario && !fixtures) {
@@ -830,8 +869,23 @@ function processFailed(outcome) {
 function processFailureMetadata(outcome) {
   if (outcome.timeout) return { errorCode: outcome.timeout.code, timeout: outcome.timeout };
   if (outcome.code === 'OBSERVER_BUSY' || outcome.code === 'OBSERVER_CONFLICT') return { errorCode: outcome.code };
+  if (outcome.code === 'ANDROID_IME_DISMISS_FAILED') {
+    return { errorCode: outcome.code, ...(outcome.diagnostics ? { imeDismissFailure: outcome.diagnostics } : {}) };
+  }
   if (outcome.cancelled || outcome.errorCode === 'WORKSIDEQA_PROCESS_CANCELLED') return { errorCode: 'WORKSIDEQA_PROCESS_CANCELLED' };
   return {};
+}
+
+function imeDismissalResultFields(dismissals) {
+  if (!Array.isArray(dismissals) || dismissals.length === 0) return {};
+  const latest = dismissals.at(-1);
+  return {
+    androidImeDismissals: dismissals,
+    keyboardDismissStrategy: latest.keyboardDismissStrategy,
+    imeVisibleBefore: latest.imeVisibleBefore,
+    imeVisibleAfter: latest.imeVisibleAfter,
+    dismissElapsedMs: latest.dismissElapsedMs,
+  };
 }
 
 function assertProcessSucceeded(outcome, description) {
@@ -1037,6 +1091,7 @@ async function runMaestroFlows(config, options = {}) {
     let outcome;
     let uiOutput = '';
     let uiErrorOutput = '';
+    const androidImeDismissals = [];
     const applicationFlowNames = [];
     const applicationStartedAt = Date.now();
     try {
@@ -1065,6 +1120,42 @@ async function runMaestroFlows(config, options = {}) {
       const runtimeStages = runtimeFlow.stages || [{ name: 'application', kind: 'application', path: runtimeFlow.path }];
       for (let stageIndex = 0; stageIndex < runtimeStages.length; stageIndex += 1) {
         const stage = runtimeStages[stageIndex];
+        if (stage.kind === 'android-ime-dismiss') {
+          const adb = resolveTool('adb', runnerEnv);
+          const artifactPath = path.join(artifactDirectory, `${stage.name}.json`);
+          if (!adb.path) {
+            const error = new Error(`ANDROID_IME_DISMISS_FAILED: ${adb.error || 'ADB executable could not be resolved.'}`);
+            error.code = 'ANDROID_IME_DISMISS_FAILED';
+            error.diagnostics = {
+              keyboardDismissStrategy: stage.imeDismiss.strategy,
+              deviceId: selectedDevice?.id || null,
+              reason: adb.error || 'ADB executable could not be resolved.',
+            };
+            writeJson(artifactPath, { status: 'failed', ...error.diagnostics });
+            throw error;
+          }
+          console.log(`[Android IME] Dismissing and verifying on ${selectedDevice.id}`);
+          try {
+            const dismissal = await dismissAndroidIme({
+              deviceId: selectedDevice.id,
+              timeoutMs: stage.imeDismiss.timeoutMs,
+              adbPath: adb.path,
+              environment: runnerEnv,
+            });
+            const record = { stage: stage.name, status: 'passed', ...dismissal };
+            androidImeDismissals.push(record);
+            writeJson(artifactPath, record);
+            logStream.write(`[Android IME] ${JSON.stringify(record)}\n`);
+            console.log(`[Android IME] CLOSED (${record.dismissElapsedMs}ms)`);
+          } catch (error) {
+            const record = { stage: stage.name, status: 'failed', ...(error.diagnostics || {}) };
+            androidImeDismissals.push(record);
+            writeJson(artifactPath, record);
+            logStream.write(`[Android IME] ${JSON.stringify(record)}\n`);
+            throw error;
+          }
+          continue;
+        }
         const stageJunitPath = stageIndex === runtimeStages.length - 1
           ? relativeJunit
           : toPosixPath(path.relative(fromRoot(), path.join(flowDirectory, `junit-${stage.name}.xml`)));
@@ -1103,6 +1194,7 @@ async function runMaestroFlows(config, options = {}) {
         flow: flow.name,
         status: "failed",
         failureStage: "ui",
+        ...imeDismissalResultFields(androidImeDismissals),
         ...processFailureMetadata(error),
         stages: {
           fixture: { status: fixtureStatus, scenario: flow.fixtureScenario || null },
@@ -1124,6 +1216,7 @@ async function runMaestroFlows(config, options = {}) {
         flow: flow.name,
         status: "failed",
         failureStage: "ui",
+        ...imeDismissalResultFields(androidImeDismissals),
         ...processFailureMetadata(outcome),
         exitCode: outcome.code,
         signal: outcome.signal || null,
@@ -1178,6 +1271,7 @@ async function runMaestroFlows(config, options = {}) {
           flow: flow.name,
           status: "failed",
           failureStage: "backend",
+          ...imeDismissalResultFields(androidImeDismissals),
           ...(correlationDiagnostics || {}),
           ...processFailureMetadata(backendOutcome),
           exitCode: outcome.code,
@@ -1210,6 +1304,7 @@ async function runMaestroFlows(config, options = {}) {
     const result = {
       flow: flow.name,
       generation,
+      ...imeDismissalResultFields(androidImeDismissals),
       ...(authoritativeResult ? { authoritativeResult } : {}),
       ...(correlationDiagnostics || {}),
       status: "passed",
