@@ -205,6 +205,18 @@ function checkManifests() {
       checks.push(result('passed', `manifest.${key}`, `${manifest.name} manifest is valid.`));
       if (!manifest.mobile?.enabled) checks.push(result('failed', `manifest.${key}.mobile`, `${key} mobile orchestration must be enabled.`));
       if (manifest.mobile?.orchestrationAuthority !== 'worksideqa') checks.push(result('failed', `manifest.${key}.authority`, `${key} mobile orchestration must be owned by WorksideQA.`));
+      const mobileEnvironment = manifest.mobile?.environment;
+      if (mobileEnvironment) {
+        checks.push(mobileEnvironment.name === 'maestro'
+          ? result('passed', `manifest.${key}.environment`, 'Mobile Maestro environment is declared.')
+          : result('failed', `manifest.${key}.environment`, 'Mobile manifest must declare environment.name=maestro.'));
+        if (mobileEnvironment.externalProvidersAllowed === true || mobileEnvironment.externalNotificationsAllowed === true) {
+          checks.push(result('failed', `manifest.${key}.external-providers`, 'External providers/notifications must be disabled for Maestro.'));
+        }
+        if (!String(mobileEnvironment.firebaseProjectId || '').endsWith('-maestro-local')) {
+          checks.push(result('failed', `manifest.${key}.firebase-project`, 'Mobile Maestro Firebase project must be a local emulator project.'));
+        }
+      }
     } catch (error) {
       checks.push(result('failed', `manifest.${key}`, error.message));
     }
@@ -284,8 +296,15 @@ async function checkMobileRuntime(env, options) {
   const config = spawnCommandSync(process.execPath, [tool, '--mobile-root', env.MERXUS_MOBILE_REPO, '--config-only'], {
     cwd: WORKSIDEQA_ROOT, env, encoding: 'utf8', timeout: 60000, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'],
   });
+  let configSummary = null;
+  try { configSummary = JSON.parse(String(config.stdout || '').trim().split(/\r?\n/).pop()); } catch { /* failure is reported below */ }
   checks.push(!config.error && config.status === 0
-    ? result('passed', 'mobile.runtime-config', 'Merxus Mobile resolves the Maestro runtime contract.')
+    ? result('passed', 'mobile.runtime-config', 'Merxus Mobile resolves the Maestro runtime contract.', {
+      environment: configSummary?.environment || 'maestro',
+      isMaestro: configSummary?.isMaestro === true,
+      backendUrl: configSummary?.backendUrl || null,
+      firebaseProjectId: configSummary?.firebaseProjectId || null,
+    })
     : result('failed', 'mobile.runtime-config', 'Merxus Mobile does not resolve a valid Maestro runtime contract.'));
   if (options.offline) checks.push(result('skipped', 'mobile.runtime-served', 'Served Metro check skipped (--offline).'));
   else {
