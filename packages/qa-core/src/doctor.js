@@ -124,12 +124,19 @@ function resolveCommand(command, env) {
   if (command === 'maestro') return resolveMaestro(env);
   if (commandExists(command, env)) return command;
   if (process.platform === 'win32') {
-    const candidates = [];
+    const candidates = [`${command}.cmd`, `${command}.bat`];
     if (command === 'adb') {
       const sdkRoots = [env.ANDROID_HOME, env.ANDROID_SDK_ROOT, path.join(env.LOCALAPPDATA || '', 'Android', 'Sdk')].filter(Boolean);
       candidates.push(...sdkRoots.map((root) => path.join(root, 'platform-tools', 'adb.exe')));
     }
     if (command === 'npm') candidates.push(path.join(path.dirname(process.execPath), 'npm.cmd'));
+    if (command === 'firebase') {
+      candidates.push(
+        path.join(env.LOCALAPPDATA || '', 'Yarn', 'bin', 'firebase.cmd'),
+        path.join(env.APPDATA || '', 'npm', 'firebase.cmd'),
+        path.join(env.USERPROFILE || '', '.yarn', 'bin', 'firebase.cmd'),
+      );
+    }
     for (const candidate of candidates) if (fs.existsSync(candidate) && commandExists(candidate, env)) return candidate;
   }
   return null;

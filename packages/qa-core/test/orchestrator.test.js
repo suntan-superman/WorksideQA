@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { parseArgs, serviceDefinitions, commandMatches, canonicalMerxusMetroEnvironment, waitForServiceReady, assertPortsAvailable } = require('../src/orchestrator');
+const { parseArgs, serviceDefinitions, commandMatches, canonicalMerxusMetroEnvironment, waitForServiceReady, assertPortsAvailable, fixtureCommands } = require('../src/orchestrator');
 
 test('orchestrator parses lifecycle and product arguments', () => {
   assert.deepEqual(parseArgs(['start', '--product', 'merxus']), {
@@ -68,4 +68,16 @@ test('unowned port conflicts abort startup without adoption', () => {
     () => assertPortsAvailable({ service: 'backend', ports: [8787] }, null, () => 5264),
     /port 8787 is owned by PID 5264, not a WorksideQA-recorded process/,
   );
+});
+
+test('fixture bootstrap reuses product-owned reset and verification commands', () => {
+  const merxus = fixtureCommands('merxus', 'merxus-maestro-worksideqa-start-test');
+  assert.equal(merxus.scenario, 'login-owner-a');
+  assert.deepEqual(merxus.verify, ['run', 'qa:maestro:auth:verify']);
+  assert.ok(merxus.reset.includes('--confirm-reset'));
+  assert.ok(merxus.reset.includes('--apply'));
+  assert.ok(merxus.reset.includes('--generation'));
+  const sageset = fixtureCommands('sageset', 'sageset-maestro-worksideqa-start-test');
+  assert.equal(sageset.scenario, 'clean');
+  assert.ok(sageset.reset.includes('reset:maestro-fixtures'));
 });

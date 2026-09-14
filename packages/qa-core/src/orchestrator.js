@@ -131,6 +131,26 @@ function processInfo(pid) {
   try { return JSON.parse(String(outcome.stdout || '{}')); } catch { return { pid: Number(pid) }; }
 }
 
+function processTreePids(rootPid) {
+  if (process.platform !== 'win32') return [Number(rootPid)];
+  const outcome = spawnCommandSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', 'Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId | ConvertTo-Json -Compress'], { encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
+  if (outcome.error || outcome.status !== 0) return [Number(rootPid)];
+  let rows;
+  try { rows = JSON.parse(String(outcome.stdout || '[]')); } catch { return [Number(rootPid)]; }
+  if (!Array.isArray(rows)) rows = [rows];
+  const descendants = new Set([Number(rootPid)]);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const row of rows) {
+      const pid = Number(row.ProcessId || 0);
+      const parent = Number(row.ParentProcessId || 0);
+      if (pid && descendants.has(parent) && !descendants.has(pid)) { descendants.add(pid); changed = true; }
+    }
+  }
+  return [...descendants];
+}
+
 function commandMatches(record, info) {
   if (!info || !record) return false;
   if (process.platform !== 'win32') return true;
@@ -227,16 +247,24 @@ function tailLog(logPath, maxLines = 12) {
   } catch { return '(log unavailable)'; }
 }
 
-async function waitForServiceReady(service, timeoutMs = READY_TIMEOUT_MS) {
+async function waitForServiceReady(service, timeoutMs = READY_TIMEOUT_MS, readinessProbe = null) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     const exitInfo = service.getExitInfo();
     if (exitInfo) return { ready: false, reason: 'PROCESS_EXITED', exitInfo };
-    if (await waitForPorts(service.record.ports, 500)) return { ready: true };
+    if (await waitForPorts(service.record.ports, 500) && (!readinessProbe || await readinessProbe())) return { ready: true };
     await new Promise((resolve) => setTimeout(resolve, POLL_MS));
   }
   const exitInfo = service.getExitInfo();
   return exitInfo ? { ready: false, reason: 'PROCESS_EXITED', exitInfo } : { ready: false, reason: 'READINESS_TIMEOUT' };
+}
+
+function metroServedRuntimeReady(env) {
+  const tool = path.join(fromRoot(), 'packages', 'qa-mobile', 'src', 'merxus-mobile-runtime.js');
+  const result = spawnCommandSync(process.execPath, [tool, '--mobile-root', env.MERXUS_MOBILE_REPO, '--served-only'], {
+    cwd: fromRoot(), env, encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  return !result.error && result.status === 0;
 }
 
 function reportServiceFailure(record, readiness) {
@@ -253,6 +281,101 @@ function reportServiceFailure(record, readiness) {
   process.stderr.write(`Log: ${record.logPath}\n`);
   process.stderr.write(`Last error:\n${tailLog(record.logPath)}\n`);
   process.stderr.write('Startup aborted.\n');
+}
+
+function runFixtureCommand(product, env, args) {
+  const cwd = product === 'merxus'
+    ? (env.MERXUS_BACKEND_REPO || path.join(DEFAULTS.merxusRoot, 'merxus-ai-backend'))
+    : path.dirname(env.SAGESET_MOBILE_REPO || DEFAULTS.sagesetRoot);
+  const executable = resolveCommand('npm', env) || (process.platform === 'win32' ? 'npm.cmd' : 'npm');
+  return spawnCommandSync(executable, args, {
+    cwd, env: { ...env, NO_UPDATE_NOTIFIER: '1' }, encoding: 'utf8', timeout: 120000,
+    windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'],
+  });
+}
+
+function fixtureFailure(product, stage, generation, outcome) {
+  const output = `${String(outcome?.stdout || '')}\n${String(outcome?.stderr || '')}`.trim();
+  const lines = output.split(/\r?\n/).filter(Boolean).slice(-8).join('\n');
+  process.stderr.write(`FAILED ${product}/${stage}\nGeneration: ${generation}\nExit code: ${outcome?.status == null ? '(none)' : outcome.status}\n`);
+  if (lines) process.stderr.write(`Last error:\n${lines}\n`);
+  process.stderr.write('Startup aborted before Metro certification. Services remain available for diagnosis.\n');
+}
+
+async function verifyBackendIdentities(env) {
+  const backendUrl = String(env.MERXUS_QA_BACKEND_URL || 'http://127.0.0.1:8787').replace(/\/$/, '');
+  const owners = [
+    ['Owner A', env.MERXUS_MAESTRO_OWNER_A_EMAIL],
+    ['Owner B', env.MERXUS_MAESTRO_OWNER_B_EMAIL],
+  ];
+  for (const [label, rawEmail] of owners) {
+    const email = String(rawEmail || '').trim().toLowerCase();
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 5000);
+    let response;
+    try {
+      response = await fetch(`${backendUrl}/api/auth/check-email`, {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email }), signal: controller.signal,
+      });
+    } catch (error) {
+      clearTimeout(timer);
+      throw new Error(`${label} backend identity check failed: ${error.name === 'AbortError' ? 'timeout' : error.message}`);
+    }
+    clearTimeout(timer);
+    const body = await response.json().catch(() => ({}));
+    if (response.status !== 200 || body.exists !== true || body.provider !== 'email' || body.hasWorkspace !== true) {
+      throw new Error(`${label} backend identity check failed (HTTP ${response.status}, exists=${body.exists === true}, provider=${body.provider || 'none'}, hasWorkspace=${body.hasWorkspace === true})`);
+    }
+  }
+}
+
+function fixtureCommands(product, generation) {
+  const scenario = product === 'merxus' ? 'login-owner-a' : 'clean';
+  return {
+    scenario,
+    verify: product === 'merxus' ? ['run', 'qa:maestro:auth:verify'] : ['--prefix', 'functions', 'run', 'verify:maestro-fixtures'],
+    reset: product === 'merxus'
+      ? ['run', 'qa:maestro:reset', '--', '--scenario', scenario, '--generation', generation, '--apply', '--confirm-reset']
+      : ['--prefix', 'functions', 'run', 'reset:maestro-fixtures', '--', '--scenario', scenario, '--apply', '--confirm-reset'],
+  };
+}
+
+async function bootstrapFixtures(product, env, state) {
+  const generation = `${product === 'merxus' ? 'merxus-maestro' : 'sageset-maestro'}-worksideqa-start-${Date.now()}`;
+  const commands = fixtureCommands(product, generation);
+  const fixture = { generation, bootstrapTimestamp: new Date().toISOString(), scenario: commands.scenario, resetPerformed: false, authVerification: 'pending', backendIdentityVerification: 'pending' };
+  const verifyArgs = commands.verify;
+  let verify = runFixtureCommand(product, env, verifyArgs);
+  if (verify.error || verify.status !== 0) {
+    const resetArgs = commands.reset;
+    const reset = runFixtureCommand(product, env, resetArgs);
+    if (reset.error || reset.status !== 0) {
+      fixtureFailure(product, 'fixture-bootstrap', generation, reset);
+      throw new Error(`${product} fixture bootstrap failed.`);
+    }
+    fixture.resetPerformed = true;
+    verify = runFixtureCommand(product, env, verifyArgs);
+  }
+  if (verify.error || verify.status !== 0) {
+    fixtureFailure(product, 'auth-verification', generation, verify);
+    throw new Error(`${product} canonical auth verification failed.`);
+  }
+  fixture.authVerification = 'passed';
+  if (product === 'merxus') {
+    try { await verifyBackendIdentities(env); } catch (error) {
+      fixtureFailure(product, 'backend-identity-verification', generation, { status: 1, stderr: error.message });
+      throw error;
+    }
+  }
+  fixture.backendIdentityVerification = 'passed';
+  state.products[product].fixture = fixture;
+  saveState(state);
+  process.stdout.write(`Fixtures ${product}: READY (generation ${generation})\n`);
+  process.stdout.write(`${product === 'merxus' ? 'Owner A' : 'User A'}: VERIFIED\n`);
+  process.stdout.write(`${product === 'merxus' ? 'Owner B' : 'User B'}: VERIFIED\n`);
+  if (product === 'merxus') process.stdout.write('Backend identities: VERIFIED\n');
+  return fixture;
 }
 
 function ownedRecord(record) {
@@ -282,10 +405,18 @@ function processBelongsTo(record, pid) {
 }
 
 function terminateRecord(record) {
-  if (!ownedRecord(record)) return { stopped: false, reason: 'process is no longer owned or is not running' };
+  const pids = Array.isArray(record?.processTreePids) ? record.processTreePids.map(Number).filter((pid) => pidAlive(pid)) : [];
+  const leaderOwned = ownedRecord(record);
+  const ownedDescendants = pids.filter((pid) => pid !== Number(record?.pid) && commandMatches(record, processInfo(pid)));
+  if (!leaderOwned && !ownedDescendants.length) return { stopped: false, reason: 'process is no longer owned or is not running' };
   if (process.platform === 'win32') {
-    const result = spawnCommandSync('taskkill.exe', ['/PID', String(record.pid), '/T', '/F'], { encoding: 'utf8', timeout: 15000, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
-    return result.status === 0 ? { stopped: true } : { stopped: false, reason: 'taskkill failed' };
+    const targets = leaderOwned ? [Number(record.pid)] : ownedDescendants;
+    let stopped = false;
+    for (const pid of targets) {
+      const result = spawnCommandSync('taskkill.exe', ['/PID', String(pid), '/T', '/F'], { encoding: 'utf8', timeout: 15000, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
+      if (result.status === 0) stopped = true;
+    }
+    return stopped ? { stopped: true } : { stopped: false, reason: 'taskkill failed' };
   }
   try { process.kill(-Number(record.pid), 'SIGTERM'); return { stopped: true }; } catch { return { stopped: false, reason: 'process termination failed' }; }
 }
@@ -312,7 +443,12 @@ async function startProduct(product) {
   state.products[product] = state.products[product] || { services: [] };
   const records = state.products[product].services || [];
   const started = [];
+  let fixturesReady = false;
   for (const definition of definitions) {
+    if (definition.service === 'metro' && !fixturesReady) {
+      await bootstrapFixtures(product, env, state);
+      fixturesReady = true;
+    }
     const previous = records.find((record) => record.service === definition.service);
     if (previous && ownedRecord(previous) && (await waitForPorts(definition.ports, 1000))) {
       process.stdout.write(`READY ${product}/${definition.service} PID=${previous.pid} (already owned)\n`);
@@ -327,7 +463,11 @@ async function startProduct(product) {
     else records.push(record);
     saveState(state);
     process.stdout.write(`Starting ${product}/${definition.service} (PID ${record.pid})\n`);
-    const readiness = await waitForServiceReady(service);
+    const readiness = await waitForServiceReady(
+      service,
+      READY_TIMEOUT_MS,
+      definition.service === 'metro' ? () => metroServedRuntimeReady(env) : null,
+    );
     if (!readiness.ready) {
       reportServiceFailure(record, readiness);
       terminateRecord(record);
@@ -335,8 +475,15 @@ async function startProduct(product) {
       saveState(state);
       throw new Error(`${product}/${definition.service} failed before readiness.`);
     }
+    record.processTreePids = processTreePids(record.pid);
+    saveState(state);
     started.push(record);
     process.stdout.write(`Ready ${product}/${definition.service} (PID ${record.pid})\n`);
+  }
+
+  if (!fixturesReady) {
+    await bootstrapFixtures(product, env, state);
+    fixturesReady = true;
   }
 
   if (product === 'merxus') {
@@ -463,11 +610,13 @@ module.exports = {
   saveState,
   serviceDefinitions,
   processInfo,
+  processTreePids,
   commandMatches,
   processBelongsTo,
   maestroActivity,
   waitForServiceReady,
   assertPortsAvailable,
+  fixtureCommands,
   portOwner,
   statusRows,
   startProduct,

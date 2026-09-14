@@ -39,9 +39,11 @@ npm run qa:status -- --product merxus
 npm run qa:doctor -- --strict
 ```
 
-Merxus order is Firebase emulators, QA backend, canonical Maestro Metro,
-Android/device readiness, `adb reverse`, then doctor. SageSet uses the same
-interface with `--product sageset` and starts its emulator/functions service.
+Merxus order is Firebase emulators, QA backend, canonical fixture verification
+(reset only when verification fails), backend identity verification, canonical
+Maestro Metro, Android/device readiness, `adb reverse`, then doctor. SageSet
+uses the same interface with `--product sageset` and its product-owned
+fixture reset/verification contract.
 Use `qa:stop` or a product restart helper to manage only recorded services:
 
 ```powershell
@@ -54,7 +56,9 @@ npm run qa:restart:sageset:firebase
 Ownership is stored locally (and ignored by Git) in
 `.worksideqa/runtime-state.json`. Each record contains product, service, role,
 PID, start time, working directory, executable/arguments, expected ports, log
-path, and a derived runtime hash. `qa:status` reports actual port owners and
+path, and a derived runtime hash. The product entry also records the fixture
+generation, bootstrap timestamp, scenario, reset decision, auth verification,
+and backend identity verification. `qa:status` reports actual port owners and
 device/app state; `qa:stop` refuses to kill an unrecorded or command-mismatched
 process. After a reboot, run `qa:start` followed by strict doctor twice from
 clean shells before resuming Slice 25 certification.
