@@ -364,7 +364,7 @@ async function checkMobileRuntime(env, options) {
     }
     checks.push(rendered.ok
       ? result('passed', 'mobile.runtime-rendered', `QA app rendered ${rendered.readySelector} (PID ${rendered.appPid || 'unknown'}) in ${rendered.elapsedMs}ms; launch=${rendered.launchStartedAt}, qaRoot=${rendered.qaRootReadyAt}, appReady=${rendered.appReadyAt}.`, rendered)
-      : result('failed', 'mobile.runtime-rendered', `QA app did not reach rendered readiness (${rendered.reason || 'unknown'}).`, rendered));
+      : result('failed', 'mobile.runtime-rendered', `QA app did not reach rendered readiness (${rendered.reason || 'unknown'}); intermediate=${rendered.intermediateStateKind || 'unknown'}; elapsed=${rendered.elapsedMs}ms${rendered.diagnosticArtifacts?.hierarchyPath ? `; hierarchy=${rendered.diagnosticArtifacts.hierarchyPath}` : ''}.`, rendered));
   }
   return checks;
 }
