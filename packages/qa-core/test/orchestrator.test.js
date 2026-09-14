@@ -105,6 +105,19 @@ test('readiness stops immediately when a child exits before ports are ready', as
   assert.equal(result.exitInfo.code, 1);
 });
 
+test('readiness aborts immediately on a fatal Metro bundle prewarm result', async () => {
+  let probes = 0;
+  const result = await waitForServiceReady(
+    { record: { ports: [] }, getExitInfo: () => null },
+    5000,
+    async () => { probes += 1; return { ready: false, fatal: true, reason: 'METRO_BUNDLE_PREWARM_FAILED', detail: 'bundle request failed' }; },
+  );
+  assert.equal(result.ready, false);
+  assert.equal(result.reason, 'METRO_BUNDLE_PREWARM_FAILED');
+  assert.equal(result.detail, 'bundle request failed');
+  assert.equal(probes, 1);
+});
+
 test('unexpected zero exit is reported as process exit, while empty readiness succeeds', async () => {
   const exited = await waitForServiceReady({ record: { ports: [65530] }, getExitInfo: () => ({ code: 0, signal: null }) }, 5000);
   assert.equal(exited.reason, 'PROCESS_EXITED');

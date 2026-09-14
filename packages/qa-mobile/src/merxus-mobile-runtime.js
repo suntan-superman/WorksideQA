@@ -30,9 +30,9 @@ async function runtimeFunctions(mobileRoot) {
   return import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
 }
 
-async function verifyExpoConfig(config, mobileRoot, source) {
+async function verifyExpoConfig(config, mobileRoot, source, platform = 'android') {
   const { buildRuntimeConfiguration, validateRuntimeConfiguration } = await runtimeFunctions(mobileRoot);
-  const runtime = buildRuntimeConfiguration(config?.extra, 'android');
+  const runtime = buildRuntimeConfiguration(config?.extra, platform);
   const summary = {
     source, environment: runtime.environment, isMaestro: runtime.isMaestro,
     appId: runtime.appId, androidPackage: config?.android?.package ?? null,
@@ -44,9 +44,9 @@ async function verifyExpoConfig(config, mobileRoot, source) {
   const expected = {
     environment: 'maestro', isMaestro: true, appId: 'com.merxus.mobile.qa',
     androidPackage: 'com.merxus.mobile.qa', iosBundleIdentifier: 'com.merxus.mobile.qa',
-    backendUrl: 'http://10.0.2.2:8787', firebaseProjectId: 'merxus-maestro-local',
-    authEmulatorHost: '10.0.2.2:9099', firestoreEmulatorHost: '10.0.2.2:8080',
-    storageEmulatorHost: '10.0.2.2:9199', allowExternalProviders: false,
+    backendUrl: platform === 'android' ? 'http://10.0.2.2:8787' : 'http://127.0.0.1:8787', firebaseProjectId: 'merxus-maestro-local',
+    authEmulatorHost: platform === 'android' ? '10.0.2.2:9099' : '127.0.0.1:9099', firestoreEmulatorHost: platform === 'android' ? '10.0.2.2:8080' : '127.0.0.1:8080',
+    storageEmulatorHost: platform === 'android' ? '10.0.2.2:9199' : '127.0.0.1:9199', allowExternalProviders: false,
   };
   const errors = Object.keys(expected).filter(key => summary[key] !== expected[key]);
   if (!runtime.firebaseApiKey || !runtime.firebaseAppId || !runtime.firebaseStorageBucket) errors.push('Firebase client configuration');
@@ -77,7 +77,7 @@ async function verifyServedRuntime(mobileRoot, fetchImpl = fetch) {
   let manifest;
   try { manifest = await response.json(); } catch { throw new Error('Mobile runtime preflight FAILED: Metro did not return an Expo manifest.'); }
   if (!manifest?.extra?.expoClient) throw new Error('Mobile runtime preflight FAILED: Metro manifest has no expoClient configuration.');
-  return verifyExpoConfig(manifest.extra.expoClient, mobileRoot, 'served Metro Android manifest');
+  return verifyExpoConfig(manifest.extra.expoClient, mobileRoot, 'served Metro Android manifest', 'android');
 }
 
 async function main(argv = process.argv.slice(2)) {

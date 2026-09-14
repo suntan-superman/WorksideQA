@@ -8,6 +8,7 @@ const { spawnCommandSync } = require('../../qa-utils/src');
 const { fromRoot } = require('../../qa-utils/src');
 const { parsePowerShellConfig, mergedEnvironment, runDoctor, DEFAULTS, resolveCommand } = require('./doctor');
 const { resolveTools, withToolPaths } = require('./tool-resolver');
+const { prewarmMetroBundle, DEFAULT_PREWARM_TIMEOUT_MS } = require('./metro-bundle');
 
 const STATE_DIRECTORY = fromRoot('.worksideqa');
 const STATE_PATH = path.join(STATE_DIRECTORY, 'runtime-state.json');
@@ -353,11 +354,26 @@ async function waitForServiceReady(service, timeoutMs = READY_TIMEOUT_MS, readin
   while (Date.now() < deadline) {
     const exitInfo = service.getExitInfo();
     if (exitInfo) return { ready: false, reason: 'PROCESS_EXITED', exitInfo };
-    if (await waitForPorts(service.record.ports, 500) && (!readinessProbe || await readinessProbe())) return { ready: true };
+    if (await waitForPorts(service.record.ports, 500)) {
+      const probe = readinessProbe ? await readinessProbe() : true;
+      if (probe === true || probe?.ready === true) return { ready: true, probe: probe === true ? null : probe };
+      if (probe?.fatal) return { ready: false, reason: probe.reason || 'READINESS_FAILED', detail: probe.detail || probe.error || null, probe };
+    }
     await new Promise((resolve) => setTimeout(resolve, POLL_MS));
   }
   const exitInfo = service.getExitInfo();
   return exitInfo ? { ready: false, reason: 'PROCESS_EXITED', exitInfo } : { ready: false, reason: 'READINESS_TIMEOUT' };
+}
+
+async function prewarmCanonicalMetro(env, platform = 'android') {
+  const mobileRoot = env.MERXUS_MOBILE_REPO || path.join(DEFAULTS.merxusRoot, 'mobile');
+  const { verifyExpoConfig } = require('../../qa-mobile/src/merxus-mobile-runtime');
+  return prewarmMetroBundle({
+    baseUrl: env.WORKSIDEQA_METRO_URL || 'http://127.0.0.1:8081',
+    platform,
+    timeoutMs: Number(env.WORKSIDEQA_METRO_BUNDLE_PREWARM_TIMEOUT_MS || DEFAULT_PREWARM_TIMEOUT_MS),
+    validateManifest: (manifest) => verifyExpoConfig(manifest?.extra?.expoClient, mobileRoot, `prewarmed Metro ${platform} manifest`, platform),
+  });
 }
 
 function metroServedRuntimeReady(env) {
@@ -379,6 +395,8 @@ function reportServiceFailure(record, readiness) {
   } else {
     process.stderr.write(`Reason: ${readiness.reason}\n`);
   }
+  if (readiness.detail) process.stderr.write(`Detail: ${readiness.detail}\n`);
+  if (readiness.probe?.bundlePrewarmElapsedMs != null) process.stderr.write(`Bundle prewarm elapsed: ${readiness.probe.bundlePrewarmElapsedMs}ms\n`);
   process.stderr.write(`Log: ${record.logPath}\n`);
   process.stderr.write(`Last error:\n${tailLog(record.logPath)}\n`);
   process.stderr.write('Startup aborted.\n');
@@ -664,6 +682,30 @@ async function startProduct(product) {
   const records = state.products[product].services || [];
   const started = [];
   let fixturesReady = false;
+  let metroPrewarmResult = null;
+  let metroProcessReadyAt = null;
+  const ensureMetroPrewarmed = async () => {
+    // waitForServiceReady invokes probes only after the service ports are
+    // reachable; record that boundary separately from bundle completion.
+    if (!metroProcessReadyAt) metroProcessReadyAt = new Date().toISOString();
+    if (metroPrewarmResult) return metroPrewarmResult.ok
+      ? { ready: true, bundlePrewarm: metroPrewarmResult }
+      : { ready: false, fatal: true, reason: metroPrewarmResult.reason, detail: metroPrewarmResult.error, bundlePrewarm: metroPrewarmResult };
+    if (!metroServedRuntimeReady(env)) return { ready: false };
+    metroPrewarmResult = await prewarmCanonicalMetro(env, 'android');
+    return metroPrewarmResult.ok
+      ? { ready: true, bundlePrewarm: metroPrewarmResult }
+      : { ready: false, fatal: true, reason: metroPrewarmResult.reason, detail: metroPrewarmResult.error, bundlePrewarm: metroPrewarmResult };
+  };
+  const awaitMetroPrewarm = async () => {
+    const deadline = Date.now() + READY_TIMEOUT_MS;
+    while (Date.now() < deadline) {
+      const result = await ensureMetroPrewarmed();
+      if (result.ready || result.fatal) return result;
+      await new Promise((resolve) => setTimeout(resolve, POLL_MS));
+    }
+    return { ready: false, fatal: true, reason: 'METRO_BUNDLE_PREWARM_TIMEOUT', detail: `Metro bundle prewarm exceeded ${READY_TIMEOUT_MS}ms.` };
+  };
   for (const definition of definitions) {
     if (definition.service === 'metro' && !fixturesReady) {
       await bootstrapFixtures(product, env, state);
@@ -676,6 +718,14 @@ async function startProduct(product) {
       throw new Error(`Cannot start ${product}/${definition.service}: port ${owner?.port || definition.ports[0]} is owned by PID ${owner?.pid || 'unknown'} with an identity mismatch; manual review required.`);
     }
     if (previous && ownership.owned && (await waitForPorts(definition.ports, 1000))) {
+      if (definition.service === 'metro') {
+        const prewarm = await awaitMetroPrewarm();
+        if (!prewarm.ready) throw new Error(`Cannot use ${product}/metro: ${prewarm.reason || 'Metro bundle prewarm failed'}. ${prewarm.detail || ''}`.trim());
+        previous.bundlePrewarm = prewarm.bundlePrewarm;
+        previous.metroProcessReadyAt = previous.metroProcessReadyAt || metroProcessReadyAt || new Date().toISOString();
+        saveState(state);
+        process.stdout.write(`PREWARMED ${product}/metro bundle (${prewarm.bundlePrewarm.bundlePrewarmElapsedMs}ms)\n`);
+      }
       if (ownership.recovered) saveState(state);
       process.stdout.write(`READY ${product}/${definition.service} PID=${previous.pid} (already owned)\n`);
       continue;
@@ -699,7 +749,7 @@ async function startProduct(product) {
     const readiness = await waitForServiceReady(
       service,
       READY_TIMEOUT_MS,
-      definition.service === 'metro' ? () => metroServedRuntimeReady(env) : null,
+      definition.service === 'metro' ? ensureMetroPrewarmed : null,
     );
     if (!readiness.ready) {
       reportServiceFailure(record, readiness);
@@ -712,6 +762,11 @@ async function startProduct(product) {
     record.processTree = processTreeMetadata(record.pid);
     record.processTreePids = record.processTree.map((item) => item.pid);
     record.processStartTimes = Object.fromEntries(record.processTree.map((item) => [String(item.pid), item.startedAt]));
+    if (definition.service === 'metro') record.metroProcessReadyAt = metroProcessReadyAt || new Date().toISOString();
+    if (definition.service === 'metro' && metroPrewarmResult?.ok) {
+      record.bundlePrewarm = metroPrewarmResult;
+      process.stdout.write(`PREWARMED ${product}/metro bundle (${metroPrewarmResult.bundlePrewarmElapsedMs}ms)\n`);
+    }
     saveState(state);
     started.push(record);
     process.stdout.write(`Ready ${product}/${definition.service} (PID ${record.pid})\n`);
@@ -890,6 +945,7 @@ module.exports = {
   processBelongsTo,
   maestroActivity,
   waitForServiceReady,
+  prewarmCanonicalMetro,
   assertPortsAvailable,
   fixtureCommands,
   spawnService,

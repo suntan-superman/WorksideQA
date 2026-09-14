@@ -18,6 +18,15 @@ test('clean shell loads the existing EAS contract and real Android runtime mappi
   assert.equal(result.appId, 'com.merxus.mobile.qa');
 });
 
+test('the same canonical runtime maps localhost endpoints for iOS simulator prewarm', async () => {
+  const result = await verifyExpoConfig(qaConfig, mobileRoot, 'iOS prewarm', 'ios');
+  assert.equal(result.environment, 'maestro');
+  assert.equal(result.backendUrl, 'http://127.0.0.1:8787');
+  assert.equal(result.authEmulatorHost, '127.0.0.1:9099');
+  assert.equal(result.firestoreEmulatorHost, '127.0.0.1:8080');
+  assert.equal(result.storageEmulatorHost, '127.0.0.1:9199');
+});
+
 test('plain Metro production defaults fail; QA native app identity alone is insufficient', async () => {
   const production = resolvedExpoConfig(mobileRoot, { ...cleanEnv, EXPO_NO_DOTENV: '1' });
   assert.equal(production.extra.ENVIRONMENT, 'production');
