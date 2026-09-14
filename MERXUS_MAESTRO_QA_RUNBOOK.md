@@ -72,13 +72,23 @@ npm run qa:restart:sageset:firebase
 
 Ownership is stored locally (and ignored by Git) in
 `.worksideqa/runtime-state.json`. Each record contains product, service, role,
-PID, start time, working directory, executable/arguments, expected ports, log
-path, and a derived runtime hash. The product entry also records the fixture
+root PID, recorded descendant PIDs with process start times/executable/command
+metadata, working directory, executable/arguments, expected ports, log path,
+startup generation, and a derived runtime hash. The product entry also records the fixture
 generation, bootstrap timestamp, scenario, reset decision, auth verification,
 and backend identity verification. `qa:status` reports actual port owners and
 device/app state; `qa:stop` refuses to kill an unrecorded or command-mismatched
 process. After a reboot, run `qa:start` followed by strict doctor twice from
 clean shells before resuming Slice 25 certification.
+
+If a launcher wrapper exits while its recorded child continues serving, status
+reports `RECOVERED` after matching the child PID and stored process identity;
+the state file is refreshed with the live tree. A port is never adopted merely
+because it is open. A PID outside the recorded tree, a recycled PID, or changed
+identity is reported as `CONFLICT` and is left untouched for manual review.
+`qa:stop` and restart helpers use the same verified tree check before issuing
+termination; insufficient OS rights therefore produce a refusal rather than
+killing an unverified process.
 
 ### Standalone Maestro commands
 

@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { parseArgs, serviceDefinitions, commandMatches, canonicalMerxusMetroEnvironment, waitForServiceReady, assertPortsAvailable, fixtureCommands, spawnService } = require('../src/orchestrator');
+const { parseArgs, serviceDefinitions, commandMatches, canonicalMerxusMetroEnvironment, waitForServiceReady, assertPortsAvailable, fixtureCommands, spawnService, reconcileRecord } = require('../src/orchestrator');
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -62,6 +62,40 @@ test('ownership matching rejects unrelated recorded PIDs on Windows semantics', 
   if (process.platform !== 'win32') return;
   assert.equal(commandMatches(record, { CommandLine: 'npm.cmd exec -- expo start --dev-client' }), true);
   assert.equal(commandMatches(record, { CommandLine: 'node unrelated-server.js' }), false);
+});
+
+test('reconciles a dead wrapper when a recorded descendant still owns the port', () => {
+  const record = {
+    pid: 100, rootPid: 100, service: 'firebase', executable: 'firebase.cmd', args: ['emulators:start'], ports: [9099],
+    processTree: [{ pid: 100, executable: 'firebase.cmd', commandLine: 'firebase.cmd emulators:start', startedAt: 'root' },
+      { pid: 200, executable: 'java.exe', commandLine: 'java -jar firebase-emulator.jar', startedAt: 'child' }],
+  };
+  const infos = new Map([[200, { pid: 200, Name: 'java.exe', CommandLine: 'java -jar firebase-emulator.jar', CreationDate: 'child', ParentProcessId: 1 }]]);
+  const result = reconcileRecord(record, () => 200, (pid) => infos.get(pid), (pid) => pid === 200);
+  assert.equal(result.state, 'RECOVERED');
+  assert.equal(result.owned, true);
+  assert.ok(record.reconciledAt);
+});
+
+test('marks a changed descendant PID as conflict rather than adopting by port', () => {
+  const record = {
+    pid: 100, rootPid: 100, service: 'firebase', executable: 'firebase.cmd', args: ['emulators:start'], ports: [9099],
+    processTree: [{ pid: 200, executable: 'java.exe', commandLine: 'java -jar firebase-emulator.jar', startedAt: 'child' }],
+  };
+  const result = reconcileRecord(record, () => 201, (pid) => pid === 201 ? { pid, Name: 'java.exe', CommandLine: 'java -jar firebase-emulator.jar', CreationDate: 'new' } : null, (candidate) => candidate === 201);
+  assert.equal(result.state, 'CONFLICT');
+});
+
+test('foreign process on an expected port remains a conflict', () => {
+  const record = { pid: 100, rootPid: 100, service: 'backend', executable: 'npm.cmd', args: ['run', 'serve'], ports: [8787], processTree: [{ pid: 100, executable: 'npm.cmd', commandLine: 'npm.cmd run serve', startedAt: 'root' }] };
+  const result = reconcileRecord(record, () => 999, (pid) => pid === 100 ? { pid, Name: 'npm.cmd', CommandLine: 'npm.cmd run serve', CreationDate: 'root' } : { pid, Name: 'other.exe', CommandLine: 'other.exe --listen 8787', CreationDate: 'foreign' }, (candidate) => [100, 999].includes(candidate));
+  assert.equal(result.state, 'CONFLICT');
+});
+
+test('stale runtime state with no live tree is not running', () => {
+  const record = { pid: 100, rootPid: 100, ports: [8081], processTree: [{ pid: 100, startedAt: 'old' }] };
+  const result = reconcileRecord(record, () => null, () => null, () => false);
+  assert.equal(result.state, 'NOT RUNNING');
 });
 
 test('readiness stops immediately when a child exits before ports are ready', async () => {

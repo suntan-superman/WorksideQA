@@ -42,6 +42,7 @@ Usage:
   npm run qa:status [-- --product merxus|sageset]
   npm run qa:stop [-- --product merxus|sageset]
   npm run qa:restart:merxus:metro
+  npm run qa:restart:merxus:firebase
   npm run qa:restart:merxus:backend
   npm run qa:restart:sageset:firebase
 
@@ -122,7 +123,12 @@ function serviceDefinitions(product, env, tools = null) {
 
 function pidAlive(pid) {
   if (!Number.isInteger(Number(pid)) || Number(pid) <= 0) return false;
-  try { process.kill(Number(pid), 0); return true; } catch { return false; }
+  try { process.kill(Number(pid), 0); return true; } catch (error) {
+    // Windows reports EPERM for a live process when this Node process lacks
+    // query/termination rights. Treat it as alive; processInfo/identity checks
+    // still decide whether it is ours.
+    return error?.code === 'EPERM';
+  }
 }
 
 function processInfo(pid) {
@@ -151,6 +157,76 @@ function processTreePids(rootPid) {
     }
   }
   return [...descendants];
+}
+
+function processTreeMetadata(rootPid, infoResolver = processInfo, treeResolver = processTreePids) {
+  return treeResolver(rootPid).map((pid) => {
+    return normalizeProcessInfo(pid, infoResolver(pid));
+  }).filter((item) => item.pid > 0);
+}
+
+function normalizeProcessInfo(pid, info = {}) {
+  return {
+    pid: Number(pid),
+    parentPid: Number(info.ParentProcessId || info.parentProcessId || 0) || null,
+    executable: String(info.Name || info.name || info.executable || ''),
+    commandLine: String(info.CommandLine || info.commandLine || info.commandline || ''),
+    startedAt: info.CreationDate || info.creationDate || info.startedAt || null,
+  };
+}
+
+function normalizedCommand(value) {
+  return String(value || '').replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
+function processIdentityMatches(expected, actual) {
+  if (!expected || !actual || Number(expected.pid) !== Number(actual.pid)) return false;
+  // CreationDate protects against accepting a recycled PID.  A missing value
+  // is tolerated only for legacy records created before metadata was stored.
+  if (expected.startedAt && actual.startedAt && String(expected.startedAt) !== String(actual.startedAt)) return false;
+  if (expected.executable && actual.executable && normalizedCommand(expected.executable) !== normalizedCommand(actual.executable)) return false;
+  if (expected.commandLine && actual.commandLine && normalizedCommand(expected.commandLine) !== normalizedCommand(actual.commandLine)) return false;
+  return true;
+}
+
+function reconcileRecord(record, ownerResolver = portOwner, infoResolver = processInfo, aliveResolver = pidAlive) {
+  if (!record) return { state: 'NOT RUNNING', owned: false, recovered: false, portOwners: [] };
+  const storedTree = Array.isArray(record.processTree) ? record.processTree :
+    (Array.isArray(record.processTreePids) ? record.processTreePids.map((pid) => ({ pid })) : []);
+  const currentTree = storedTree.map((expected) => {
+    const pid = Number(expected.pid);
+    if (!aliveResolver(pid)) return null;
+    const actual = normalizeProcessInfo(pid, infoResolver(pid));
+    return processIdentityMatches(expected, actual) ? { ...expected, ...actual, pid } : { mismatch: true, expected, actual };
+  }).filter(Boolean);
+  const mismatched = currentTree.find((item) => item.mismatch);
+  const portOwners = (record.ports || record.port ? (record.ports || [record.port]) : []).map((port) => ({ port, pid: ownerResolver(port) }));
+  const known = new Map(currentTree.filter((item) => !item.mismatch).map((item) => [Number(item.pid), item]));
+  const foreign = portOwners.find((item) => item.pid && !known.has(Number(item.pid)) && Number(item.pid) !== Number(record.pid));
+  if (foreign || mismatched) {
+    return {
+      state: 'CONFLICT', owned: false, recovered: false, portOwners, mismatch: mismatched || foreign,
+      reason: foreign ? `port ${foreign.port} owner PID ${foreign.pid} is not in the recorded tree` : `recorded PID ${mismatched.expected?.pid} identity changed`,
+    };
+  }
+  const rootAlive = aliveResolver(record.rootPid || record.pid);
+  const rootOwned = rootAlive && commandMatches(record, infoResolver(record.rootPid || record.pid));
+  const descendantPort = portOwners.some((item) => item.pid && Number(item.pid) !== Number(record.pid) && known.has(Number(item.pid)));
+  const recovered = !rootOwned && (currentTree.some((item) => Number(item.pid) !== Number(record.pid)) || descendantPort);
+  if (rootOwned) return { state: 'RUNNING', owned: true, recovered: false, portOwners, currentTree };
+  if (recovered) {
+    record.rootPid = Number(record.rootPid || record.pid);
+    record.startupGeneration = record.startupGeneration || `${record.startedAt || 'legacy'}-${record.runtimeHash || 'unknown'}`;
+    record.processTree = currentTree.filter((item) => !item.mismatch).map((item) => ({
+      pid: Number(item.pid), parentPid: Number(item.ParentProcessId || item.parentPid || 0) || null,
+      executable: String(item.Name || item.executable || ''), commandLine: String(item.CommandLine || item.commandLine || ''),
+      startedAt: item.CreationDate || item.creationDate || item.startedAt || null,
+    }));
+    record.processTreePids = record.processTree.map((item) => item.pid);
+    record.reconciledAt = new Date().toISOString();
+    return { state: 'RECOVERED', owned: true, recovered: true, portOwners, currentTree, reason: 'matched recorded descendant identity' };
+  }
+  return { state: 'NOT RUNNING', owned: false, recovered: false, portOwners, currentTree };
 }
 
 function commandMatches(record, info) {
@@ -249,12 +325,15 @@ function finishSpawnedService(child, definition, product, logPath) {
   });
   child.unref();
   const runtimeIdentity = `${definition.cwd}|${definition.executable}|${definition.args.join(' ')}`;
+  const startupGeneration = `${Date.now()}-${crypto.randomBytes(6).toString('hex')}`;
   return {
     record: {
       product, service: definition.service, role: definition.role, pid: child.pid,
+    rootPid: child.pid, startupGeneration,
     startedAt: new Date().toISOString(), cwd: definition.cwd,
     executable: definition.executable, path: definition.executable, args: definition.args, port: definition.ports[0], ports: definition.ports,
     logPath, runtimeHash: crypto.createHash('sha256').update(runtimeIdentity).digest('hex'),
+    processTreePids: [child.pid], processTree: [],
     },
     child,
     getExitInfo: () => exitInfo,
@@ -401,7 +480,10 @@ async function bootstrapFixtures(product, env, state) {
 
 function ownedRecord(record) {
   if (!record || !pidAlive(record.pid)) return false;
-  return commandMatches(record, processInfo(record.pid));
+  const info = processInfo(record.pid);
+  const rootEntry = Array.isArray(record.processTree) && record.processTree.find((item) => Number(item.pid) === Number(record.rootPid || record.pid));
+  if (rootEntry && processIdentityMatches(rootEntry, normalizeProcessInfo(record.pid, info))) return true;
+  return commandMatches(record, info);
 }
 
 function processBelongsTo(record, pid) {
@@ -425,10 +507,22 @@ function processBelongsTo(record, pid) {
   return false;
 }
 
+function verifiedProcessTreePids(record) {
+  const tree = Array.isArray(record?.processTree) ? record.processTree :
+    (Array.isArray(record?.processTreePids) ? record.processTreePids.map((pid) => ({ pid })) : []);
+  return tree.map((expected) => {
+    const pid = Number(expected.pid);
+    if (!pidAlive(pid)) return null;
+    const actual = processInfo(pid);
+    return processIdentityMatches(expected, { ...actual, pid }) ? pid : null;
+  }).filter(Boolean);
+}
+
 function terminateRecord(record) {
-  const pids = Array.isArray(record?.processTreePids) ? record.processTreePids.map(Number).filter((pid) => pidAlive(pid)) : [];
+  const pids = verifiedProcessTreePids(record);
   const leaderOwned = ownedRecord(record);
-  const ownedDescendants = pids.filter((pid) => pid !== Number(record?.pid) && commandMatches(record, processInfo(pid)));
+  const hasIdentityMetadata = Array.isArray(record?.processTree) && record.processTree.some((item) => item && item.executable);
+  const ownedDescendants = pids.filter((pid) => pid !== Number(record?.pid) && (hasIdentityMetadata || commandMatches(record, processInfo(pid))));
   if (!leaderOwned && !ownedDescendants.length) return { stopped: false, reason: 'process is no longer owned or is not running' };
   if (process.platform === 'win32') {
     const targets = leaderOwned ? [Number(record.pid)] : ownedDescendants;
@@ -445,7 +539,14 @@ function terminateRecord(record) {
 function assertPortsAvailable(definition, existingRecord, ownerResolver = portOwner) {
   for (const port of definition.ports) {
     const owner = ownerResolver(port);
-    if (owner && (!existingRecord || Number(existingRecord.pid) !== owner)) {
+    const ownerInfo = owner ? processInfo(owner) : null;
+    const treeEntry = existingRecord && Array.isArray(existingRecord.processTree)
+      ? existingRecord.processTree.find((item) => Number(item.pid) === Number(owner)) : null;
+    const known = existingRecord && Number(owner) > 0 && (
+      (Number(existingRecord.pid) === Number(owner) && commandMatches(existingRecord, ownerInfo)) ||
+      (treeEntry && processIdentityMatches(treeEntry, { ...ownerInfo, pid: owner }) && commandMatches(existingRecord, ownerInfo))
+    );
+    if (owner && !known) {
       throw new Error(`Cannot start ${definition.service}: port ${port} is owned by PID ${owner}, not a WorksideQA-recorded process.`);
     }
   }
@@ -475,12 +576,18 @@ async function startProduct(product) {
       fixturesReady = true;
     }
     const previous = records.find((record) => record.service === definition.service);
-    if (previous && ownedRecord(previous) && (await waitForPorts(definition.ports, 1000))) {
+    const ownership = reconcileRecord(previous);
+    if (ownership.state === 'CONFLICT') {
+      const owner = ownership.portOwners.find((item) => item.pid && (!ownership.mismatch || Number(item.pid) === Number(ownership.mismatch?.pid)));
+      throw new Error(`Cannot start ${product}/${definition.service}: port ${owner?.port || definition.ports[0]} is owned by PID ${owner?.pid || 'unknown'} with an identity mismatch; manual review required.`);
+    }
+    if (previous && ownership.owned && (await waitForPorts(definition.ports, 1000))) {
+      if (ownership.recovered) saveState(state);
       process.stdout.write(`READY ${product}/${definition.service} PID=${previous.pid} (already owned)\n`);
       continue;
     }
-    if (previous && pidAlive(previous.pid)) terminateRecord(previous);
-    assertPortsAvailable(definition, null);
+    if (previous && (pidAlive(previous.rootPid || previous.pid) || ownership.owned)) terminateRecord(previous);
+    assertPortsAvailable(definition, ownership.owned ? previous : null);
     const service = spawnService(definition, product);
     const record = service.record;
     const existingIndex = records.findIndex((item) => item.service === definition.service);
@@ -500,7 +607,9 @@ async function startProduct(product) {
       saveState(state);
       throw new Error(`${product}/${definition.service} failed before readiness.`);
     }
-    record.processTreePids = processTreePids(record.pid);
+    record.processTree = processTreeMetadata(record.pid);
+    record.processTreePids = record.processTree.map((item) => item.pid);
+    record.processStartTimes = Object.fromEntries(record.processTree.map((item) => [String(item.pid), item.startedAt]));
     saveState(state);
     started.push(record);
     process.stdout.write(`Ready ${product}/${definition.service} (PID ${record.pid})\n`);
@@ -544,9 +653,11 @@ function statusRows(product, env) {
   for (const key of products) {
     for (const definition of serviceDefinitions(key, env)) {
       const record = state.products[key]?.services?.find((item) => item.service === definition.service) || null;
-      const owned = ownedRecord(record);
-      const owners = definition.ports.map((port) => ({ port, pid: portOwner(port) }));
-      rows.push({ product: key, service: definition.service, role: definition.role, running: owned && owners.every((item) => !item.pid || processBelongsTo(record, item.pid)), pid: record?.pid || null, startTime: record?.startedAt || null, expectedPorts: definition.ports, actualPortOwners: owners, runtimeMode: key === 'merxus' ? 'maestro' : 'emulator', maestroState, owner: owned ? 'WorksideQA' : record ? 'unknown' : 'none' });
+      const ownership = reconcileRecord(record);
+      const owners = ownership.portOwners.length ? ownership.portOwners : definition.ports.map((port) => ({ port, pid: portOwner(port) }));
+      const running = ownership.owned && owners.every((item) => !item.pid || processBelongsTo(record, item.pid) || (record?.processTreePids || []).map(Number).includes(Number(item.pid)));
+      if (record && ownership.recovered) saveState(state);
+      rows.push({ product: key, service: definition.service, role: definition.role, running, state: ownership.state, reason: ownership.reason || null, pid: record?.pid || null, startTime: record?.startedAt || null, expectedPorts: definition.ports, actualPortOwners: owners, runtimeMode: key === 'merxus' ? 'maestro' : 'emulator', maestroState, owner: ownership.state === 'CONFLICT' ? 'conflict' : ownership.owned ? 'WorksideQA' : record ? 'unknown' : 'none' });
     }
   }
   if (product === 'merxus' || !product) {
@@ -562,10 +673,10 @@ function statusRows(product, env) {
 
 function printStatus(rows) {
   for (const row of rows) {
-    const state = row.running ? 'RUNNING' : 'NOT RUNNING';
+    const state = row.state === 'CONFLICT' ? 'CONFLICT' : row.state === 'RECOVERED' ? 'RECOVERED' : row.running ? 'RUNNING' : 'NOT RUNNING';
     const ports = row.expectedPorts.length ? row.expectedPorts.join(',') : '-';
     const owners = row.actualPortOwners.length ? row.actualPortOwners.map((item) => `${item.port}:${item.pid || '-'}`).join(',') : '-';
-    process.stdout.write(`${state.padEnd(12)} ${row.product.padEnd(8)} ${row.service.padEnd(16)} PID=${row.pid || '-'} start=${row.startTime || '-'} expected=${ports} owner=${owners} mode=${row.runtimeMode} maestro=${row.maestroState || '-'}${row.emulatorState ? ` emulator=${row.emulatorState}` : ''}${row.appId ? ` appId=${row.appId}` : ''}${row.appInstalled != null ? ` app=${row.appInstalled ? 'installed' : 'missing'}` : ''}\n`);
+    process.stdout.write(`${state.padEnd(12)} ${row.product.padEnd(8)} ${row.service.padEnd(16)} PID=${row.pid || '-'} start=${row.startTime || '-'} expected=${ports} owner=${owners} mode=${row.runtimeMode} maestro=${row.maestroState || '-'}${row.reason ? ` reason=${row.reason}` : ''}${row.emulatorState ? ` emulator=${row.emulatorState}` : ''}${row.appId ? ` appId=${row.appId}` : ''}${row.appInstalled != null ? ` app=${row.appInstalled ? 'installed' : 'missing'}` : ''}\n`);
   }
   const ready = rows.filter((row) => row.service !== 'android-device').every((row) => row.running) && rows.filter((row) => row.service === 'android-device').every((row) => row.running && row.appInstalled !== false);
   process.stdout.write(`\n${ready ? 'READY' : 'NOT READY'}\n`);
@@ -577,8 +688,10 @@ function stopProduct(product) {
   for (const key of products) {
     const services = state.products[key]?.services || [];
     for (const record of services) {
+      const ownership = reconcileRecord(record);
+      if (ownership.recovered) saveState(state);
       const outcome = terminateRecord(record);
-      process.stdout.write(`${outcome.stopped ? 'Stopped' : 'Skipped'} ${key}/${record.service} PID=${record.pid}${outcome.reason ? ` (${outcome.reason})` : ''}\n`);
+      process.stdout.write(`${outcome.stopped ? 'Stopped' : 'Skipped'} ${key}/${record.service} PID=${record.pid} state=${ownership.state}${outcome.reason ? ` (${outcome.reason})` : ''}\n`);
     }
     if (state.products[key]) state.products[key].services = [];
   }
@@ -590,8 +703,13 @@ async function restartProductService(product, service) {
   const state = loadState();
   const record = state.products[product]?.services?.find((item) => item.service === service);
   if (record) {
+    const ownership = reconcileRecord(record);
+    if (ownership.state === 'CONFLICT') {
+      const owner = ownership.portOwners.find((item) => item.pid);
+      throw new Error(`Refusing to restart ${product}/${service}: port ${owner?.port || service} is CONFLICT (PID ${owner?.pid || 'unknown'} identity mismatch).`);
+    }
     const outcome = terminateRecord(record);
-    if (!outcome.stopped && pidAlive(record.pid)) throw new Error(`Refusing to restart ${product}/${service}: recorded PID is not owned.`);
+    if (!outcome.stopped && (pidAlive(record.rootPid || record.pid) || verifiedProcessTreePids(record).length)) throw new Error(`Refusing to restart ${product}/${service}: verified process tree could not be stopped (${outcome.reason || 'unknown termination failure'}). No unverified process was touched.`);
     state.products[product].services = state.products[product].services.filter((item) => item !== record);
     saveState(state);
   }
@@ -636,6 +754,9 @@ module.exports = {
   serviceDefinitions,
   processInfo,
   processTreePids,
+  processTreeMetadata,
+  processIdentityMatches,
+  reconcileRecord,
   commandMatches,
   processBelongsTo,
   maestroActivity,
@@ -648,4 +769,5 @@ module.exports = {
   startProduct,
   stopProduct,
   terminateRecord,
+  verifiedProcessTreePids,
 };

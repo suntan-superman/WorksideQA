@@ -83,6 +83,7 @@
     "qa:start": "node packages/qa-core/src/orchestrator.js start",
     "qa:status": "node packages/qa-core/src/orchestrator.js status",
     "qa:stop": "node packages/qa-core/src/orchestrator.js stop",
+    "qa:restart:merxus:firebase": "node packages/qa-core/src/orchestrator.js restart --product merxus --service firebase",
     "qa:restart:merxus:metro": "node packages/qa-core/src/orchestrator.js restart --product merxus --service metro",
     "qa:restart:merxus:backend": "node packages/qa-core/src/orchestrator.js restart --product merxus --service backend",
     "qa:restart:sageset:firebase": "node packages/qa-core/src/orchestrator.js restart --product sageset --service firebase",
