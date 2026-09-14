@@ -196,6 +196,11 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
   let deterministicTextResetApplied = false;
   const keyboardDismissRules = selectedDevice.platform === 'ios' && selectedDevice.kind === 'simulator'
     ? selectedDevice.keyboardDismissAfterEdit || [] : [];
+  // Some iOS ScrollView states can resume at the bottom of a long form.  A
+  // bounded, metadata-driven reverse traversal lets the iOS runtime recover
+  // without changing the platform-neutral source flow or Android behavior.
+  const iosTraversalFallbacks = selectedDevice.platform === 'ios'
+    ? flow.iosTraversalFallbacks || [] : [];
   const androidImeDismissRules = selectedDevice.platform === 'android'
     ? flow.androidImeDismissAfterEdit || [] : [];
   const androidImeDismissBoundaries = [];
@@ -284,6 +289,36 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
           runtimeCommands.push({ assertVisible: { id: field.id, text: `^${inputValue}$` } });
         }
         commandIndex += 2;
+        continue;
+      }
+      const scrollTargetId = command?.scrollUntilVisible?.element?.id;
+      const traversalFallback = scrollTargetId
+        ? iosTraversalFallbacks.find((rule) => rule.targetId === scrollTargetId)
+        : null;
+      if (traversalFallback) {
+        // The primary traversal is optional so a resume state that has already
+        // overscrolled to the bottom can be recovered by the reverse pass.
+        runtimeCommands.push({
+          scrollUntilVisible: {
+            ...command.scrollUntilVisible,
+            element: { ...command.scrollUntilVisible.element },
+            optional: true,
+          },
+        });
+        runtimeCommands.push({
+          runFlow: {
+            when: { notVisible: { id: scrollTargetId } },
+            commands: [{
+              scrollUntilVisible: {
+                ...command.scrollUntilVisible,
+                element: { ...command.scrollUntilVisible.element },
+                direction: traversalFallback.fallbackDirection,
+                ...(traversalFallback.timeoutMs ? { timeout: traversalFallback.timeoutMs } : {}),
+              },
+            }],
+          },
+        });
+        appendOverlaySweepers((rule) => rule.checkpoints.afterTapIds?.includes(command?.tapOn?.id));
         continue;
       }
       runtimeCommands.push(command);

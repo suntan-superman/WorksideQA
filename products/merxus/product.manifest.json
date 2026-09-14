@@ -244,6 +244,13 @@
             "timeoutMs": 5000
           }
         ],
+        "iosTraversalFallbacks": [
+          {
+            "targetId": "settings.sms.reload",
+            "fallbackDirection": "UP",
+            "timeoutMs": 20000
+          }
+        ],
         "account": "user-a",
         "requiredEnv": ["MERXUS_MAESTRO_OWNER_A_EMAIL", "MERXUS_MAESTRO_OWNER_A_PASSWORD"],
         "timeoutMs": 180000,

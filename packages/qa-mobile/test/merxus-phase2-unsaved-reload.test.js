@@ -78,6 +78,23 @@ for (const [name, id] of [['androidEmulator', 'emulator-5554'], ['iosSimulator',
     assert.equal(generated.slice(generatedEdit).findIndex((command) => command === 'hideKeyboard'), -1, 'iOS runtime replaces hideKeyboard');
     assert.ok(generated.slice(generatedEdit).some((command) => command.tapOn?.id === 'settings.sms.qa-dismiss-keyboard'));
     assert.equal(generated.slice(generatedEdit).some((command) => command.tapOn?.id === 'screen.settings.ready'), false, 'iOS keeps its existing dismiss helper');
+    const reloadScrollIndex = generated.findIndex((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.reload');
+    assert.ok(reloadScrollIndex >= 0, 'iOS keeps semantic Reload traversal');
+    assert.equal(generated[reloadScrollIndex].scrollUntilVisible.optional, true, 'primary iOS traversal may recover from an overscrolled resume state');
+    const fallback = generated[reloadScrollIndex + 1];
+    assert.deepEqual(fallback, {
+      runFlow: {
+        when: { notVisible: { id: 'settings.sms.reload' } },
+        commands: [{
+          scrollUntilVisible: {
+            element: { id: 'settings.sms.reload' },
+            direction: 'UP',
+            timeout: 20000,
+            centerElement: true,
+          },
+        }],
+      },
+    }, 'iOS resumes with a bounded reverse traversal when the primary scan reaches the bottom');
   }
 }
 for (const suite of ['phase2-retry', 'phase2-retry-delay']) {
