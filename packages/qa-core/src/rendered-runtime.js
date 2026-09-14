@@ -291,12 +291,24 @@ function captureObserverProcesses(adb, deviceId, execute = spawnCommandSync, env
     const result = execute(adb, ['-s', deviceId, 'shell', 'ps', '-A'], { env, encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
     deviceOutput = String(result?.stdout || '');
   } catch { /* diagnostics must not prevent a readiness probe */ }
+  let instrumentationOutput = '';
+  try {
+    const result = execute(adb, ['-s', deviceId, 'shell', 'dumpsys', 'activity', 'instrumentation'], { env, encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
+    instrumentationOutput = String(result?.stdout || '');
+  } catch { /* diagnostics must not prevent a readiness probe */ }
+  let installedInstrumentationOutput = '';
+  try {
+    const result = execute(adb, ['-s', deviceId, 'shell', 'pm', 'list', 'instrumentation'], { env, encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
+    installedInstrumentationOutput = String(result?.stdout || '');
+  } catch { /* diagnostics must not prevent a readiness probe */ }
   const combined = `${hostOutput}\n${deviceOutput}`;
   const matching = combined.split(/\r?\n/).filter((line) => /maestro|dev\.mobile\.maestro|androidjunitrunner|uiautomator/i.test(line));
   return {
     hostProcesses: hostOutput.split(/\r?\n/).filter((line) => /maestro|java/i.test(line)).slice(-80),
     deviceProcesses: deviceOutput.split(/\r?\n/).filter((line) => /maestro|instrumentation|uiautomator/i.test(line)).slice(-80),
     activeDriverProcesses: matching.slice(-80),
+    instrumentationState: instrumentationOutput.slice(-12_000),
+    installedInstrumentation: installedInstrumentationOutput.split(/\r?\n/).filter(Boolean).slice(-80),
   };
 }
 
