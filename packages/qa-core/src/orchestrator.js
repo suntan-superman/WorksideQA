@@ -203,28 +203,47 @@ async function waitForPorts(ports, timeoutMs = READY_TIMEOUT_MS) {
 function spawnService(definition, product) {
   fs.mkdirSync(LOG_DIRECTORY, { recursive: true });
   const logPath = path.join(LOG_DIRECTORY, `${definition.service}.log`);
-  const logStream = fs.createWriteStream(logPath, { flags: 'a' });
-  const child = spawn(definition.executable, definition.args, {
-    cwd: definition.cwd,
-    env: { ...definition.env, NO_UPDATE_NOTIFIER: '1' },
-    // Batch shims on Windows create a cmd.exe wrapper. Keeping that wrapper
-    // attached preserves stdout/stderr pipes for diagnostics; taskkill /T
-    // still provides process-tree cleanup. POSIX uses a detached group so the
-    // recorded leader can be terminated as one tree.
-    detached: process.platform !== 'win32',
-    windowsHide: true,
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
+  // Give the long-running child its own log file descriptors. Keeping a
+  // parent-owned stdout/stderr relay open would leave active pipe handles in
+  // the qa:start process after readiness, preventing the CLI from returning
+  // to the caller. The descriptors are closed in the parent immediately
+  // after spawn; the child retains the inherited file handles for its
+  // lifetime, so startup/failure logs remain available without pinning the
+  // orchestrator process.
+  let stdoutFd;
+  let stderrFd;
+  try {
+    stdoutFd = fs.openSync(logPath, 'a');
+    stderrFd = fs.openSync(logPath, 'a');
+    const child = spawn(definition.executable, definition.args, {
+      cwd: definition.cwd,
+      env: { ...definition.env, NO_UPDATE_NOTIFIER: '1' },
+      // Services must survive the short-lived qa:start CLI on every platform.
+      // Windows uses an independent process group as well; ownership and
+      // cleanup remain safe because the complete recorded tree is terminated
+      // with taskkill /T when qa:stop is requested.
+      detached: true,
+      windowsHide: true,
+      stdio: ['ignore', stdoutFd, stderrFd],
+    });
+    return finishSpawnedService(child, definition, product, logPath);
+  } finally {
+    if (stdoutFd !== undefined) {
+      try { fs.closeSync(stdoutFd); } catch { /* child inherited the fd */ }
+    }
+    if (stderrFd !== undefined) {
+      try { fs.closeSync(stderrFd); } catch { /* child inherited the fd */ }
+    }
+  }
+}
+
+function finishSpawnedService(child, definition, product, logPath) {
   let exitInfo = null;
-  child.stdout?.on('data', (chunk) => logStream.write(chunk));
-  child.stderr?.on('data', (chunk) => logStream.write(chunk));
   child.once('error', (error) => {
     exitInfo = { code: null, signal: null, error: error.message };
-    logStream.end();
   });
   child.once('exit', (code, signal) => {
     exitInfo = { code, signal };
-    logStream.end();
   });
   child.unref();
   const runtimeIdentity = `${definition.cwd}|${definition.executable}|${definition.args.join(' ')}`;
@@ -617,6 +636,7 @@ module.exports = {
   waitForServiceReady,
   assertPortsAvailable,
   fixtureCommands,
+  spawnService,
   portOwner,
   statusRows,
   startProduct,

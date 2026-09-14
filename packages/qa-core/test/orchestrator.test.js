@@ -1,6 +1,8 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { parseArgs, serviceDefinitions, commandMatches, canonicalMerxusMetroEnvironment, waitForServiceReady, assertPortsAvailable, fixtureCommands } = require('../src/orchestrator');
+const { parseArgs, serviceDefinitions, commandMatches, canonicalMerxusMetroEnvironment, waitForServiceReady, assertPortsAvailable, fixtureCommands, spawnService } = require('../src/orchestrator');
+const fs = require('node:fs');
+const path = require('node:path');
 
 test('orchestrator parses lifecycle and product arguments', () => {
   assert.deepEqual(parseArgs(['start', '--product', 'merxus']), {
@@ -80,4 +82,27 @@ test('fixture bootstrap reuses product-owned reset and verification commands', (
   const sageset = fixtureCommands('sageset', 'sageset-maestro-worksideqa-start-test');
   assert.equal(sageset.scenario, 'clean');
   assert.ok(sageset.reset.includes('reset:maestro-fixtures'));
+});
+
+test('long-running service logging does not retain parent stdout/stderr pipes', async () => {
+  const serviceName = `orchestrator-test-${process.pid}-${Date.now()}`;
+  const logPath = path.join(process.cwd(), '.worksideqa', 'logs', `${serviceName}.log`);
+  const service = spawnService({
+    service: serviceName,
+    role: 'test-service',
+    cwd: process.cwd(),
+    executable: process.execPath,
+    args: ['-e', "process.stdout.write('service-ready\\n'); setTimeout(() => {}, 30000)"],
+    ports: [],
+  }, 'test');
+  try {
+    assert.equal(service.child.stdout, null);
+    assert.equal(service.child.stderr, null);
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    assert.match(fs.readFileSync(logPath, 'utf8'), /service-ready/);
+  } finally {
+    service.child.kill();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    try { fs.unlinkSync(logPath); } catch {}
+  }
 });
