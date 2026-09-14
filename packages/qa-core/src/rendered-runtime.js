@@ -486,6 +486,22 @@ async function waitForRenderedRuntime(options = {}) {
     readHierarchy || options.allowSecondaryHierarchy || options.readHierarchyResult
   );
   if (!secondaryHierarchyEnabled) {
+    if (!state.appPid) {
+      return {
+        ...appReadinessFailure('APP_PROCESS_EXITED', state, startedAt, timeoutMs, {
+          probeEndMs: now(), qaRootReadyAt: new Date(rootReadyAt).toISOString(),
+          observerAttempts: [observerAttempt], launchDiagnostics: { preparation: launchPreparation, launch },
+        }),
+      };
+    }
+    if (state.launcherForeground) {
+      return {
+        ...appReadinessFailure('LAUNCHER_FOREGROUND', state, startedAt, timeoutMs, {
+          probeEndMs: now(), qaRootReadyAt: new Date(rootReadyAt).toISOString(),
+          observerAttempts: [observerAttempt], launchDiagnostics: { preparation: launchPreparation, launch },
+        }),
+      };
+    }
     const readyAt = now();
     return {
       ok: true,

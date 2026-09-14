@@ -228,6 +228,20 @@ test('normal rendered readiness does not start a second adb hierarchy observer',
   assert.equal(calls.some((args) => args.includes('uiautomator')), false);
 });
 
+test('single-observer readiness still rejects a dead app after Maestro exits', async () => {
+  let stateReads = 0;
+  const report = await waitForRenderedRuntime(readinessOptions({
+    readState: () => {
+      stateReads += 1;
+      return stateReads < 3
+        ? { appPid: 4321, appForeground: true, launcherForeground: false, activityText: 'com.merxus.mobile.qa' }
+        : { appPid: null, appForeground: false, launcherForeground: false, activityText: '' };
+    },
+  }));
+  assert.equal(report.ok, false);
+  assert.equal(report.reason, 'APP_PROCESS_EXITED');
+});
+
 function readinessOptions(overrides = {}) {
   let fakeNow = 0;
   const execute = (_command, args) => {
