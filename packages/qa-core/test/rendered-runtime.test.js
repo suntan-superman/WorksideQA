@@ -10,6 +10,7 @@ const {
   startApplication,
   hierarchySummary,
   captureObserverProcesses,
+  inferFlowReadiness,
   waitForRenderedRuntime,
 } = require('../src/rendered-runtime');
 
@@ -166,6 +167,48 @@ test('hierarchy summary identifies the intermediate QA-root-only state', () => {
   assert.deepEqual(summary.resourceIds, ['qa-environment-root']);
   assert.deepEqual(summary.visibleText, []);
   assert.deepEqual(summary.contentDescriptions, []);
+});
+
+test('single readiness flow reports whether QA root was reached from its terminal assertion', () => {
+  assert.deepEqual(inferFlowReadiness('Assert that id: qa-environment-root is visible... FAILED'), {
+    qaRootSeen: false,
+    lastKnownSelector: null,
+  });
+  assert.deepEqual(inferFlowReadiness('Assert that id: qa-environment-root is visible... COMPLETED\nAssertion is false: id: screen.auth.login is visible'), {
+    qaRootSeen: true,
+    lastKnownSelector: 'qa-environment-root',
+  });
+});
+
+test('foreground app failure includes root/last-selector diagnostics without another observer', async () => {
+  const report = await waitForRenderedRuntime(readinessOptions({
+    runFlowImplementation: async () => ({
+      ok: false,
+      code: 1,
+      signal: null,
+      timedOut: false,
+      output: 'Assert that id: qa-environment-root is visible... COMPLETED\nAssertion is false: id: screen.auth.login is visible',
+    }),
+  }));
+  assert.equal(report.reason, 'APP_FOREGROUND_AND_NOT_READY');
+  assert.equal(report.qaRootSeen, true);
+  assert.equal(report.lastKnownSelector, 'qa-environment-root');
+  assert.equal(report.observerAttempts.length, 1);
+});
+
+test('foreground app failure distinguishes a root that never rendered', async () => {
+  const report = await waitForRenderedRuntime(readinessOptions({
+    runFlowImplementation: async () => ({
+      ok: false,
+      code: 1,
+      signal: null,
+      timedOut: false,
+      output: 'Assert that id: qa-environment-root is visible... FAILED',
+    }),
+  }));
+  assert.equal(report.reason, 'APP_FOREGROUND_AND_NOT_READY');
+  assert.equal(report.qaRootSeen, false);
+  assert.equal(report.lastKnownSelector, null);
 });
 
 test('rendered probe reports root and auth readiness timings without login or reset', async () => {

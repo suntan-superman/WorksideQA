@@ -366,9 +366,13 @@ async function checkMobileRuntime(env, options) {
     const launchSummary = launchDetail && (launchDetail.command || launchDetail.exitCode !== undefined)
       ? `; launchCommand=${launchDetail.displayCommand || launchDetail.command || 'unknown'}; launchExit=${launchDetail.exitCode ?? 'unknown'}${launchDetail.stdout ? `; launchStdout=${String(launchDetail.stdout).slice(-240)}` : ''}${launchDetail.stderr ? `; launchStderr=${String(launchDetail.stderr).slice(-240)}` : ''}`
       : '';
+    const foregroundSummary = String(rendered.foregroundActivity || '')
+      .split(/\r?\n/)
+      .find((line) => /(?:m?ResumedActivity|topResumedActivity|mFocusedApp|topDisplayFocusedRootTask)/i.test(line))
+      || 'unknown';
     checks.push(rendered.ok
       ? result('passed', 'mobile.runtime-rendered', `QA app rendered ${rendered.readySelector} (PID ${rendered.appPid || 'unknown'}) in ${rendered.elapsedMs}ms; launch=${rendered.launchStartedAt}, qaRoot=${rendered.qaRootReadyAt}, appReady=${rendered.appReadyAt}.`, rendered)
-      : result('failed', 'mobile.runtime-rendered', `QA app did not reach rendered readiness (${rendered.reason || 'unknown'}); intermediate=${rendered.intermediateStateKind || 'unknown'}; elapsed=${rendered.elapsedMs}ms${launchSummary}${rendered.diagnosticArtifacts?.hierarchyPath ? `; hierarchy=${rendered.diagnosticArtifacts.hierarchyPath}` : ''}.`, rendered));
+      : result('failed', 'mobile.runtime-rendered', `QA app did not reach rendered readiness (${rendered.reason || 'unknown'}); qaRootSeen=${rendered.qaRootSeen ?? 'unknown'}; lastKnownSelector=${rendered.lastKnownSelector || 'unknown'}; foregroundActivity=${foregroundSummary}; appPid=${rendered.appPid || 'unknown'}; intermediate=${rendered.intermediateStateKind || 'unknown'}; elapsed=${rendered.elapsedMs}ms${launchSummary}${rendered.diagnosticArtifacts?.hierarchyPath ? `; hierarchy=${rendered.diagnosticArtifacts.hierarchyPath}` : ''}.`, rendered));
   }
   return checks;
 }

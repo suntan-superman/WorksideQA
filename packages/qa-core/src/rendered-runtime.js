@@ -266,6 +266,8 @@ function appReadinessFailure(reason, state, startedAt, timeoutMs, details = {}) 
     elapsedMs: finishedAt - startedAt,
     timeoutMs,
     logicalBudgetMs: timeoutMs,
+    qaRootSeen: details.qaRootSeen ?? null,
+    lastKnownSelector: details.lastKnownSelector ?? null,
     failureCode: reason,
     launcherForeground: Boolean(state?.launcherForeground),
     foregroundActivity: state?.activityText || null,
@@ -276,6 +278,19 @@ function appReadinessFailure(reason, state, startedAt, timeoutMs, details = {}) 
 
 function observerFailureMarker(output) {
   return /uiautomationservice\s+already\s+registered|uiautomation(?:service)?\s+(?:startup|registration|connection)|observer\s+(?:failed|timeout|timed out)|hierarchy\s+(?:observer|dump)\s+(?:failed|unavailable)/i.test(String(output || ''));
+}
+
+// Infer only the state proven by the single readiness flow's final output.
+// This avoids starting a competing hierarchy observer after Maestro exits.
+function inferFlowReadiness(output) {
+  const text = String(output || '');
+  const rootFailed = /(?:assert(?:ion)?[^\r\n]*|id:\s*)qa-environment-root[^\r\n]*(?:failed|false|not visible)/i.test(text);
+  const loginFailed = /(?:assert(?:ion)?[^\r\n]*|id:\s*)screen\.auth\.login[^\r\n]*(?:failed|false|not visible)/i.test(text);
+  const dashboardFailed = /(?:assert(?:ion)?[^\r\n]*|id:\s*)screen\.dashboard\.ready[^\r\n]*(?:failed|false|not visible)/i.test(text);
+  const rootCompleted = /id:\s*qa-environment-root[^\r\n]*(?:completed|passed|visible)/i.test(text) && !rootFailed;
+  if (rootFailed) return { qaRootSeen: false, lastKnownSelector: null };
+  if (loginFailed || dashboardFailed || rootCompleted) return { qaRootSeen: true, lastKnownSelector: 'qa-environment-root' };
+  return { qaRootSeen: null, lastKnownSelector: null };
 }
 
 function observerConflictDetails(output, snapshot, source = 'maestro_observer', beforeSnapshot = null, phase = 'unknown') {
@@ -470,6 +485,7 @@ async function waitForRenderedRuntime(options = {}) {
   let state = readState(adb, deviceId, appId, execute, env);
   if (!root.ok) {
     const failureAt = now();
+    const flowReadiness = inferFlowReadiness(root.output);
     let reason;
     if (!state.appPid) reason = beforeObserver.appPid ? 'APP_PROCESS_EXITED' : 'APP_PROCESS_NOT_STARTED';
     else if (/uiautomationservice\s+already\s+registered/i.test(String(root.output || ''))) reason = 'OBSERVER_CONFLICT';
@@ -485,6 +501,8 @@ async function waitForRenderedRuntime(options = {}) {
       observerFailureAt: (reason === 'OBSERVER_FAILURE' || reason === 'OBSERVER_CONFLICT' ? new Date(failureAt).toISOString() : null),
       observerAttempts: [observerAttempt],
       flowOutput: String(root.output || '').slice(-2000),
+      qaRootSeen: flowReadiness.qaRootSeen,
+      lastKnownSelector: flowReadiness.lastKnownSelector,
       launchDiagnostics: { preparation: launchPreparation, launch },
       observerLock: { path: lockPath, owner: observerLock.owner || null },
       observerProcessesBefore,
@@ -633,4 +651,4 @@ async function waitForRenderedRuntime(options = {}) {
   return failed;
 }
 
-module.exports = { DEFAULT_TIMEOUT_MS, readAppState, readUiHierarchy, readUiHierarchyResult, hierarchySummary, captureObserverProcesses, verifyLaunchTarget, prepareApplicationLaunch, startApplication, runFlow, waitForRenderedRuntime };
+module.exports = { DEFAULT_TIMEOUT_MS, readAppState, readUiHierarchy, readUiHierarchyResult, hierarchySummary, captureObserverProcesses, verifyLaunchTarget, prepareApplicationLaunch, startApplication, runFlow, waitForRenderedRuntime, inferFlowReadiness };
