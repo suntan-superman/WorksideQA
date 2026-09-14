@@ -17,6 +17,8 @@ test('loads Merxus and SageSet values without requiring shell exports', () => {
   const { filePath } = fixtureFile([
     '$env:MERXUS_ANDROID_EMULATOR_ID = "emulator-qa"',
     '$env:MERXUS_MAESTRO_OWNER_A_PASSWORD = "secret-a"',
+    '$env:MERXUS_MAESTRO_MANAGER_A_EMAIL = "manager-a@merxus-maestro.test"',
+    '$env:MERXUS_MAESTRO_MANAGER_A_PASSWORD = "secret-manager"',
     '$env:SAGESET_MAESTRO_USER_A_EMAIL = "sage-a@example.test"',
     '$env:SAGESET_MAESTRO_USER_A_PASSWORD = "secret-sage"',
     '$env:NOT_ALLOWED = "must-not-load"',
@@ -24,6 +26,7 @@ test('loads Merxus and SageSet values without requiring shell exports', () => {
   const result = loadLocalQaConfig({ filePath, env: {}, mutate: false });
   assert.equal(result.values.MERXUS_ANDROID_EMULATOR_ID, 'emulator-qa');
   assert.equal(result.values.SAGESET_MAESTRO_USER_A_EMAIL, 'sage-a@example.test');
+  assert.equal(result.values.MERXUS_MAESTRO_MANAGER_A_EMAIL, 'manager-a@merxus-maestro.test');
   assert.equal(result.values.NOT_ALLOWED, undefined);
   assert.ok(result.loadedKeys.includes('MERXUS_ANDROID_EMULATOR_ID'));
 });

@@ -49,8 +49,33 @@ assert.deepEqual(flow.authoritativeResult, {
   crossTenantLeakageCount: 0, successAuditCount: 1, operationReceiptCount: 1,
   tenantBUnchanged: true, revision: 2,
 }, 'backend mutation/audit/idempotency verification contract is unchanged');
+
+const managerFlows = selectFlows(config, { suite: 'phase2-manager-mutation' });
+assert.equal(managerFlows.length, 1);
+const managerFlow = managerFlows[0];
+assert.equal(managerFlow.name, '26-tenant-settings-manager-mutation-owner-a');
+assert.equal(managerFlow.account, 'manager-a');
+assert.equal(managerFlow.fixtureScenario, 'phase2-settings-manager-mutation-owner-a');
+assert.equal(managerFlow.backendVerification, 'phase2-settings-manager-mutation-owner-a');
+assert.deepEqual(managerFlow.requiredEnv, ['MERXUS_MAESTRO_MANAGER_A_EMAIL', 'MERXUS_MAESTRO_MANAGER_A_PASSWORD']);
+assert.equal(managerFlow.timeoutMs, 180000);
+const managerCommands = YAML.parseAllDocuments(fs.readFileSync(managerFlow.path, 'utf8'))[1].toJS();
+assert.ok(managerCommands.some((command) => command.assertVisible?.id === 'settings.user.role' && command.assertVisible.text === 'manager'));
+assert.ok(managerCommands.some((command) => command.inputText === '${MERXUS_MAESTRO_MANAGER_A_EMAIL}'));
+assert.ok(managerCommands.some((command) => command.inputText === '${MERXUS_MAESTRO_MANAGER_A_PASSWORD}'));
+assert.ok(managerCommands.some((command) => command.assertVisible?.id === 'settings.sms.daily-digest-time' && command.assertVisible.text === '^18:00$'));
+assert.ok(managerCommands.some((command) => command.assertVisible?.id === 'settings.sms.daily-digest-time' && command.assertVisible.text === '^18:30$'));
+assert.equal(managerCommands.filter((command) => command.tapOn?.id === 'settings.sms.save').length, 1);
 const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'phase2-settings-'));
 try {
+  const managerIos = buildDeviceLaunchFlow(managerFlow, { ...config.mobile.devices.iosSimulator, id: 'manager-explicit-udid', descriptorName: 'iosSimulator' }, path.join(directory, 'manager-ios', 'runtime.yaml'));
+  assert.equal(managerIos.stages.length, 3, 'manager mutation retains the certified iOS split flow');
+  assert.ok(managerIos.launchPlan.launchArgs.includes('manager-explicit-udid'));
+  const managerLogin = fs.readFileSync(managerIos.stages[0].path, 'utf8');
+  assert.ok(managerLogin.includes('${MERXUS_MAESTRO_MANAGER_A_EMAIL}'));
+  assert.ok(managerLogin.includes('${MERXUS_MAESTRO_MANAGER_A_PASSWORD}'));
+  const managerResume = YAML.parseAllDocuments(fs.readFileSync(managerIos.stages[2].path, 'utf8'))[1].toJS();
+  assert.ok(managerResume.some((command) => command.assertVisible?.id === 'settings.user.role' && command.assertVisible.text === 'manager'));
   const ios = buildDeviceLaunchFlow(flow, { ...config.mobile.devices.iosSimulator, id: 'explicit-udid', descriptorName: 'iosSimulator' }, path.join(directory, 'runtime.yaml'));
   assert.equal(ios.stages.length, 3);
   assert.ok(ios.launchPlan.launchArgs.includes('explicit-udid'));

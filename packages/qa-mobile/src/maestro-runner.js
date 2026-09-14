@@ -31,6 +31,14 @@ function configuredCredentialKeys(mobile) {
   return unique(Object.values(mobile?.fixtures?.credentialEnvKeys || {}).filter(Boolean));
 }
 
+function configuredRoleCredentialKeys(mobile) {
+  return unique(Object.values(mobile?.fixtures?.roleCredentialEnvKeys || {}).filter(Boolean));
+}
+
+function configuredMaestroCredentialKeys(mobile) {
+  return unique([...configuredCredentialKeys(mobile), ...configuredRoleCredentialKeys(mobile)]);
+}
+
 function validateFixtureConfiguration(mobile, productKey) {
   const fixtures = mobile?.fixtures;
   if (!fixtures) return null;
@@ -149,7 +157,7 @@ function validateFlowFile(flow, mobile) {
 
   const references = collectEnvironmentReferences(source);
   const requiredEnv = unique(flow.requiredEnv || []);
-  const allowedCredentialKeys = configuredCredentialKeys(mobile);
+  const allowedCredentialKeys = configuredMaestroCredentialKeys(mobile);
   for (const key of references) {
     if (!requiredEnv.includes(key)) {
       throw new Error(`${flow.path} references ${key}, but the manifest does not declare it in requiredEnv.`);
@@ -637,13 +645,14 @@ function validateMaestroConfiguration(config) {
       if (flow.backendVerification && !fixtures.verification?.mutations?.includes(flow.backendVerification)) {
         throw new Error(`Flow ${flow.name} references unsupported backend verification ${flow.backendVerification}.`);
       }
-      if (!["user-a", "user-b"].includes(flow.account)) {
-        throw new Error(`Flow ${flow.name} must declare account user-a or user-b.`);
+      const accountCredentialPrefixes = { 'user-a': 'userA', 'user-b': 'userB', 'manager-a': 'managerA' };
+      if (!Object.hasOwn(accountCredentialPrefixes, flow.account)) {
+        throw new Error(`Flow ${flow.name} must declare account user-a, user-b, or manager-a.`);
       }
-      const accountPrefix = flow.account === "user-a" ? "userA" : "userB";
+      const accountPrefix = accountCredentialPrefixes[flow.account];
       const accountCredentialKeys = [
-        fixtures.credentialEnvKeys?.[`${accountPrefix}Email`],
-        fixtures.credentialEnvKeys?.[`${accountPrefix}Password`],
+        fixtures.credentialEnvKeys?.[`${accountPrefix}Email`] || fixtures.roleCredentialEnvKeys?.[`${accountPrefix}Email`],
+        fixtures.credentialEnvKeys?.[`${accountPrefix}Password`] || fixtures.roleCredentialEnvKeys?.[`${accountPrefix}Password`],
       ];
       if (accountCredentialKeys.some((key) => !key || !flow.requiredEnv?.includes(key))) {
         throw new Error(`Flow ${flow.name} must declare the email and password environment keys for ${flow.account}.`);
@@ -691,6 +700,11 @@ function buildFixtureResetPlan(validated, flow, environment = process.env, gener
   for (const key of configuredCredentialKeys(mobile)) {
     const value = environment[key];
     if (!value) throw new Error(`Missing required SageSet fixture environment variable: ${key}`);
+    credentialValues[key] = value;
+  }
+  for (const key of configuredRoleCredentialKeys(mobile).filter((candidate) => flow.requiredEnv?.includes(candidate))) {
+    const value = environment[key];
+    if (!value) throw new Error(`Missing required role fixture environment variable: ${key}`);
     credentialValues[key] = value;
   }
 
