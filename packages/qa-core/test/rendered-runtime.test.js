@@ -281,6 +281,15 @@ test('observer timeout with a live QA process is classified as observer failure 
   assert.ok(calls.some((args) => args.includes('force-stop')));
 });
 
+test('a successful launch with no observed app PID is classified as APP_PROCESS_NOT_STARTED', async () => {
+  const report = await waitForRenderedRuntime(readinessOptions({
+    runFlowImplementation: async () => ({ ok: false, code: 1, signal: null, timedOut: false, output: 'observer could not inspect hierarchy' }),
+    readState: () => ({ appPid: null, appForeground: false, launcherForeground: false, activityText: '' }),
+  }));
+  assert.equal(report.reason, 'APP_PROCESS_NOT_STARTED');
+  assert.equal(report.launchDiagnostics.preparation.skipped, true);
+});
+
 test('a normal root observer receives only the remaining logical deadline, without the former grace extension', async () => {
   let observedTimeout = null;
   const report = await waitForRenderedRuntime(readinessOptions({
