@@ -140,3 +140,12 @@ test('rendered probe rejects a launcher that replaces the QA app', async () => {
   assert.equal(report.ok, false);
   assert.equal(report.reason, 'APP_NOT_FOREGROUND');
 });
+
+test('rendered probe distinguishes an unavailable hierarchy observer from app readiness failure', async () => {
+  const report = await waitForRenderedRuntime(readinessOptions({
+    readHierarchyResult: () => ({ xml: '', status: 137, error: 'UiAutomationService already registered' }),
+  }));
+  assert.equal(report.ok, false);
+  assert.equal(report.reason, 'UI_HIERARCHY_UNAVAILABLE');
+  assert.match(report.hierarchyError, /already registered/);
+});

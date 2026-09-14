@@ -55,15 +55,20 @@ function runFlow(maestro, deviceId, flowPath, env, timeoutMs, spawn = spawnComma
   });
 }
 
-function readUiHierarchy(adb, deviceId, execute = spawnCommandSync, env = process.env) {
+function readUiHierarchyResult(adb, deviceId, execute = spawnCommandSync, env = process.env) {
   const dump = execute(adb, ['-s', deviceId, 'shell', 'uiautomator', 'dump', '/sdcard/worksideqa-readiness.xml'], {
-    env, encoding: 'utf8', timeout: 8000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'],
+    env, encoding: 'utf8', timeout: 8000, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'],
   });
-  if (dump.error || dump.status !== 0) return '';
+  if (dump.error || dump.status !== 0) return { xml: '', error: dump.stderr || dump.error?.message || `uiautomator dump exited with ${dump.status}`, status: dump.status };
   const hierarchy = execute(adb, ['-s', deviceId, 'shell', 'cat', '/sdcard/worksideqa-readiness.xml'], {
-    env, encoding: 'utf8', timeout: 8000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'],
+    env, encoding: 'utf8', timeout: 8000, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'],
   });
-  return hierarchy.error || hierarchy.status !== 0 ? '' : String(hierarchy.stdout || '');
+  if (hierarchy.error || hierarchy.status !== 0) return { xml: '', error: hierarchy.stderr || hierarchy.error?.message || `hierarchy read exited with ${hierarchy.status}`, status: hierarchy.status };
+  return { xml: String(hierarchy.stdout || ''), error: null, status: 0 };
+}
+
+function readUiHierarchy(adb, deviceId, execute = spawnCommandSync, env = process.env) {
+  return readUiHierarchyResult(adb, deviceId, execute, env).xml;
 }
 
 function hierarchySummary(xml) {
@@ -171,7 +176,7 @@ async function waitForRenderedRuntime(options = {}) {
     adb, maestro, deviceId, appId, launchUri,
     execute = spawnCommandSync, spawn = spawnCommand, terminate = terminateProcessTree,
     now = Date.now, sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
-    readHierarchy = readUiHierarchy, readState = readAppState,
+    readHierarchy = null, readHierarchyResult = readUiHierarchyResult, readState = readAppState,
     timeoutMs = DEFAULT_TIMEOUT_MS, pollMs = DEFAULT_POLL_MS, artifactDirectory,
   } = options;
   if (!adb || !maestro || !deviceId || !appId || !launchUri) throw new Error('Rendered runtime probe requires adb, maestro, deviceId, appId, and launchUri.');
@@ -193,6 +198,7 @@ async function waitForRenderedRuntime(options = {}) {
   let lastSummary = null;
   let intermediateAt = null;
   let intermediateKind = null;
+  let hierarchyError = null;
   let lastHierarchyAt = rootReadyAt;
   while (now() <= deadline) {
     state = readState(adb, deviceId, appId, execute, env);
@@ -202,7 +208,11 @@ async function waitForRenderedRuntime(options = {}) {
     if (state.launcherForeground || !state.appForeground) {
       return { ...appReadinessFailure('APP_NOT_FOREGROUND', state, startedAt, timeoutMs, { qaRootReadyAt: new Date(rootReadyAt).toISOString(), intermediateState: lastSummary, intermediateStateKind: intermediateKind, intermediateStateAt: intermediateAt !== null ? new Date(intermediateAt).toISOString() : null, lastHierarchyAt: new Date(lastHierarchyAt).toISOString() }) };
     }
-    const hierarchy = readHierarchy(adb, deviceId, execute, env);
+    const hierarchyRead = readHierarchy
+      ? readHierarchy(adb, deviceId, execute, env)
+      : readHierarchyResult(adb, deviceId, execute, env);
+    const hierarchy = typeof hierarchyRead === 'string' ? hierarchyRead : String(hierarchyRead?.xml || '');
+    if (!hierarchy && hierarchyRead && typeof hierarchyRead === 'object' && hierarchyRead.error) hierarchyError = String(hierarchyRead.error).slice(-2000);
     if (hierarchy) {
       lastHierarchy = hierarchy;
       lastHierarchyAt = now();
@@ -244,11 +254,13 @@ async function waitForRenderedRuntime(options = {}) {
     intermediateStateAt: intermediateAt !== null ? new Date(intermediateAt).toISOString() : null,
     intermediateStateDurationMs: intermediateAt !== null ? Math.max(0, now() - intermediateAt) : null,
     lastHierarchyAt: new Date(lastHierarchyAt).toISOString(),
+    hierarchyError,
     hierarchy: lastHierarchy.slice(-16_000) || null,
   };
   const failed = appReadinessFailure('AUTH_OR_DASHBOARD_NOT_READY', state, startedAt, timeoutMs, details);
+  if (!lastHierarchy && hierarchyError) failed.reason = 'UI_HIERARCHY_UNAVAILABLE';
   failed.diagnosticArtifacts = captureFailureArtifacts({ artifactDirectory, adb, deviceId, execute, env, hierarchy: lastHierarchy, state });
   return failed;
 }
 
-module.exports = { DEFAULT_TIMEOUT_MS, readAppState, readUiHierarchy, hierarchySummary, startApplication, runFlow, waitForRenderedRuntime };
+module.exports = { DEFAULT_TIMEOUT_MS, readAppState, readUiHierarchy, readUiHierarchyResult, hierarchySummary, startApplication, runFlow, waitForRenderedRuntime };
