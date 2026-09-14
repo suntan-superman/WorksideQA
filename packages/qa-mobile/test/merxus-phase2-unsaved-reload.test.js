@@ -88,7 +88,14 @@ for (const [name, id] of [['androidEmulator', 'emulator-5554'], ['iosSimulator',
         centerElement: true,
       },
     });
-    assert.equal(generated.some((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.reload'), false, 'iOS no longer traverses directly to the short Reload node');
+    assert.deepEqual(generated[reloadScrollIndex + 1], {
+      scrollUntilVisible: {
+        element: { id: 'settings.sms.reload' },
+        direction: 'DOWN',
+        timeout: 5000,
+        centerElement: true,
+      },
+    }, 'iOS performs one bounded semantic traversal from the Save anchor to the real Reload control');
   }
 }
 for (const suite of ['phase2-retry', 'phase2-retry-delay']) {

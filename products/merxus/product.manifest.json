@@ -248,7 +248,13 @@
           "targetId": "settings.sms.save",
           "direction": "DOWN",
           "timeoutMs": 20000,
-          "centerElement": true
+          "centerElement": true,
+          "followUp": {
+            "targetId": "settings.sms.reload",
+            "direction": "DOWN",
+            "timeoutMs": 5000,
+            "centerElement": true
+          }
         },
         "account": "user-a",
         "requiredEnv": ["MERXUS_MAESTRO_OWNER_A_EMAIL", "MERXUS_MAESTRO_OWNER_A_PASSWORD"],

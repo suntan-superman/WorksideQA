@@ -302,6 +302,20 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
             ...(iosReloadAnchor.centerElement === false ? { centerElement: false } : { centerElement: true }),
           },
         });
+        if (iosReloadAnchor.followUp?.targetId) {
+          // The Save action-row anchor can leave the short Reload control just
+          // below the iOS accessibility viewport. One bounded semantic
+          // traversal exposes the real control without pressing Save.
+          runtimeCommands.push({
+            scrollUntilVisible: {
+              ...command.scrollUntilVisible,
+              element: { id: iosReloadAnchor.followUp.targetId },
+              direction: iosReloadAnchor.followUp.direction || 'DOWN',
+              ...(iosReloadAnchor.followUp.timeoutMs ? { timeout: iosReloadAnchor.followUp.timeoutMs } : {}),
+              ...(iosReloadAnchor.followUp.centerElement === false ? { centerElement: false } : { centerElement: true }),
+            },
+          });
+        }
         appendOverlaySweepers((rule) => rule.checkpoints.afterTapIds?.includes(command?.tapOn?.id));
         continue;
       }
