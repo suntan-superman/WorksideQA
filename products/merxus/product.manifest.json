@@ -149,7 +149,13 @@
           },
           {
             "fieldId": "settings.sms.notification-retry-delay-minutes",
-            "targetId": "settings.sms.qa-dismiss-keyboard"
+            "targetId": "settings.sms.qa-dismiss-keyboard",
+            "reanchorAfterDismiss": {
+              "targetId": "settings.sms.notification-retry-delay-minutes",
+              "direction": "UP",
+              "timeoutMs": 10000,
+              "centerElement": true
+            }
           }
         ],
         "externalSystemOverlay": {

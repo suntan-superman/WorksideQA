@@ -149,12 +149,21 @@ for (const spec of [
     assert.ok(ios.launchPlan.launchArgs.includes('explicit-retry-udid'));
     const resume = YAML.parseAllDocuments(fs.readFileSync(ios.stages[2].path, 'utf8'))[1].toJS();
     const index = resume.findIndex((command) => command.tapOn?.id === retryField);
-    assert.deepEqual(resume.slice(index, index + 6), [
+    const expectedIosEdit = [
       { tapOn: { id: retryField } }, { eraseText: 100 }, { inputText: spec.after },
       { extendedWaitUntil: { visible: { id: 'settings.sms.qa-dismiss-keyboard' }, timeout: 5000 } },
       { tapOn: { id: 'settings.sms.qa-dismiss-keyboard' } },
-      { assertVisible: { id: retryField, text: `^${spec.after}$` } },
-    ]);
+    ];
+    if (spec.suite === 'phase2-retry-delay') expectedIosEdit.push({
+      scrollUntilVisible: {
+        element: { id: retryField },
+        direction: 'UP',
+        timeout: 10000,
+        centerElement: true,
+      },
+    });
+    expectedIosEdit.push({ assertVisible: { id: retryField, text: `^${spec.after}$` } });
+    assert.deepEqual(resume.slice(index, index + expectedIosEdit.length), expectedIosEdit);
     assert.ok(!resume.some((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.qa-dismiss-keyboard'), 'fixed helper never needs form scrolling');
     assert.equal(resume.some((command) => command === 'hideKeyboard'), false);
     assert.ok(JSON.stringify(resume).includes('WORKSIDEQA_CORRELATION='));

@@ -256,6 +256,19 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
       if (dismissRule.scrollToTarget) runtimeCommands.push({ scrollUntilVisible: { element: { id: dismissRule.targetId }, direction: 'UP', timeout: 5000 } });
       runtimeCommands.push({ extendedWaitUntil: { visible: { id: dismissRule.targetId }, timeout: 5000 } });
       runtimeCommands.push({ tapOn: { id: dismissRule.targetId } });
+      if (dismissRule.reanchorAfterDismiss?.targetId) {
+        // iOS can reposition the outer form substantially when the fixed
+        // keyboard-dismiss control is tapped. Re-expose the edited field
+        // before asserting its value; this is semantic and bounded.
+        runtimeCommands.push({
+          scrollUntilVisible: {
+            element: { id: dismissRule.reanchorAfterDismiss.targetId },
+            direction: dismissRule.reanchorAfterDismiss.direction || 'UP',
+            ...(dismissRule.reanchorAfterDismiss.timeoutMs ? { timeout: dismissRule.reanchorAfterDismiss.timeoutMs } : {}),
+            ...(dismissRule.reanchorAfterDismiss.centerElement === false ? { centerElement: false } : { centerElement: true }),
+          },
+        });
+      }
       runtimeCommands.push(command);
       commandIndex += 1;
       continue;
