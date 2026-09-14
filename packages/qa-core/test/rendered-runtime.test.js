@@ -260,6 +260,8 @@ test('rendered probe distinguishes an unavailable hierarchy observer from app re
 });
 
 test('UiAutomation registration collision with a live QA process is classified as observer conflict', async () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'worksideqa-observer-conflict-'));
+  const lockPath = path.join(directory, 'observer.lock');
   let fakeNow = 0;
   let observerBudget = null;
   const calls = [];
@@ -275,7 +277,7 @@ test('UiAutomation registration collision with a live QA process is classified a
       observerBudget = timeoutMs;
       fakeNow = 60_000;
       return { ok: false, code: 143, signal: 'SIGTERM', timedOut: true, output: 'UiAutomationService already registered' };
-    }, env: {}, timeoutMs: 60_000, pollMs: 1, now: () => fakeNow, preflight: false,
+    }, env: {}, timeoutMs: 60_000, pollMs: 1, now: () => fakeNow, preflight: false, observerLockPath: lockPath,
   });
   assert.equal(report.reason, 'OBSERVER_CONFLICT');
   assert.equal(observerBudget, 60_000);
@@ -284,6 +286,8 @@ test('UiAutomation registration collision with a live QA process is classified a
   assert.match(report.observerAttempts[0].output, /UiAutomationService already registered/);
   assert.ok(report.elapsedMs <= report.logicalBudgetMs);
   assert.ok(calls.some((args) => args.includes('force-stop')));
+  assert.equal(fs.existsSync(lockPath), false);
+  fs.rmSync(directory, { recursive: true, force: true });
 });
 
 test('a successful launch with no observed app PID is classified as APP_PROCESS_NOT_STARTED', async () => {
