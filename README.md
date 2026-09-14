@@ -80,6 +80,8 @@ npm run qa:env:health -- --product radiusiq
 npm run qa:env:health -- --require-ai
 npm run qa:env:health:offline
 npm run qa:doctor
+npm run qa:doctor -- --product merxus --strict
+npm run qa:doctor -- --product sageset --strict
 npm run qa:start -- --product merxus
 npm run qa:status -- --product merxus
 npm run qa:stop -- --product merxus
@@ -88,13 +90,16 @@ npm run qa:restart:merxus:backend
 ```
 
 `qa:doctor` is the single read-only readiness gate for the local Maestro lab.
-It loads the ignored `.maestro.local.ps1`, validates the Merxus and SageSet
-manifests and paths, checks required tools, proves the Merxus Maestro runtime
-configuration served by Metro, verifies local emulator/backend identity
-readiness, and confirms the configured Android QA app. It never starts or
-stops a service, resets fixtures, launches a flow, or prints passwords. Use
-`npm run qa:doctor -- --offline` for a reboot-safe contract check before the
-local services are running; a normal run must pass before certification.
+It loads the ignored `.maestro.local.ps1`, validates product manifests and
+paths, checks required tools, proves the selected Maestro runtime, verifies
+local emulator/backend identity readiness, and confirms the configured QA app.
+It never starts or stops a service, resets fixtures, launches a flow, or prints
+passwords. `--product merxus` and `--product sageset` scope every product
+check; `--strict` makes that selected product a required certification target
+without requiring the other product's credentials. With no `--product`, the
+command is an all-products overview: an unconfigured product is a warning in
+non-strict mode, while global `--strict` requires all configured products. Use
+`--offline` for a reboot-safe contract check before services are running.
 
 The lifecycle commands own only processes recorded in
 `.worksideqa/runtime-state.json` (which is gitignored). `qa:start` loads the

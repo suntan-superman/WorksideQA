@@ -25,6 +25,23 @@ reset fixtures, launch an app, or print passwords. Use
 `npm run qa:doctor -- --offline` to validate the local contract before services
 are started. A normal run must report `PASS` before certification.
 
+Doctor scope is product-specific when requested. The normal Merxus workflow is:
+
+```powershell
+npm run qa:doctor -- --product merxus --strict
+```
+
+This checks only Merxus and does not fail when optional SageSet QA credentials
+are absent. Use the equivalent command for SageSet:
+
+```powershell
+npm run qa:doctor -- --product sageset --strict
+```
+
+The no-`--product` command remains an all-products overview. In non-strict mode
+an unconfigured product is a warning; global `--strict` requires every
+configured product and is intended for whole-lab certification.
+
 ## Managed service lifecycle
 
 Use the WorksideQA lifecycle commands for reboot-safe startup; they load the
@@ -36,7 +53,7 @@ read-only product doctor. No feature flow is launched automatically.
 Set-Location C:\Users\sjroy\Source\WorksideQA
 npm run qa:start -- --product merxus
 npm run qa:status -- --product merxus
-npm run qa:doctor -- --strict
+npm run qa:doctor -- --product merxus --strict
 ```
 
 Merxus order is Firebase emulators, QA backend, canonical fixture verification

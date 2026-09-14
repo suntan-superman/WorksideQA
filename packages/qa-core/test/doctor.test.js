@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { parseArgs, parsePowerShellConfig, mergedEnvironment } = require('../src/doctor');
+const { parseArgs, parsePowerShellConfig, mergedEnvironment, runDoctor } = require('../src/doctor');
 
 test('doctor parses only canonical PowerShell environment assignments', () => {
   const fs = require('node:fs');
@@ -33,4 +33,24 @@ test('doctor supplies safe canonical defaults without exposing credentials', () 
   assert.equal(env.MERXUS_QA_BACKEND_URL, 'http://127.0.0.1:8787');
   assert.equal(env.MERXUS_ALLOW_EXTERNAL_PROVIDERS, 'false');
   assert.equal(env.MERXUS_MAESTRO_OWNER_A_PASSWORD, undefined);
+});
+
+test('product-scoped strict Doctor ignores the other product credentials', async () => {
+  const merxus = await runDoctor({ product: 'merxus', strict: true, offline: true, skipAuth: true });
+  assert.equal(merxus.status, 'PASS');
+  assert.equal(merxus.checks.some((check) => check.id === 'config.sageset-identity'), false);
+
+  const sageset = await runDoctor({ product: 'sageset', strict: true, offline: true, skipAuth: true });
+  assert.equal(sageset.status, 'FAIL');
+  assert.ok(sageset.checks.some((check) => check.id === 'config.SAGESET_MAESTRO_USER_A_EMAIL' && check.status === 'failed'));
+  assert.equal(sageset.checks.some((check) => check.id.startsWith('config.MERXUS_')), false);
+});
+
+test('global Doctor retains warning versus strict all-products semantics', async () => {
+  const overview = await runDoctor({ offline: true, skipAuth: true });
+  assert.equal(overview.status, 'WARN');
+  assert.ok(overview.checks.some((check) => check.id === 'config.sageset-identity' && check.status === 'warning'));
+  const strict = await runDoctor({ strict: true, offline: true, skipAuth: true });
+  assert.equal(strict.status, 'FAIL');
+  assert.ok(strict.checks.some((check) => check.id === 'config.sageset-identity' && check.status === 'failed'));
 });
