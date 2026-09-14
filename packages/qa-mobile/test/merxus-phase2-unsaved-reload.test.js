@@ -73,28 +73,22 @@ for (const [name, id] of [['androidEmulator', 'emulator-5554'], ['iosSimulator',
   } else {
     assert.equal(runtime.stages.length, 3);
     const generated = YAML.parseAllDocuments(fs.readFileSync(runtime.stages[2].path, 'utf8'))[1].toJS();
-    assert.doesNotMatch(JSON.stringify(generated), /WORKSIDEQA_CORRELATION|settings\.sms\.save/);
+    assert.doesNotMatch(JSON.stringify(generated), /WORKSIDEQA_CORRELATION/);
     const generatedEdit = generated.findIndex((command) => command.tapOn?.id === field);
     assert.equal(generated.slice(generatedEdit).findIndex((command) => command === 'hideKeyboard'), -1, 'iOS runtime replaces hideKeyboard');
     assert.ok(generated.slice(generatedEdit).some((command) => command.tapOn?.id === 'settings.sms.qa-dismiss-keyboard'));
     assert.equal(generated.slice(generatedEdit).some((command) => command.tapOn?.id === 'screen.settings.ready'), false, 'iOS keeps its existing dismiss helper');
-    const reloadScrollIndex = generated.findIndex((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.reload');
-    assert.ok(reloadScrollIndex >= 0, 'iOS keeps semantic Reload traversal');
-    assert.equal(generated[reloadScrollIndex].scrollUntilVisible.optional, true, 'primary iOS traversal may recover from an overscrolled resume state');
-    const fallback = generated[reloadScrollIndex + 1];
-    assert.deepEqual(fallback, {
-      runFlow: {
-        when: { notVisible: { id: 'settings.sms.reload' } },
-        commands: [{
-          scrollUntilVisible: {
-            element: { id: 'settings.sms.reload' },
-            direction: 'UP',
-            timeout: 20000,
-            centerElement: true,
-          },
-        }],
+    const reloadScrollIndex = generated.findIndex((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.save');
+    assert.ok(reloadScrollIndex >= 0, 'iOS uses the proven Save action-row anchor before Reload');
+    assert.deepEqual(generated[reloadScrollIndex], {
+      scrollUntilVisible: {
+        element: { id: 'settings.sms.save' },
+        direction: 'DOWN',
+        timeout: 20000,
+        centerElement: true,
       },
-    }, 'iOS resumes with a bounded reverse traversal when the primary scan reaches the bottom');
+    });
+    assert.equal(generated.some((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.reload'), false, 'iOS no longer traverses directly to the short Reload node');
   }
 }
 for (const suite of ['phase2-retry', 'phase2-retry-delay']) {

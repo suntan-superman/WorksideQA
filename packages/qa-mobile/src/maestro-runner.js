@@ -196,11 +196,8 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
   let deterministicTextResetApplied = false;
   const keyboardDismissRules = selectedDevice.platform === 'ios' && selectedDevice.kind === 'simulator'
     ? selectedDevice.keyboardDismissAfterEdit || [] : [];
-  // Some iOS ScrollView states can resume at the bottom of a long form.  A
-  // bounded, metadata-driven reverse traversal lets the iOS runtime recover
-  // without changing the platform-neutral source flow or Android behavior.
-  const iosTraversalFallbacks = selectedDevice.platform === 'ios'
-    ? flow.iosTraversalFallbacks || [] : [];
+  const iosReloadAnchor = selectedDevice.platform === 'ios'
+    ? flow.iosReloadAnchor || null : null;
   const androidImeDismissRules = selectedDevice.platform === 'android'
     ? flow.androidImeDismissAfterEdit || [] : [];
   const androidImeDismissBoundaries = [];
@@ -291,31 +288,18 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
         commandIndex += 2;
         continue;
       }
-      const scrollTargetId = command?.scrollUntilVisible?.element?.id;
-      const traversalFallback = scrollTargetId
-        ? iosTraversalFallbacks.find((rule) => rule.targetId === scrollTargetId)
-        : null;
-      if (traversalFallback) {
-        // The primary traversal is optional so a resume state that has already
-        // overscrolled to the bottom can be recovered by the reverse pass.
+      const isReloadTraversal = command?.scrollUntilVisible?.element?.id === 'settings.sms.reload';
+      if (isReloadTraversal && iosReloadAnchor?.targetId) {
+        // On iOS the long SMS form can skip the short Reload node while
+        // traversing. Save is the adjacent, proven action-row anchor; locating
+        // it never presses or mutates the control.
         runtimeCommands.push({
           scrollUntilVisible: {
             ...command.scrollUntilVisible,
-            element: { ...command.scrollUntilVisible.element },
-            optional: true,
-          },
-        });
-        runtimeCommands.push({
-          runFlow: {
-            when: { notVisible: { id: scrollTargetId } },
-            commands: [{
-              scrollUntilVisible: {
-                ...command.scrollUntilVisible,
-                element: { ...command.scrollUntilVisible.element },
-                direction: traversalFallback.fallbackDirection,
-                ...(traversalFallback.timeoutMs ? { timeout: traversalFallback.timeoutMs } : {}),
-              },
-            }],
+            element: { id: iosReloadAnchor.targetId },
+            direction: iosReloadAnchor.direction || command.scrollUntilVisible.direction,
+            ...(iosReloadAnchor.timeoutMs ? { timeout: iosReloadAnchor.timeoutMs } : {}),
+            ...(iosReloadAnchor.centerElement === false ? { centerElement: false } : { centerElement: true }),
           },
         });
         appendOverlaySweepers((rule) => rule.checkpoints.afterTapIds?.includes(command?.tapOn?.id));
