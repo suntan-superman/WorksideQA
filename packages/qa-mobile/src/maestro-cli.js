@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const { loadProductManifest } = require("../../qa-config/src");
+const { loadLocalQaConfig } = require("../../qa-core/src/local-config");
 const { runMaestroFlows, selectFlows, validateMaestroConfiguration } = require("./maestro-runner");
 
 function usage() {
@@ -43,6 +44,10 @@ async function main() {
     usage();
     return;
   }
+  // Standalone Maestro commands run in a fresh shell as well as from the
+  // orchestrator. Import the canonical ignored config before device/flow
+  // validation so explicit IDs and credentials are always available.
+  loadLocalQaConfig({ required: true });
   if (!options.product) throw new Error("--product is required.");
 
   const config = loadProductManifest(options.product);

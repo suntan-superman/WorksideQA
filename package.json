@@ -34,7 +34,7 @@
     "qa:merxus:maestro:phase2:retry-delay:android": "node packages/qa-mobile/src/maestro-cli.js --product merxus --suite phase2-retry-delay --device androidEmulator",
     "qa:merxus:maestro:phase2:retry-delay:ios": "node packages/qa-mobile/src/maestro-cli.js --product merxus --suite phase2-retry-delay --device iosSimulator",
     "test:merxus:phase2:settings": "node packages/qa-mobile/test/merxus-phase2-settings.test.js && node packages/qa-mobile/test/ui-correlation.test.js",
-    "test:qa-doctor": "node --test packages/qa-core/test/doctor.test.js packages/qa-core/test/orchestrator.test.js packages/qa-core/test/tool-resolver.test.js",
+  "test:qa-doctor": "node --test packages/qa-core/test/doctor.test.js packages/qa-core/test/orchestrator.test.js packages/qa-core/test/tool-resolver.test.js packages/qa-core/test/local-config.test.js",
     "qa:sageset:maestro:phase1": "node packages/qa-mobile/src/maestro-cli.js --product sageset --suite phase1",
     "qa:sageset:maestro:validate": "node packages/qa-mobile/src/maestro-cli.js --product sageset --suite phase1 --validate",
     "qa:sageset:maestro:phase2": "node packages/qa-mobile/src/maestro-cli.js --product sageset --suite phase2",

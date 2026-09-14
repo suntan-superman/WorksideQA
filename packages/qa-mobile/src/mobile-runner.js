@@ -1,12 +1,14 @@
 const path = require("path");
 const { fileExists, fromRoot } = require("../../qa-utils/src");
 const { spawnMaestroSync } = require("./maestro-process");
+const { loadLocalQaConfig } = require("../../qa-core/src/local-config");
 
 function check(status, name, message) {
   return { status, name, message };
 }
 
 function runMobileChecks(config, options = {}) {
+  loadLocalQaConfig({ required: true });
   const flows = config.mobile?.flows || [];
   const pushNotifications = config.mobile?.pushNotifications;
 

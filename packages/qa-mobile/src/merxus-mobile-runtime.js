@@ -1,6 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawnCommandSync } = require('../../qa-utils/src');
+const { loadLocalQaConfig } = require('../../qa-core/src/local-config');
 
 const PROFILE = 'maestro-simulator';
 const PROFILE_KEYS = [
@@ -80,6 +81,7 @@ async function verifyServedRuntime(mobileRoot, fetchImpl = fetch) {
 }
 
 async function main(argv = process.argv.slice(2)) {
+  loadLocalQaConfig({ required: true });
   const allowed = new Set(['--print-env', '--config-only', '--served-only', '--mobile-root']);
   let mobileRoot = process.env.MERXUS_MOBILE_REPO || path.resolve(__dirname, '../../../../Merxus/mobile');
   for (let i = 0; i < argv.length; i++) {

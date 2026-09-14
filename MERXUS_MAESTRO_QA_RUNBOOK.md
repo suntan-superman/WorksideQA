@@ -80,6 +80,32 @@ device/app state; `qa:stop` refuses to kill an unrecorded or command-mismatched
 process. After a reboot, run `qa:start` followed by strict doctor twice from
 clean shells before resuming Slice 25 certification.
 
+### Standalone Maestro commands
+
+Every Node-based Maestro entrypoint imports the ignored
+`C:\Users\sjroy\Source\WorksideQA\.maestro.local.ps1` automatically before
+device, credential, or flow validation. This includes `maestro-cli.js`, Phase 0
+/ Phase 1 certification, the Mobile runtime preflight, and SageSet release
+certification. A user shell does not need to dot-source the file or export
+`MERXUS_ANDROID_EMULATOR_ID` manually. The loader reads only the documented QA
+allowlist and never executes the PowerShell file or prints its values.
+
+Precedence is explicit process environment first, then values from
+`.maestro.local.ps1` for keys that are unset or empty. This permits CI or a
+deliberate per-process override while keeping a fresh shell deterministic. If
+the local file is missing, standalone commands fail immediately with the exact
+path and setup guidance.
+
+For example, from a fresh PowerShell:
+
+```powershell
+Set-Location C:\Users\sjroy\Source\WorksideQA
+npm run qa:merxus:maestro:phase2:unsaved-reload:android
+```
+
+The command resolves the configured Android device from the local file before
+launching Maestro; no manual environment export is required.
+
 ## Terminal map
 - T1 – Firebase emulators
 - T2 – Maestro QA backend

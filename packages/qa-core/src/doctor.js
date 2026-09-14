@@ -15,12 +15,13 @@ const { spawnCommandSync } = require('../../qa-utils/src');
 const { fromRoot, fileExists } = require('../../qa-utils/src');
 const { loadProductManifest, validateManifest } = require('../../qa-config/src');
 const { resolveTool, resolveTools } = require('./tool-resolver');
+const { DEFAULT_LOCAL_CONFIG_PATH, parsePowerShellConfig } = require('./local-config');
 
 const WORKSIDEQA_ROOT = fromRoot();
 const DEFAULTS = {
   merxusRoot: path.resolve(WORKSIDEQA_ROOT, '..', 'Merxus'),
   sagesetRoot: path.resolve(WORKSIDEQA_ROOT, '..', 'SageSet'),
-  localConfig: path.join(WORKSIDEQA_ROOT, '.maestro.local.ps1'),
+  localConfig: DEFAULT_LOCAL_CONFIG_PATH,
 };
 
 function parseArgs(argv) {
@@ -61,19 +62,6 @@ Options:
 
 function result(status, id, message, detail = {}) {
   return { status, id, message, ...detail };
-}
-
-function parsePowerShellConfig(filePath) {
-  if (!fs.existsSync(filePath)) return {};
-  const entries = {};
-  for (const line of fs.readFileSync(filePath, 'utf8').split(/\r?\n/)) {
-    // This intentionally parses only simple environment assignments from the
-    // canonical file; it never executes arbitrary PowerShell during a doctor.
-    const match = line.match(/^\s*\$env:([A-Z][A-Z0-9_]*)\s*=\s*(["'])(.*?)\2\s*$/);
-    if (!match) continue;
-    entries[match[1]] = match[3].replace(/``/g, '`').replace(/`(["'])/g, '$1');
-  }
-  return entries;
 }
 
 function mergedEnvironment(localConfig) {

@@ -5,6 +5,7 @@ const { spawnCommandSync } = require('../../qa-utils/src');
 const { loadProductManifest } = require('../../qa-config/src');
 const { ensureDir, fromRoot, writeJson } = require('../../qa-utils/src');
 const { validateDeviceDescriptors } = require('./device-selection');
+const { loadLocalQaConfig } = require('../../qa-core/src/local-config');
 
 const CHECK_NAMES = [
   'QA app identity', 'Production app rejection', 'Production Firebase rejection', 'Production backend rejection',
@@ -22,6 +23,7 @@ function safeText(value) {
 function stamp() { return new Date().toISOString().replace(/[:.]/g, '-'); }
 
 function certify(options = {}) {
+  loadLocalQaConfig({ required: true });
   const manifest = loadProductManifest('merxus');
   const mobile = manifest.mobile || {};
   const backendRoot = path.resolve(options.backendRoot || process.env.MERXUS_BACKEND_REPO || fromRoot('..', 'Merxus', 'merxus-ai-backend'));

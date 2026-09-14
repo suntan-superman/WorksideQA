@@ -4,11 +4,13 @@ const path = require('node:path');
 const { loadProductManifest } = require('../../qa-config/src');
 const { ensureDir, fromRoot, writeJson } = require('../../qa-utils/src');
 const { runMaestroFlows, validateMaestroConfiguration } = require('./maestro-runner');
+const { loadLocalQaConfig } = require('../../qa-core/src/local-config');
 
 function timestampSlug(date = new Date()) { return date.toISOString().replace(/[:.]/g, '-'); }
 function platformLabel(platform) { return platform === 'ios' ? 'iOS Simulator' : 'Android Emulator'; }
 
 async function main() {
+  loadLocalQaConfig({ required: true });
   const config = loadProductManifest('merxus');
   const validated = validateMaestroConfiguration(config);
   const root = ensureDir(fromRoot(validated.maestro.reportDirectory, timestampSlug()));

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const { loadProductManifest } = require("../../qa-config/src");
+const { loadLocalQaConfig } = require("../../qa-core/src/local-config");
 const {
   runReleaseCertification,
   validateReleaseCertification,
@@ -40,6 +41,7 @@ async function main() {
     usage();
     return;
   }
+  loadLocalQaConfig({ required: true });
   if (!options.product) throw new Error("--product is required.");
   if (options.product !== "sageset") throw new Error("Release certification is currently defined only for sageset.");
 
