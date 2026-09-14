@@ -14,6 +14,7 @@ const STATE_PATH = path.join(STATE_DIRECTORY, 'runtime-state.json');
 const LOG_DIRECTORY = path.join(STATE_DIRECTORY, 'logs');
 const POLL_MS = 500;
 const READY_TIMEOUT_MS = 120000;
+const TERMINATION_TIMEOUT_MS = 10000;
 
 function parseArgs(argv) {
   const options = { action: 'status', product: null, service: null, json: false };
@@ -298,8 +299,8 @@ function spawnService(definition, product) {
       env: { ...definition.env, NO_UPDATE_NOTIFIER: '1' },
       // Services must survive the short-lived qa:start CLI on every platform.
       // Windows uses an independent process group as well; ownership and
-      // cleanup remain safe because the complete recorded tree is terminated
-      // with taskkill /T when qa:stop is requested.
+      // cleanup remain safe because each recorded tree member is terminated
+      // individually after identity verification when qa:stop is requested.
       detached: true,
       windowsHide: true,
       stdio: ['ignore', stdoutFd, stderrFd],
@@ -518,22 +519,115 @@ function verifiedProcessTreePids(record) {
   }).filter(Boolean);
 }
 
-function terminateRecord(record) {
-  const pids = verifiedProcessTreePids(record);
-  const leaderOwned = ownedRecord(record);
-  const hasIdentityMetadata = Array.isArray(record?.processTree) && record.processTree.some((item) => item && item.executable);
-  const ownedDescendants = pids.filter((pid) => pid !== Number(record?.pid) && (hasIdentityMetadata || commandMatches(record, processInfo(pid))));
-  if (!leaderOwned && !ownedDescendants.length) return { stopped: false, reason: 'process is no longer owned or is not running' };
-  if (process.platform === 'win32') {
-    const targets = leaderOwned ? [Number(record.pid)] : ownedDescendants;
-    let stopped = false;
-    for (const pid of targets) {
-      const result = spawnCommandSync('taskkill.exe', ['/PID', String(pid), '/T', '/F'], { encoding: 'utf8', timeout: 15000, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
-      if (result.status === 0) stopped = true;
+function terminationTree(record, ownership, options = {}) {
+  const aliveResolver = options.aliveResolver || pidAlive;
+  const infoResolver = options.infoResolver || processInfo;
+  const tree = Array.isArray(ownership?.currentTree) && ownership.currentTree.length
+    ? ownership.currentTree
+    : (Array.isArray(record?.processTree) ? record.processTree :
+      (Array.isArray(record?.processTreePids) ? record.processTreePids.map((pid) => ({ pid })) : []));
+  return tree.map((expected) => {
+    const pid = Number(expected?.pid);
+    if (!pid || !aliveResolver(pid)) return null;
+    const actual = normalizeProcessInfo(pid, infoResolver(pid));
+    // Termination is deliberately stricter than status reconciliation. A
+    // process with missing or changed identity is never a kill target.
+    const hasMetadata = Boolean(expected?.executable || expected?.commandLine || expected?.startedAt);
+    const verified = hasMetadata
+      ? Boolean(actual.executable && actual.commandLine && processIdentityMatches(expected, actual))
+      : (pid === Number(record?.rootPid || record?.pid) && commandMatches(record, actual));
+    return verified ? pid : null;
+  }).filter(Boolean);
+}
+
+function busyPorts(record, ownerResolver = portOwner) {
+  return (record?.ports || (record?.port ? [record.port] : []))
+    .map((port) => ({ port: Number(port), pid: ownerResolver(Number(port)) }))
+    .filter((item) => item.pid);
+}
+
+async function waitForTermination(record, pids, options = {}) {
+  const aliveResolver = options.aliveResolver || pidAlive;
+  const infoResolver = options.infoResolver || processInfo;
+  const ownerResolver = options.ownerResolver || portOwner;
+  const portOpenResolver = options.portOpenResolver || portOpen;
+  const pollMs = options.pollMs || POLL_MS;
+  const deadline = Date.now() + (options.timeoutMs || TERMINATION_TIMEOUT_MS);
+  const isStillVerified = (pid) => {
+    if (!aliveResolver(pid)) return false;
+    const expected = (record.processTree || []).find((item) => Number(item.pid) === Number(pid));
+    const actual = normalizeProcessInfo(pid, infoResolver(pid));
+    if (expected && (expected.executable || expected.commandLine || expected.startedAt)) {
+      return Boolean(actual.executable && actual.commandLine && processIdentityMatches(expected, actual));
     }
-    return stopped ? { stopped: true } : { stopped: false, reason: 'taskkill failed' };
+    return Number(pid) === Number(record.rootPid || record.pid) && commandMatches(record, actual);
+  };
+  const readRemaining = async () => {
+    const remainingPids = pids.filter(isStillVerified);
+    const remainingPorts = [];
+    for (const port of (record.ports || (record.port ? [record.port] : []))) {
+      const owner = ownerResolver(Number(port));
+      const open = owner ? true : await portOpenResolver(Number(port));
+      if (owner || open) remainingPorts.push({ port: Number(port), pid: owner || null });
+    }
+    return { remainingPids, remainingPorts };
+  };
+  while (Date.now() < deadline) {
+    const result = await readRemaining();
+    if (!result.remainingPids.length && !result.remainingPorts.length) return result;
+    await new Promise((resolve) => setTimeout(resolve, pollMs));
   }
-  try { process.kill(-Number(record.pid), 'SIGTERM'); return { stopped: true }; } catch { return { stopped: false, reason: 'process termination failed' }; }
+  return readRemaining();
+}
+
+async function terminateRecord(record, options = {}) {
+  const ownership = options.ownership || reconcileRecord(
+    record,
+    options.ownerResolver || portOwner,
+    options.infoResolver || processInfo,
+    options.aliveResolver || pidAlive,
+  );
+  if (ownership.state === 'CONFLICT') {
+    return { stopped: false, reason: 'ownership conflict; no process was terminated', remainingPids: [], remainingPorts: busyPorts(record, options.ownerResolver || portOwner) };
+  }
+  const pids = terminationTree(record, ownership, options);
+  const aliveResolver = options.aliveResolver || pidAlive;
+  if (!pids.length && aliveResolver(Number(record?.rootPid || record?.pid))) {
+    return { stopped: false, reason: 'verified process tree is unavailable; ownership preserved', remainingPids: [Number(record.rootPid || record.pid)], remainingPorts: busyPorts(record, options.ownerResolver || portOwner) };
+  }
+  if (!pids.length) {
+    const verification = await waitForTermination(record, [], options);
+    if (verification.remainingPorts.length) return { stopped: false, reason: 'expected port remained after termination', attemptedPids: [], remainingPids: [], remainingPorts: verification.remainingPorts };
+    return { stopped: true, cleaned: true, attemptedPids: [] };
+  }
+
+  const platform = options.platform || process.platform;
+  const attemptedPids = [];
+  if (platform === 'win32') {
+    const taskkill = options.taskkill || ((pid) => spawnCommandSync('taskkill.exe', ['/PID', String(pid), '/F'], { encoding: 'utf8', timeout: 15000, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] }));
+    // Target every verified recorded PID individually. Do not pass /T: a
+    // recursive taskkill could terminate an unrecorded child that appeared
+    // after the last verified tree snapshot. A newly spawned/unrecorded child
+    // must instead remain visible as incomplete cleanup.
+    for (const pid of [...pids].sort((a, b) => b - a)) {
+      attemptedPids.push(pid);
+      try { taskkill(pid); } catch { /* verification below reports survivors */ }
+    }
+  } else {
+    try { process.kill(-Number(record.pid), 'SIGTERM'); } catch { return { stopped: false, reason: 'process termination failed', attemptedPids: [Number(record.pid)] }; }
+    attemptedPids.push(Number(record.pid));
+  }
+  const verification = await waitForTermination(record, pids, options);
+  if (verification.remainingPids.length || verification.remainingPorts.length) {
+    return {
+      stopped: false,
+      reason: 'verified process tree or expected port remained after termination',
+      attemptedPids,
+      remainingPids: verification.remainingPids,
+      remainingPorts: verification.remainingPorts,
+    };
+  }
+  return { stopped: true, cleaned: true, attemptedPids, remainingPids: [], remainingPorts: [] };
 }
 
 function assertPortsAvailable(definition, existingRecord, ownerResolver = portOwner) {
@@ -586,7 +680,14 @@ async function startProduct(product) {
       process.stdout.write(`READY ${product}/${definition.service} PID=${previous.pid} (already owned)\n`);
       continue;
     }
-    if (previous && (pidAlive(previous.rootPid || previous.pid) || ownership.owned)) terminateRecord(previous);
+    if (previous && (pidAlive(previous.rootPid || previous.pid) || ownership.owned)) {
+      const previousStop = await terminateRecord(previous, { ownership });
+      if (!previousStop.stopped) {
+        const remaining = previousStop.remainingPids?.length ? ` remaining PIDs=${previousStop.remainingPids.join(',')}` : '';
+        const ports = previousStop.remainingPorts?.length ? ` remaining ports=${previousStop.remainingPorts.map((item) => item.port).join(',')}` : '';
+        throw new Error(`Cannot replace ${product}/${definition.service}: verified cleanup incomplete (${previousStop.reason || 'unknown'}).${remaining}${ports}`);
+      }
+    }
     assertPortsAvailable(definition, ownership.owned ? previous : null);
     const service = spawnService(definition, product);
     const record = service.record;
@@ -602,8 +703,9 @@ async function startProduct(product) {
     );
     if (!readiness.ready) {
       reportServiceFailure(record, readiness);
-      terminateRecord(record);
-      state.products[product].services = records.filter((item) => item.pid !== record.pid);
+      const cleanup = await terminateRecord(record);
+      if (cleanup.stopped) state.products[product].services = records.filter((item) => item.pid !== record.pid);
+      else process.stderr.write(`Cleanup incomplete for ${product}/${definition.service}; ownership record retained.\n`);
       saveState(state);
       throw new Error(`${product}/${definition.service} failed before readiness.`);
     }
@@ -632,8 +734,13 @@ async function startProduct(product) {
   }
   const finalCheck = await runDoctor({ product, strict: true, environment: env, localConfig: local });
   if (finalCheck.status === 'FAIL') {
-    for (const record of started) terminateRecord(record);
-    state.products[product].services = records.filter((record) => !started.some((item) => item.pid === record.pid));
+    const failedCleanup = [];
+    for (const record of started) {
+      const cleanup = await terminateRecord(record);
+      if (!cleanup.stopped) failedCleanup.push({ record, cleanup });
+    }
+    state.products[product].services = records.filter((record) => !started.some((item) => item.pid === record.pid) || failedCleanup.some((item) => item.record.pid === record.pid));
+    for (const item of failedCleanup) process.stderr.write(`Cleanup incomplete for ${product}/${item.record.service}; ownership record retained.\n`);
     saveState(state);
     printReport(finalCheck);
     throw new Error(`${product} doctor failed after startup; newly started services were stopped.`);
@@ -682,20 +789,42 @@ function printStatus(rows) {
   process.stdout.write(`\n${ready ? 'READY' : 'NOT READY'}\n`);
 }
 
-function stopProduct(product) {
-  const state = loadState();
+async function stopProduct(product, options = {}) {
+  const state = options.state || loadState();
+  const reconcile = options.reconcile || reconcileRecord;
+  const terminate = options.terminate || terminateRecord;
+  const persist = options.save || saveState;
   const products = product ? [product] : Object.keys(state.products || {});
+  const failures = [];
   for (const key of products) {
     const services = state.products[key]?.services || [];
+    const remainingRecords = [];
     for (const record of services) {
-      const ownership = reconcileRecord(record);
-      if (ownership.recovered) saveState(state);
-      const outcome = terminateRecord(record);
-      process.stdout.write(`${outcome.stopped ? 'Stopped' : 'Skipped'} ${key}/${record.service} PID=${record.pid} state=${ownership.state}${outcome.reason ? ` (${outcome.reason})` : ''}\n`);
+      const ownership = reconcile(record);
+      if (ownership.state === 'CONFLICT') {
+        failures.push({ key, record, outcome: { stopped: false, reason: ownership.reason, remainingPorts: ownership.portOwners.filter((item) => item.pid) } });
+        remainingRecords.push(record);
+        process.stderr.write(`CONFLICT ${key}/${record.service} PID=${record.pid} (${ownership.reason})\n`);
+        continue;
+      }
+      const outcome = await terminate(record, { ownership });
+      if (outcome.stopped) {
+        process.stdout.write(`Stopped ${key}/${record.service} PID=${record.pid} state=${ownership.state}\n`);
+      } else {
+        failures.push({ key, record, outcome });
+        remainingRecords.push(record);
+        const pids = outcome.remainingPids?.length ? ` remaining PIDs=${outcome.remainingPids.join(',')}` : '';
+        const ports = outcome.remainingPorts?.length ? ` remaining ports=${outcome.remainingPorts.map((item) => `${item.port}${item.pid ? ` (PID ${item.pid})` : ''}`).join(',')}` : '';
+        process.stderr.write(`FAILED ${key}/${record.service} PID=${record.pid}: ${outcome.reason || 'cleanup incomplete'}${pids}${ports}\n`);
+      }
     }
-    if (state.products[key]) state.products[key].services = [];
+    if (state.products[key]) state.products[key].services = remainingRecords;
   }
-  saveState(state);
+  persist(state);
+  if (failures.length) {
+    throw new Error(`qa:stop incomplete; ${failures.length} WorksideQA-owned service tree(s) remain recorded.`);
+  }
+  return { stopped: true };
 }
 
 async function restartProductService(product, service) {
@@ -708,8 +837,8 @@ async function restartProductService(product, service) {
       const owner = ownership.portOwners.find((item) => item.pid);
       throw new Error(`Refusing to restart ${product}/${service}: port ${owner?.port || service} is CONFLICT (PID ${owner?.pid || 'unknown'} identity mismatch).`);
     }
-    const outcome = terminateRecord(record);
-    if (!outcome.stopped && (pidAlive(record.rootPid || record.pid) || verifiedProcessTreePids(record).length)) throw new Error(`Refusing to restart ${product}/${service}: verified process tree could not be stopped (${outcome.reason || 'unknown termination failure'}). No unverified process was touched.`);
+    const outcome = await terminateRecord(record, { ownership });
+    if (!outcome.stopped) throw new Error(`Refusing to restart ${product}/${service}: verified process tree could not be stopped (${outcome.reason || 'unknown termination failure'}). No unverified process was touched.`);
     state.products[product].services = state.products[product].services.filter((item) => item !== record);
     saveState(state);
   }
@@ -730,7 +859,7 @@ async function main(argv = process.argv.slice(2)) {
     await startProduct(options.product);
     return;
   }
-  if (options.action === 'stop') { stopProduct(options.product); return; }
+  if (options.action === 'stop') { await stopProduct(options.product); return; }
   if (options.action === 'restart') {
     if (!options.product) throw new Error('qa:restart requires --product.');
     await restartProductService(options.product, options.service);

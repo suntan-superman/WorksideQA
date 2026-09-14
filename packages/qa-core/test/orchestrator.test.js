@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { parseArgs, serviceDefinitions, commandMatches, canonicalMerxusMetroEnvironment, waitForServiceReady, assertPortsAvailable, fixtureCommands, spawnService, reconcileRecord } = require('../src/orchestrator');
+const { parseArgs, serviceDefinitions, commandMatches, canonicalMerxusMetroEnvironment, waitForServiceReady, assertPortsAvailable, fixtureCommands, spawnService, reconcileRecord, terminateRecord, stopProduct } = require('../src/orchestrator');
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -152,4 +152,69 @@ test('long-running service logging does not retain parent stdout/stderr pipes', 
     await new Promise((resolve) => setTimeout(resolve, 50));
     try { fs.unlinkSync(logPath); } catch {}
   }
+});
+
+function terminationRecord() {
+  return {
+    product: 'merxus', service: 'firebase', pid: 100, rootPid: 100, executable: 'firebase.cmd',
+    args: ['emulators:start'], ports: [9099], processTree: [
+      { pid: 100, executable: 'firebase.cmd', commandLine: 'firebase.cmd emulators:start', startedAt: 'root' },
+      { pid: 200, executable: 'node.exe', commandLine: 'node firebase.js emulators:start', startedAt: 'child' },
+    ],
+  };
+}
+
+test('termination targets every verified recorded Windows tree member, including a live descendant after wrapper exit', async () => {
+  const record = terminationRecord();
+  const live = new Set([200]);
+  const info = new Map([[200, { pid: 200, Name: 'node.exe', CommandLine: 'node firebase.js emulators:start', CreationDate: 'child' }]]);
+  const killed = [];
+  const result = await terminateRecord(record, {
+    platform: 'win32', ownership: { state: 'RECOVERED', owned: true, currentTree: [record.processTree[1]], portOwners: [{ port: 9099, pid: 200 }] },
+    aliveResolver: (pid) => live.has(pid), infoResolver: (pid) => info.get(pid), ownerResolver: () => live.has(200) ? 200 : null,
+    portOpenResolver: () => false, taskkill: (pid) => { killed.push(pid); live.delete(pid); }, timeoutMs: 100, pollMs: 1,
+  });
+  assert.equal(result.stopped, true);
+  assert.deepEqual(killed, [200]);
+});
+
+test('termination preserves ownership when taskkill fails or a verified descendant/port remains', async () => {
+  const record = terminationRecord();
+  const live = new Set([100, 200]);
+  const info = new Map([
+    [100, { pid: 100, Name: 'firebase.cmd', CommandLine: 'firebase.cmd emulators:start', CreationDate: 'root' }],
+    [200, { pid: 200, Name: 'node.exe', CommandLine: 'node firebase.js emulators:start', CreationDate: 'child' }],
+  ]);
+  const result = await terminateRecord(record, {
+    platform: 'win32', ownership: { state: 'RUNNING', owned: true, currentTree: record.processTree, portOwners: [{ port: 9099, pid: 200 }] },
+    aliveResolver: (pid) => live.has(pid), infoResolver: (pid) => info.get(pid), ownerResolver: () => 200,
+    portOpenResolver: () => true, taskkill: () => ({ status: 1 }), timeoutMs: 5, pollMs: 1,
+  });
+  assert.equal(result.stopped, false);
+  assert.deepEqual(result.remainingPids.sort((a, b) => a - b), [100, 200]);
+  assert.deepEqual(result.remainingPorts, [{ port: 9099, pid: 200 }]);
+  assert.equal(live.has(100), true);
+});
+
+test('stopProduct retains records on incomplete cleanup and clears only after verified success', async () => {
+  const record = terminationRecord();
+  const baseState = () => ({ products: { merxus: { services: [record] } } });
+  const ownership = { state: 'RUNNING', owned: true, recovered: false, portOwners: [] };
+  let persisted = 0;
+  await assert.rejects(
+    stopProduct('merxus', {
+      state: baseState(), reconcile: () => ownership,
+      terminate: async () => ({ stopped: false, reason: 'port remains', remainingPids: [200], remainingPorts: [{ port: 9099, pid: 200 }] }),
+      save: () => { persisted += 1; },
+    }),
+    /qa:stop incomplete/,
+  );
+  assert.equal(persisted, 1);
+
+  const successfulState = baseState();
+  await stopProduct('merxus', {
+    state: successfulState, reconcile: () => ownership,
+    terminate: async () => ({ stopped: true, cleaned: true }), save: () => { persisted += 1; },
+  });
+  assert.deepEqual(successfulState.products.merxus.services, []);
 });
