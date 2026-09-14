@@ -300,6 +300,17 @@ function captureObserverProcesses(adb, deviceId, execute = spawnCommandSync, env
   };
 }
 
+async function waitForObserverIdle(capture, now, sleep, deadline, pollMs = 100) {
+  let snapshot = capture();
+  while (snapshot?.activeDriverProcesses?.length && now() < deadline) {
+    const remaining = deadline - now();
+    if (remaining <= 0) break;
+    await sleep(Math.min(pollMs, remaining));
+    snapshot = capture();
+  }
+  return { idle: !snapshot?.activeDriverProcesses?.length, snapshot };
+}
+
 async function confirmLauncherForeground(readState, adb, deviceId, appId, execute, env, now, sleep, deadline) {
   const observations = [];
   const first = readState(adb, deviceId, appId, execute, env);
@@ -379,10 +390,23 @@ async function waitForRenderedRuntime(options = {}) {
   } finally {
     observerLock.release();
   }
-  const observerProcessesAfter = options.observerProcessSnapshot
-    ? options.observerProcessSnapshot('after')
+  const observerCapture = (phase) => options.observerProcessSnapshot
+    ? options.observerProcessSnapshot(phase)
     : captureObserverProcesses(adb, deviceId, execute, env);
+  const observerIdle = root.ok
+    ? await waitForObserverIdle(() => observerCapture('after'), now, sleep, deadline)
+    : (() => { const snapshot = observerCapture('after'); return { idle: !snapshot?.activeDriverProcesses?.length, snapshot }; })();
+  const observerProcessesAfter = observerIdle.snapshot;
   const afterObserver = readState(adb, deviceId, appId, execute, env);
+  if (root.ok && !observerIdle.idle) {
+    return {
+      ...appReadinessFailure('OBSERVER_CONFLICT', afterObserver, startedAt, timeoutMs, {
+        probeEndMs: now(), observerFailureAt: new Date(now()).toISOString(), observerProcessesBefore, observerProcessesAfter,
+        observerLock: { path: lockPath, owner: observerLock.owner || null }, launchDiagnostics: { preparation: launchPreparation, launch },
+      }),
+      error: 'Maestro instrumentation remained active after the observer exited.',
+    };
+  }
   const observerAttempt = {
     before: { timestamp: new Date(observerStartedAt).toISOString(), appPid: beforeObserver.appPid || null, appPidAlive: Boolean(beforeObserver.appPid), foregroundActivity: beforeObserver.activityText || null, appForeground: Boolean(beforeObserver.appForeground), launcherForeground: Boolean(beforeObserver.launcherForeground) },
     after: { timestamp: new Date(now()).toISOString(), appPid: afterObserver.appPid || null, appPidAlive: Boolean(afterObserver.appPid), foregroundActivity: afterObserver.activityText || null, appForeground: Boolean(afterObserver.appForeground), launcherForeground: Boolean(afterObserver.launcherForeground) },
@@ -390,7 +414,7 @@ async function waitForRenderedRuntime(options = {}) {
     output: String(root.output || '').slice(-2000),
     observerProcessesBefore,
     observerProcessesAfter,
-    observerCleanupVerified: observerProcessesAfter.activeDriverProcesses.length === 0,
+    observerCleanupVerified: observerIdle.idle,
   };
   let state = readState(adb, deviceId, appId, execute, env);
   if (!root.ok) {

@@ -337,3 +337,21 @@ test('rendered probe refuses to start when an instrumentation process is already
   assert.equal(observerStarted, false);
   assert.match(report.observerProcessesBefore.activeDriverProcesses[0], /dev\.mobile\.maestro\.test/);
 });
+
+test('rendered probe waits for the observer driver to exit before a second hierarchy read', async () => {
+  let phase = 0;
+  let hierarchyRead = false;
+  const snapshots = [
+    { hostProcesses: [], deviceProcesses: [], activeDriverProcesses: [] },
+    { hostProcesses: [], deviceProcesses: ['dev.mobile.maestro.test'], activeDriverProcesses: ['dev.mobile.maestro.test'] },
+    { hostProcesses: [], deviceProcesses: [], activeDriverProcesses: [] },
+  ];
+  const report = await waitForRenderedRuntime(readinessOptions({
+    observerProcessSnapshot: () => snapshots[Math.min(phase++, snapshots.length - 1)],
+    runFlowImplementation: async () => ({ ok: true, code: 0, signal: null, output: '' }),
+    readHierarchy: () => { hierarchyRead = true; return '<node resource-id="qa-environment-root"/><node resource-id="screen.auth.login"/>'; },
+  }));
+  assert.equal(report.ok, true);
+  assert.equal(hierarchyRead, true);
+  assert.equal(report.observerAttempts[0].observerCleanupVerified, true);
+});
