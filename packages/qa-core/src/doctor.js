@@ -353,7 +353,10 @@ async function checkMobileRuntime(env, options) {
       rendered = device && adb && maestro && deviceId
         ? await waitForRenderedRuntime({
           adb, maestro, deviceId, appId: device.appId || manifest.mobile.appId,
-          launchUri: device.launchUri, env, timeoutMs: Number(env.WORKSIDEQA_RENDERED_RUNTIME_TIMEOUT_MS || DEFAULT_TIMEOUT_MS),
+          launchUri: device.launchUri,
+          env,
+          timeoutMs: Number(env.WORKSIDEQA_RENDERED_RUNTIME_TIMEOUT_MS || DEFAULT_TIMEOUT_MS),
+          artifactDirectory: path.join(WORKSIDEQA_ROOT, '.worksideqa', 'rendered-runtime', new Date().toISOString().replace(/[:.]/g, '-')),
         })
         : { ok: false, reason: 'CONFIGURATION_MISSING', elapsedMs: 0 };
     } catch (error) {
