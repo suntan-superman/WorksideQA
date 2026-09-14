@@ -21,7 +21,7 @@ test('doctor parses only canonical PowerShell environment assignments', () => {
 
 test('doctor arguments support offline/json/strict modes', () => {
   assert.deepEqual(parseArgs(['--offline', '--json', '--strict']), {
-    json: true, offline: true, skipAuth: false, strict: true,
+    json: true, offline: true, skipAuth: false, strict: true, product: 'all',
   });
 });
 

@@ -16,3 +16,4 @@ test-results/
 *.log
 
 .maestro.local.ps1
+.worksideqa/

@@ -23,13 +23,18 @@ const DEFAULTS = {
 };
 
 function parseArgs(argv) {
-  const options = { json: false, offline: false, skipAuth: false, strict: false };
+  const options = { json: false, offline: false, skipAuth: false, strict: false, product: 'all' };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === '--json') options.json = true;
     else if (arg === '--offline' || arg === '--skip-network') options.offline = true;
     else if (arg === '--skip-auth') options.skipAuth = true;
     else if (arg === '--strict') options.strict = true;
+    else if (arg === '--product') {
+      const value = argv[++i];
+      if (!['all', 'merxus', 'sageset'].includes(value)) throw new Error('--product must be merxus, sageset, or all.');
+      options.product = value;
+    }
     else if (arg === '--help' || arg === '-h') options.help = true;
     else throw new Error(`Unknown option: ${arg}`);
   }
@@ -48,6 +53,7 @@ Options:
   --offline       Skip network, service, and device probes; validate local contracts only.
   --skip-auth     Skip the Auth-emulator command (identity probes still run when online).
   --strict        Treat optional SageSet/iOS checks as failures when configured.
+  --product       Check one product (merxus, sageset) or all products (default).
   --json          Emit a machine-readable report instead of the human summary.
 `;
 }
@@ -82,6 +88,9 @@ function mergedEnvironment(localConfig) {
   env.FIRESTORE_EMULATOR_HOST = env.FIRESTORE_EMULATOR_HOST || '127.0.0.1:8080';
   env.FIREBASE_STORAGE_EMULATOR_HOST = env.FIREBASE_STORAGE_EMULATOR_HOST || '127.0.0.1:9199';
   env.MERXUS_ALLOW_EXTERNAL_PROVIDERS = env.MERXUS_ALLOW_EXTERNAL_PROVIDERS || 'false';
+  env.SAGESET_MAESTRO_ENVIRONMENT = env.SAGESET_MAESTRO_ENVIRONMENT || 'emulator';
+  env.SAGESET_MAESTRO_FIREBASE_PROJECT_ID = env.SAGESET_MAESTRO_FIREBASE_PROJECT_ID || 'sageset-maestro-local';
+  env.SAGESET_MAESTRO_ALLOW_EXTERNAL_NOTIFICATIONS = env.SAGESET_MAESTRO_ALLOW_EXTERNAL_NOTIFICATIONS || 'false';
   return env;
 }
 
@@ -114,6 +123,15 @@ function resolveMaestro(env) {
 function resolveCommand(command, env) {
   if (command === 'maestro') return resolveMaestro(env);
   if (commandExists(command, env)) return command;
+  if (process.platform === 'win32') {
+    const candidates = [];
+    if (command === 'adb') {
+      const sdkRoots = [env.ANDROID_HOME, env.ANDROID_SDK_ROOT, path.join(env.LOCALAPPDATA || '', 'Android', 'Sdk')].filter(Boolean);
+      candidates.push(...sdkRoots.map((root) => path.join(root, 'platform-tools', 'adb.exe')));
+    }
+    if (command === 'npm') candidates.push(path.join(path.dirname(process.execPath), 'npm.cmd'));
+    for (const candidate of candidates) if (fs.existsSync(candidate) && commandExists(candidate, env)) return candidate;
+  }
   return null;
 }
 
@@ -145,8 +163,33 @@ function safeCredentialStatus(env, key) {
   return !String(env[key] || '').trim() ? 'missing' : 'set';
 }
 
-function checkLocalContract(env, localConfig) {
+function checkLocalContract(env, localConfig, product = 'all') {
   const checks = [];
+  if (product === 'sageset') {
+    const required = [
+      ['SAGESET_MOBILE_REPO', 'SageSet Mobile path'],
+      ['SAGESET_MAESTRO_USER_A_EMAIL', 'SageSet User A email'],
+      ['SAGESET_MAESTRO_USER_A_PASSWORD', 'SageSet User A password'],
+      ['SAGESET_MAESTRO_USER_B_EMAIL', 'SageSet User B email'],
+      ['SAGESET_MAESTRO_USER_B_PASSWORD', 'SageSet User B password'],
+      ['SAGESET_MAESTRO_QA_EMAIL_ALLOWLIST', 'SageSet QA email allowlist'],
+    ];
+    for (const [key, label] of required) {
+      checks.push(String(env[key] || '').trim()
+        ? result('passed', `config.${key}`, `${label} is configured.`, { value: key.includes('PASSWORD') ? 'set' : env[key] })
+        : result('failed', `config.${key}`, `${label} is missing from .maestro.local.ps1.`));
+    }
+    checks.push(env.SAGESET_MAESTRO_ENVIRONMENT === 'emulator'
+      ? result('passed', 'config.sageset-environment', 'SageSet emulator environment is canonical.')
+      : result('failed', 'config.sageset-environment', 'SAGESET_MAESTRO_ENVIRONMENT must be emulator.'));
+    checks.push(env.SAGESET_MAESTRO_FIREBASE_PROJECT_ID === 'sageset-maestro-local'
+      ? result('passed', 'config.sageset-firebase-project', 'SageSet Maestro Firebase project is canonical.')
+      : result('failed', 'config.sageset-firebase-project', 'SAGESET_MAESTRO_FIREBASE_PROJECT_ID must be sageset-maestro-local.'));
+    checks.push(String(env.SAGESET_MAESTRO_ALLOW_EXTERNAL_NOTIFICATIONS || 'false').toLowerCase() !== 'true'
+      ? result('passed', 'config.sageset-external-notifications', 'SageSet external notifications are disabled.')
+      : result('failed', 'config.sageset-external-notifications', 'SageSet external notifications must be disabled.'));
+    return checks;
+  }
   checks.push(fs.existsSync(DEFAULTS.localConfig)
     ? result('passed', 'config.local', 'Loaded ignored .maestro.local.ps1.')
     : result('failed', 'config.local', `Missing ${DEFAULTS.localConfig}. Copy maestro.local.ps1.example and fill canonical QA values.`));
@@ -173,9 +216,11 @@ function checkLocalContract(env, localConfig) {
   checks.push(env.MERXUS_ALLOW_EXTERNAL_PROVIDERS === 'false'
     ? result('passed', 'config.external-providers', 'Merxus external providers are disabled.')
     : result('failed', 'config.external-providers', 'MERXUS_ALLOW_EXTERNAL_PROVIDERS must be false for Maestro.'));
-  checks.push(safeCredentialStatus(env, 'SAGESET_MAESTRO_USER_A_EMAIL') === 'set'
-    ? result('passed', 'config.sageset-identity', 'SageSet User A credentials are configured.')
-    : result(optionsStrict(localConfig) ? 'failed' : 'warning', 'config.sageset-identity', 'SageSet credentials are not configured; SageSet flows will be blocked.'));
+  if (product === 'all') {
+    checks.push(safeCredentialStatus(env, 'SAGESET_MAESTRO_USER_A_EMAIL') === 'set'
+      ? result('passed', 'config.sageset-identity', 'SageSet User A credentials are configured.')
+      : result(optionsStrict(localConfig) ? 'failed' : 'warning', 'config.sageset-identity', 'SageSet credentials are not configured; SageSet flows will be blocked.'));
+  }
   return checks;
 }
 
@@ -183,7 +228,7 @@ function optionsStrict(localConfig) {
   return Boolean(localConfig.__doctorStrict);
 }
 
-function checkPaths(env) {
+function checkPaths(env, product = 'all') {
   const paths = [
     ['path.worksideqa', WORKSIDEQA_ROOT],
     ['path.merxus', DEFAULTS.merxusRoot],
@@ -193,14 +238,14 @@ function checkPaths(env) {
     ['path.sageset', DEFAULTS.sagesetRoot],
     ['path.sageset.mobile', env.SAGESET_MOBILE_REPO],
   ];
-  return paths.map(([id, value]) => fs.existsSync(value)
+  return paths.filter(([id]) => product === 'all' || (product === 'merxus' ? !id.includes('sageset') : id.includes('sageset'))).map(([id, value]) => fs.existsSync(value)
     ? result('passed', id, 'Path exists.', { path: value })
     : result('failed', id, `Path does not exist: ${value}`, { path: value }));
 }
 
-function checkManifests() {
+function checkManifests(product = 'all') {
   const checks = [];
-  for (const key of ['merxus', 'sageset']) {
+  for (const key of ['merxus', 'sageset'].filter((key) => product === 'all' || key === product)) {
     try {
       const manifest = validateManifest(loadProductManifest(key));
       checks.push(result('passed', `manifest.${key}`, `${manifest.name} manifest is valid.`));
@@ -248,6 +293,14 @@ function checkTools(env) {
 async function checkServices(env, options) {
   if (options.offline) return [result('skipped', 'services', 'Network/service probes skipped (--offline).')];
   const checks = [];
+  if (options.product === 'sageset') {
+    for (const [id, label, port] of [['service.sageset-auth', 'SageSet Auth emulator', 9099], ['service.sageset-firestore', 'SageSet Firestore emulator', 8080], ['service.sageset-storage', 'SageSet Storage emulator', 9199], ['service.sageset-functions', 'SageSet Functions emulator', 5001]]) {
+      checks.push((await probePort('127.0.0.1', port))
+        ? result('passed', id, `${label} is listening on 127.0.0.1:${port}.`)
+        : result('failed', id, `${label} is not reachable on 127.0.0.1:${port}.`));
+    }
+    return checks;
+  }
   for (const [id, label, host, port] of [
     ['service.firebase-auth', 'Firebase Auth emulator', '127.0.0.1', 9099],
     ['service.firebase-firestore', 'Firestore emulator', '127.0.0.1', 8080],
@@ -273,14 +326,23 @@ async function checkServices(env, options) {
     try { body = JSON.parse(response.body || '{}'); } catch { /* safe diagnostic only */ }
     const passed = response.status === 200 && body.exists === true && body.provider === 'email' && body.hasWorkspace === true;
     checks.push(passed
-      ? result('passed', `backend.identity.${owner.toLowerCase().replace(' ', '-')}`, `${owner} is visible to the exact Mobile check-email endpoint.`, { status: response.status, exists: true, provider: body.provider, hasWorkspace: true })
-      : result('failed', `backend.identity.${owner.toLowerCase().replace(' ', '-')}`, `${owner} check-email contract failed.`, { status: response.status || null, exists: body.exists === true, provider: body.provider || null, hasWorkspace: body.hasWorkspace === true }));
+      ? result('passed', `backend.identity.${owner.toLowerCase().replace(' ', '-')}`, `${owner} is visible to the exact Mobile check-email endpoint.`, { httpStatus: response.status, exists: true, provider: body.provider, hasWorkspace: true })
+      : result('failed', `backend.identity.${owner.toLowerCase().replace(' ', '-')}`, `${owner} check-email contract failed.`, { httpStatus: response.status || null, exists: body.exists === true, provider: body.provider || null, hasWorkspace: body.hasWorkspace === true }));
   }
   return checks;
 }
 
 function runAuthVerify(env, options) {
   if (options.offline || options.skipAuth) return result('skipped', 'auth.verify', 'Auth identity command skipped.');
+  if (options.product === 'sageset') {
+    const root = env.SAGESET_MOBILE_REPO ? path.dirname(env.SAGESET_MOBILE_REPO) : DEFAULTS.sagesetRoot;
+    const outcome = spawnCommandSync(process.platform === 'win32' ? 'npm.cmd' : 'npm', ['--prefix', 'functions', 'run', 'verify:maestro-fixtures'], {
+      cwd: root, env, encoding: 'utf8', timeout: 30000, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    return !outcome.error && outcome.status === 0
+      ? result('passed', 'auth.verify.sageset', 'SageSet canonical fixture users and documents verified.')
+      : result('failed', 'auth.verify.sageset', 'SageSet verify:maestro-fixtures failed.');
+  }
   const backendRoot = env.MERXUS_BACKEND_REPO || path.join(DEFAULTS.merxusRoot, 'merxus-ai-backend');
   const outcome = spawnCommandSync(process.platform === 'win32' ? 'npm.cmd' : 'npm', ['run', 'qa:maestro:auth:verify'], {
     cwd: backendRoot, env, encoding: 'utf8', timeout: 30000, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'],
@@ -291,6 +353,7 @@ function runAuthVerify(env, options) {
 }
 
 async function checkMobileRuntime(env, options) {
+  if (options.product === 'sageset') return [result('skipped', 'mobile.runtime', 'SageSet has no WorksideQA-owned served Metro runtime contract.')];
   const tool = path.join(WORKSIDEQA_ROOT, 'packages', 'qa-mobile', 'src', 'merxus-mobile-runtime.js');
   const checks = [];
   if (!fs.existsSync(tool)) return [result('failed', 'mobile.runtime-tool', 'Canonical Mobile runtime verifier is missing.')];
@@ -320,6 +383,7 @@ async function checkMobileRuntime(env, options) {
 }
 
 async function checkDevices(env, options) {
+  if (options.product === 'sageset') return [result('skipped', 'device', 'SageSet device identity is selected by the invoked flow.')];
   if (options.offline) return [result('skipped', 'device.android', 'Device probes skipped (--offline).')];
   const checks = [];
   const adb = resolveCommand('adb', env);
@@ -338,13 +402,13 @@ async function checkDevices(env, options) {
 }
 
 async function runDoctor(options = {}) {
-  const localConfig = parsePowerShellConfig(DEFAULTS.localConfig);
+  const localConfig = options.localConfig || parsePowerShellConfig(DEFAULTS.localConfig);
   if (options.strict) localConfig.__doctorStrict = true;
-  const env = mergedEnvironment(localConfig);
+  const env = options.environment || mergedEnvironment(localConfig);
   const checks = [
-    ...checkLocalContract(env, localConfig),
-    ...checkPaths(env),
-    ...checkManifests(),
+    ...checkLocalContract(env, localConfig, options.product),
+    ...checkPaths(env, options.product),
+    ...checkManifests(options.product),
     ...checkTools(env),
   ];
   checks.push(...await checkMobileRuntime(env, options));
@@ -394,6 +458,7 @@ module.exports = {
   parseArgs,
   parsePowerShellConfig,
   mergedEnvironment,
+  resolveCommand,
   probePort,
   runDoctor,
 };

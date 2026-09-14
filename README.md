@@ -80,6 +80,11 @@ npm run qa:env:health -- --product radiusiq
 npm run qa:env:health -- --require-ai
 npm run qa:env:health:offline
 npm run qa:doctor
+npm run qa:start -- --product merxus
+npm run qa:status -- --product merxus
+npm run qa:stop -- --product merxus
+npm run qa:restart:merxus:metro
+npm run qa:restart:merxus:backend
 ```
 
 `qa:doctor` is the single read-only readiness gate for the local Maestro lab.
@@ -90,6 +95,16 @@ readiness, and confirms the configured Android QA app. It never starts or
 stops a service, resets fixtures, launches a flow, or prints passwords. Use
 `npm run qa:doctor -- --offline` for a reboot-safe contract check before the
 local services are running; a normal run must pass before certification.
+
+The lifecycle commands own only processes recorded in
+`.worksideqa/runtime-state.json` (which is gitignored). `qa:start` loads the
+ignored `.maestro.local.ps1`, starts missing services in dependency order,
+waits for their ports, configures Android reverse networking, and runs the
+product doctor before printing `READY`. It never launches a feature flow.
+`qa:status` reports ownership, PIDs, ports, runtime mode, device/app state and
+readiness. `qa:stop` and the restart helpers terminate only recorded,
+command-matching WorksideQA processes; unrecorded processes are never killed.
+Use `--product sageset` with the same start/status/stop commands for SageSet.
 
 Use `--update-baselines` after reviewing a clean screenshot to create missing visual regression baselines.
 

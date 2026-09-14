@@ -25,6 +25,40 @@ reset fixtures, launch an app, or print passwords. Use
 `npm run qa:doctor -- --offline` to validate the local contract before services
 are started. A normal run must report `PASS` before certification.
 
+## Managed service lifecycle
+
+Use the WorksideQA lifecycle commands for reboot-safe startup; they load the
+ignored `.maestro.local.ps1`, start only missing owned services, wait for
+readiness probes, configure Android reverse networking, and finish with the
+read-only product doctor. No feature flow is launched automatically.
+
+```powershell
+Set-Location C:\Users\sjroy\Source\WorksideQA
+npm run qa:start -- --product merxus
+npm run qa:status -- --product merxus
+npm run qa:doctor -- --strict
+```
+
+Merxus order is Firebase emulators, QA backend, canonical Maestro Metro,
+Android/device readiness, `adb reverse`, then doctor. SageSet uses the same
+interface with `--product sageset` and starts its emulator/functions service.
+Use `qa:stop` or a product restart helper to manage only recorded services:
+
+```powershell
+npm run qa:stop -- --product merxus
+npm run qa:restart:merxus:metro
+npm run qa:restart:merxus:backend
+npm run qa:restart:sageset:firebase
+```
+
+Ownership is stored locally (and ignored by Git) in
+`.worksideqa/runtime-state.json`. Each record contains product, service, role,
+PID, start time, working directory, executable/arguments, expected ports, log
+path, and a derived runtime hash. `qa:status` reports actual port owners and
+device/app state; `qa:stop` refuses to kill an unrecorded or command-mismatched
+process. After a reboot, run `qa:start` followed by strict doctor twice from
+clean shells before resuming Slice 25 certification.
+
 ## Terminal map
 - T1 – Firebase emulators
 - T2 – Maestro QA backend
