@@ -66,6 +66,12 @@ Canonical local keys (values are never printed by tooling):
 - `MERXUS_MAESTRO_ANDROID_APP_ID`
 - `MERXUS_ANDROID_EMULATOR_ID`
 - `MERXUS_IOS_SIMULATOR_ID` (Mac only)
+- `SAGESET_MOBILE_REPO`
+- `SAGESET_MAESTRO_USER_A_EMAIL`
+- `SAGESET_MAESTRO_USER_A_PASSWORD`
+- `SAGESET_MAESTRO_USER_B_EMAIL`
+- `SAGESET_MAESTRO_USER_B_PASSWORD`
+- `SAGESET_MAESTRO_QA_EMAIL_ALLOWLIST`
 
 ## One-time setup
 1. Ensure `C:\Users\sjroy\.maestro\bin` is in the persistent user PATH.

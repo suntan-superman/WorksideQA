@@ -11,3 +11,11 @@ $env:MERXUS_ANDROID_EMULATOR_ID = "emulator-5554"
 $env:MERXUS_IOS_SIMULATOR_ID = "<SET LOCALLY: simulator UDID>"
 $env:MERXUS_MAESTRO_FIREBASE_PROJECT_ID = "merxus-maestro-local"
 $env:MERXUS_MAESTRO_ANDROID_APP_ID = "com.merxus.mobile.qa"
+
+# SageSet Maestro fixture contract (required for SageSet suites)
+$env:SAGESET_MOBILE_REPO = "C:\Users\sjroy\Source\SageSet\mobile"
+$env:SAGESET_MAESTRO_USER_A_EMAIL = "<SET LOCALLY: canonical QA email>"
+$env:SAGESET_MAESTRO_USER_A_PASSWORD = "<SET LOCALLY: canonical QA password>"
+$env:SAGESET_MAESTRO_USER_B_EMAIL = "<SET LOCALLY: canonical QA email>"
+$env:SAGESET_MAESTRO_USER_B_PASSWORD = "<SET LOCALLY: canonical QA password>"
+$env:SAGESET_MAESTRO_QA_EMAIL_ALLOWLIST = "<USER_A_EMAIL>,<USER_B_EMAIL>"
