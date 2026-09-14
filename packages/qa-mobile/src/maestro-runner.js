@@ -3,7 +3,7 @@ const path = require("path");
 const YAML = require("yaml");
 const { parseAuthoritativeResult } = require('./authoritative-result');
 const { collectCorrelationSources, emptyCorrelationDiagnostics } = require('./ui-correlation');
-const { ensureDir, fileExists, fromRoot, spawnCommand, terminateProcessTree, toPosixPath, writeJson } = require("../../qa-utils/src");
+const { acquireObserverLock, ensureDir, fileExists, fromRoot, spawnCommand, terminateProcessTree, toPosixPath, writeJson } = require("../../qa-utils/src");
 const { resolveConfiguredDevice, validateDeviceDescriptors } = require('./device-selection');
 const { spawnMaestro, spawnMaestroSync, terminateMaestro } = require("./maestro-process");
 const { runBackendIdentityPreflight, validateBackendIdentityContract } = require('./backend-identity-preflight');
@@ -728,9 +728,32 @@ function runProcess(command, args, options) {
       env: options.env,
       stdio: ["inherit", "pipe", "pipe"],
     };
-    const child = command === "maestro"
-      ? spawnMaestro(args, spawnOptions)
-      : spawnCommand(command, args, spawnOptions);
+    let observerLock = null;
+    if (command === "maestro" && options.serializeMaestro !== false) {
+      const lockPath = options.observerLockPath || fromRoot('.worksideqa', 'maestro-observer.lock');
+      observerLock = acquireObserverLock(lockPath, {
+        product: options.product || null,
+        deviceId: options.deviceId || null,
+        stage: options.stage || 'process',
+        command: 'maestro',
+      });
+      if (!observerLock.ok) {
+        const error = observerLock.error || new Error('Maestro observer is busy.');
+        error.code = error.code || 'OBSERVER_BUSY';
+        reject(error);
+        return;
+      }
+    }
+    let child;
+    try {
+      child = command === "maestro"
+        ? spawnMaestro(args, spawnOptions)
+        : spawnCommand(command, args, spawnOptions);
+    } catch (error) {
+      observerLock?.release();
+      reject(error);
+      return;
+    }
     const stdout = createOutputSink(process.stdout, options.logStream, options.secretValues);
     const stderr = createOutputSink(process.stderr, options.logStream, options.secretValues);
     let timedOut = false;
@@ -785,6 +808,7 @@ function runProcess(command, args, options) {
       clearTimeout(timer);
       clearTimeout(escalationTimer);
       process.removeListener('SIGINT', cancel);
+      observerLock?.release();
       stdout.flush();
       stderr.flush();
     };
@@ -805,6 +829,7 @@ function processFailed(outcome) {
 
 function processFailureMetadata(outcome) {
   if (outcome.timeout) return { errorCode: outcome.timeout.code, timeout: outcome.timeout };
+  if (outcome.code === 'OBSERVER_BUSY' || outcome.code === 'OBSERVER_CONFLICT') return { errorCode: outcome.code };
   if (outcome.cancelled || outcome.errorCode === 'WORKSIDEQA_PROCESS_CANCELLED') return { errorCode: 'WORKSIDEQA_PROCESS_CANCELLED' };
   return {};
 }
@@ -1056,6 +1081,8 @@ async function runMaestroFlows(config, options = {}) {
         outcome = await runProcess("maestro", stageArgs, {
           cwd: fromRoot(),
           env: runnerEnv,
+          product: config.key,
+          deviceId: selectedDevice?.id || null,
           logStream,
           secretValues,
           timeoutMs: watchdog.effectiveWatchdogMs,

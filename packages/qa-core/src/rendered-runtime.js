@@ -4,6 +4,7 @@ const {
   spawnCommand,
   spawnCommandSync,
   terminateProcessTree,
+  acquireObserverLock,
 } = require('../../qa-utils/src');
 
 const ROOT = path.resolve(__dirname, '..', '..', '..');
@@ -277,6 +278,28 @@ function observerFailureMarker(output) {
   return /uiautomationservice\s+already\s+registered|uiautomation(?:service)?\s+(?:startup|registration|connection)|observer\s+(?:failed|timeout|timed out)|hierarchy\s+(?:observer|dump)\s+(?:failed|unavailable)/i.test(String(output || ''));
 }
 
+function captureObserverProcesses(adb, deviceId, execute = spawnCommandSync, env = process.env, hostExecute = spawnCommandSync) {
+  const hostCommand = process.platform === 'win32' ? 'tasklist.exe' : 'ps';
+  const hostArgs = process.platform === 'win32' ? ['/FO', 'CSV', '/NH'] : ['-eo', 'pid=,comm=,args='];
+  let hostOutput = '';
+  try {
+    const result = hostExecute(hostCommand, hostArgs, { env, encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
+    hostOutput = String(result?.stdout || '');
+  } catch { /* diagnostics must not prevent a readiness probe */ }
+  let deviceOutput = '';
+  try {
+    const result = execute(adb, ['-s', deviceId, 'shell', 'ps', '-A'], { env, encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
+    deviceOutput = String(result?.stdout || '');
+  } catch { /* diagnostics must not prevent a readiness probe */ }
+  const combined = `${hostOutput}\n${deviceOutput}`;
+  const matching = combined.split(/\r?\n/).filter((line) => /maestro|dev\.mobile\.maestro|androidjunitrunner|uiautomator/i.test(line));
+  return {
+    hostProcesses: hostOutput.split(/\r?\n/).filter((line) => /maestro|java/i.test(line)).slice(-80),
+    deviceProcesses: deviceOutput.split(/\r?\n/).filter((line) => /maestro|instrumentation|uiautomator/i.test(line)).slice(-80),
+    activeDriverProcesses: matching.slice(-80),
+  };
+}
+
 async function confirmLauncherForeground(readState, adb, deviceId, appId, execute, env, now, sleep, deadline) {
   const observations = [];
   const first = readState(adb, deviceId, appId, execute, env);
@@ -329,19 +352,51 @@ async function waitForRenderedRuntime(options = {}) {
   const beforeObserver = readState(adb, deviceId, appId, execute, env);
   const observerBudget = Math.max(0, deadline - now());
   if (!observerBudget) return { ...appReadinessFailure('QA_ROOT_NOT_READY', beforeObserver, startedAt, timeoutMs, { probeEndMs: now(), observerFailureAt: new Date(now()).toISOString(), observerAttempts: [] }) };
-  const root = await runFlowImplementation(maestro, deviceId, rootFlow, env, observerBudget, spawn, terminate);
+  const observerProcessesBefore = options.observerProcessSnapshot
+    ? options.observerProcessSnapshot('before')
+    : captureObserverProcesses(adb, deviceId, execute, env);
+  if (observerProcessesBefore?.activeDriverProcesses?.length) {
+    return { ...appReadinessFailure('OBSERVER_BUSY', beforeObserver, startedAt, timeoutMs, { probeEndMs: now(), observerProcessesBefore }) , error: 'A Maestro/UiAutomation process is already active.' };
+  }
+  const lockPath = options.observerLockPath || path.join(ROOT, '.worksideqa', 'maestro-observer.lock');
+  let observerLock;
+  try {
+    observerLock = options.acquireObserverLock
+      ? options.acquireObserverLock(lockPath, { product: options.product || appId, deviceId, appId, flow: path.basename(rootFlow) })
+      : acquireObserverLock(lockPath, { product: options.product || appId, deviceId, appId, flow: path.basename(rootFlow) });
+  } catch (error) {
+    return { ...appReadinessFailure('OBSERVER_BUSY', beforeObserver, startedAt, timeoutMs, { probeEndMs: now(), observerLock: { path: lockPath, error: error.message } }), error: error.message };
+  }
+  if (!observerLock?.ok) {
+    const error = observerLock.error || new Error('Maestro observer lock is busy.');
+    return { ...appReadinessFailure('OBSERVER_BUSY', beforeObserver, startedAt, timeoutMs, { probeEndMs: now(), observerLock: { path: observerLock.path || lockPath, owner: observerLock.owner || null, error: error.message } }), error: error.message };
+  }
+  let root;
+  try {
+    root = await runFlowImplementation(maestro, deviceId, rootFlow, env, observerBudget, spawn, terminate);
+  } catch (error) {
+    root = { ok: false, code: null, signal: null, timedOut: false, error, output: '' };
+  } finally {
+    observerLock.release();
+  }
+  const observerProcessesAfter = options.observerProcessSnapshot
+    ? options.observerProcessSnapshot('after')
+    : captureObserverProcesses(adb, deviceId, execute, env);
   const afterObserver = readState(adb, deviceId, appId, execute, env);
   const observerAttempt = {
     before: { timestamp: new Date(observerStartedAt).toISOString(), appPid: beforeObserver.appPid || null, appPidAlive: Boolean(beforeObserver.appPid), foregroundActivity: beforeObserver.activityText || null, appForeground: Boolean(beforeObserver.appForeground), launcherForeground: Boolean(beforeObserver.launcherForeground) },
     after: { timestamp: new Date(now()).toISOString(), appPid: afterObserver.appPid || null, appPidAlive: Boolean(afterObserver.appPid), foregroundActivity: afterObserver.activityText || null, appForeground: Boolean(afterObserver.appForeground), launcherForeground: Boolean(afterObserver.launcherForeground) },
     result: { ok: Boolean(root.ok), code: root.code, signal: root.signal, timedOut: Boolean(root.timedOut), error: root.error || null },
     output: String(root.output || '').slice(-2000),
+    observerProcessesBefore,
+    observerProcessesAfter,
   };
   let state = readState(adb, deviceId, appId, execute, env);
   if (!root.ok) {
     const failureAt = now();
     let reason;
     if (!state.appPid) reason = beforeObserver.appPid ? 'APP_PROCESS_EXITED' : 'APP_PROCESS_NOT_STARTED';
+    else if (/uiautomationservice\s+already\s+registered/i.test(String(root.output || ''))) reason = 'OBSERVER_CONFLICT';
     else if (observerFailureMarker(root.output) || root.timedOut) reason = 'OBSERVER_FAILURE';
     else if (state.launcherForeground) {
       const launcher = await confirmLauncherForeground(readState, adb, deviceId, appId, execute, env, now, sleep, deadline);
@@ -349,7 +404,7 @@ async function waitForRenderedRuntime(options = {}) {
       observerAttempt.launcherConfirmation = launcher.observations.map((item) => ({ timestamp: new Date(item.at).toISOString(), appPid: item.state.appPid || null, appPidAlive: Boolean(item.state.appPid), foregroundActivity: item.state.activityText || null, launcherForeground: Boolean(item.state.launcherForeground) }));
     } else if (state.appForeground) reason = 'APP_FOREGROUND_AND_NOT_READY';
     else reason = 'QA_ROOT_NOT_READY';
-    const failed = appReadinessFailure(reason, state, startedAt, timeoutMs, { probeEndMs: failureAt, observerFailureAt: (reason === 'OBSERVER_FAILURE' ? new Date(failureAt).toISOString() : null), observerAttempts: [observerAttempt], flowOutput: String(root.output || '').slice(-2000), launchDiagnostics: { preparation: launchPreparation, launch } });
+    const failed = appReadinessFailure(reason, state, startedAt, timeoutMs, { probeEndMs: failureAt, observerFailureAt: (reason === 'OBSERVER_FAILURE' || reason === 'OBSERVER_CONFLICT' ? new Date(failureAt).toISOString() : null), observerAttempts: [observerAttempt], flowOutput: String(root.output || '').slice(-2000), launchDiagnostics: { preparation: launchPreparation, launch }, observerLock: { path: lockPath, owner: observerLock.owner || null }, observerProcessesBefore });
     failed.diagnosticArtifacts = captureFailureArtifacts({ artifactDirectory, adb, deviceId, execute, env, hierarchy: '', state });
     return failed;
   }
@@ -440,4 +495,4 @@ async function waitForRenderedRuntime(options = {}) {
   return failed;
 }
 
-module.exports = { DEFAULT_TIMEOUT_MS, readAppState, readUiHierarchy, readUiHierarchyResult, hierarchySummary, verifyLaunchTarget, prepareApplicationLaunch, startApplication, runFlow, waitForRenderedRuntime };
+module.exports = { DEFAULT_TIMEOUT_MS, readAppState, readUiHierarchy, readUiHierarchyResult, hierarchySummary, captureObserverProcesses, verifyLaunchTarget, prepareApplicationLaunch, startApplication, runFlow, waitForRenderedRuntime };

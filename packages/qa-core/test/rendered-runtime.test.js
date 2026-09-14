@@ -1,4 +1,7 @@
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 const test = require('node:test');
 const { EventEmitter } = require('node:events');
 const {
@@ -154,6 +157,7 @@ test('rendered probe reports root and auth readiness timings without login or re
     adb: 'adb.exe', maestro: 'maestro.bat', deviceId: 'emulator-5554', appId: 'com.merxus.mobile.qa',
     launchUri: 'exp+merxus-mobile://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081',
     execute, spawn, terminate: () => {}, env: {}, timeoutMs: 60000, pollMs: 1, preflight: false,
+    observerProcessSnapshot: () => ({ hostProcesses: [], deviceProcesses: [], activeDriverProcesses: [] }),
   });
   assert.equal(report.ok, true);
   assert.equal(report.readySelector, 'screen.auth.login');
@@ -184,6 +188,7 @@ function readinessOptions(overrides = {}) {
     launchUri: 'exp+merxus-mobile://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081',
     execute, spawn, terminate: () => {}, env: {}, timeoutMs: 100, pollMs: 10, preflight: false,
     now: () => fakeNow,
+    observerProcessSnapshot: () => ({ hostProcesses: [], deviceProcesses: [], activeDriverProcesses: [] }),
     sleep: async (ms) => { fakeNow += ms; },
     ...overrides,
   };
@@ -254,7 +259,7 @@ test('rendered probe distinguishes an unavailable hierarchy observer from app re
   assert.match(report.hierarchyError, /already registered/);
 });
 
-test('observer timeout with a live QA process is classified as observer failure and stays within the absolute budget', async () => {
+test('UiAutomation registration collision with a live QA process is classified as observer conflict', async () => {
   let fakeNow = 0;
   let observerBudget = null;
   const calls = [];
@@ -272,7 +277,7 @@ test('observer timeout with a live QA process is classified as observer failure 
       return { ok: false, code: 143, signal: 'SIGTERM', timedOut: true, output: 'UiAutomationService already registered' };
     }, env: {}, timeoutMs: 60_000, pollMs: 1, now: () => fakeNow, preflight: false,
   });
-  assert.equal(report.reason, 'OBSERVER_FAILURE');
+  assert.equal(report.reason, 'OBSERVER_CONFLICT');
   assert.equal(observerBudget, 60_000);
   assert.equal(report.appPid, 4321);
   assert.equal(report.observerAttempts.length, 1);
@@ -302,4 +307,29 @@ test('a normal root observer receives only the remaining logical deadline, witho
   }));
   assert.equal(report.ok, true);
   assert.equal(observedTimeout, 20);
+});
+
+test('rendered observer lock is released after a successful observer run', async () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'worksideqa-rendered-lock-'));
+  const lockPath = path.join(directory, 'observer.lock');
+  const report = await waitForRenderedRuntime(readinessOptions({
+    observerLockPath: lockPath,
+    runFlowImplementation: async () => ({ ok: true, code: 0, signal: null, output: '' }),
+    readHierarchy: () => '<node resource-id="qa-environment-root"/><node resource-id="screen.auth.login"/>',
+  }));
+  assert.equal(report.ok, true);
+  assert.equal(fs.existsSync(lockPath), false);
+  fs.rmSync(directory, { recursive: true, force: true });
+});
+
+test('rendered probe refuses to start when an instrumentation process is already active', async () => {
+  let observerStarted = false;
+  const report = await waitForRenderedRuntime(readinessOptions({
+    observerProcessSnapshot: () => ({ hostProcesses: [], deviceProcesses: ['u0_a123 1234 dev.mobile.maestro.test'], activeDriverProcesses: ['u0_a123 1234 dev.mobile.maestro.test'] }),
+    runFlowImplementation: async () => { observerStarted = true; return { ok: true, code: 0, output: '' }; },
+  }));
+  assert.equal(report.ok, false);
+  assert.equal(report.reason, 'OBSERVER_BUSY');
+  assert.equal(observerStarted, false);
+  assert.match(report.observerProcessesBefore.activeDriverProcesses[0], /dev\.mobile\.maestro\.test/);
 });
