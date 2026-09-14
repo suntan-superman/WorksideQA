@@ -67,3 +67,10 @@ test('Windows resolver evaluates later where.exe hits when an earlier shim is br
   assert.equal(path.normalize(result.path), path.normalize(path.join(validDir, 'firebase.cmd')));
   fs.rmSync(root, { recursive: true, force: true });
 });
+
+test('resolver does not retain a negative result after the environment changes', () => {
+  const missing = resolveTool('firebase', { PATH: '', Path: '', USERPROFILE: path.join(os.tmpdir(), 'worksideqa-no-firebase') });
+  assert.equal(missing.path, null);
+  const available = resolveTool('firebase', { PATH: '', Path: '', WORKSIDEQA_FIREBASE_BIN: process.env.LOCALAPPDATA + '\\Yarn\\bin\\firebase.cmd' });
+  assert.equal(path.normalize(available.path), path.normalize(process.env.LOCALAPPDATA + '\\Yarn\\bin\\firebase.cmd'));
+});
