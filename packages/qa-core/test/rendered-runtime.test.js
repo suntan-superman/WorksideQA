@@ -3,6 +3,7 @@ const test = require('node:test');
 const { EventEmitter } = require('node:events');
 const {
   readAppState,
+  verifyLaunchTarget,
   startApplication,
   hierarchySummary,
   waitForRenderedRuntime,
@@ -18,6 +19,91 @@ test('rendered probe launches the manifest URI with the explicit Android device'
   assert.equal(result.ok, true);
   assert.deepEqual(calls[0].args, ['-s', 'emulator-5554', 'shell', 'am', 'force-stop', 'com.merxus.mobile.qa']);
   assert.deepEqual(calls[1].args, ['-s', 'emulator-5554', 'shell', 'am', 'start', '-a', 'android.intent.action.VIEW', '-d', 'exp+merxus-mobile://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081', '-p', 'com.merxus.mobile.qa']);
+  assert.equal(calls[1].args.includes('-W'), false);
+});
+
+test('launch preflight validates package, MainActivity, deep-link resolution, and reverse mapping', () => {
+  const calls = [];
+  const execute = (_command, args) => {
+    calls.push(args);
+    if (args.includes('pm')) return { status: 0, stdout: 'package:com.merxus.mobile.qa\n' };
+    if (args.includes('dumpsys')) return { status: 0, stdout: 'com.merxus.mobile.qa/com.merxus.mobile.MainActivity' };
+    if (args.includes('resolve-activity')) return { status: 0, stdout: 'com.merxus.mobile.qa/com.merxus.mobile.MainActivity\n' };
+    if (args.includes('--list')) return { status: 0, stdout: 'host-17 tcp:8081 tcp:8081\n' };
+    return { status: 0, stdout: '' };
+  };
+  const result = verifyLaunchTarget('C:\\Android\\adb.exe', 'emulator-5554', 'com.merxus.mobile.qa', 'exp+merxus-mobile://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081', execute, {});
+  assert.equal(result.ok, true);
+  assert.equal(result.expectedComponent, 'com.merxus.mobile.qa/com.merxus.mobile.MainActivity');
+  assert.ok(calls.some((args) => args.includes('resolve-activity')));
+  assert.ok(calls.some((args) => args.includes('--list')));
+  assert.equal(calls.some((args) => args.includes('reverse') && args.includes('tcp:8081') && args.includes('tcp:8081') && !args.includes('--list')), false);
+});
+
+test('launch preflight reports an installed-package failure without attempting launch', () => {
+  const calls = [];
+  const execute = (_command, args) => { calls.push(args); return { status: 0, stdout: 'package:other.app\n' }; };
+  const result = verifyLaunchTarget('adb.exe', 'emulator-5554', 'com.merxus.mobile.qa', 'exp+merxus-mobile://invalid', execute, {});
+  assert.equal(result.ok, false);
+  assert.equal(result.code, 'APP_PACKAGE_MISSING');
+  assert.equal(result.exitCode, 0);
+  assert.equal(calls.length, 1);
+});
+
+test('launch preflight configures a missing reverse mapping and preserves the URI as one argument', () => {
+  const calls = [];
+  const execute = (_command, args) => {
+    calls.push(args);
+    if (args.includes('pm')) return { status: 0, stdout: 'package:com.merxus.mobile.qa\n' };
+    if (args.includes('dumpsys')) return { status: 0, stdout: 'com.merxus.mobile.MainActivity' };
+    if (args.includes('resolve-activity')) return { status: 0, stdout: 'com.merxus.mobile.qa/com.merxus.mobile.MainActivity' };
+    if (args.includes('--list')) return { status: 0, stdout: '' };
+    return { status: 0, stdout: '' };
+  };
+  const uri = 'exp+merxus-mobile://expo-development-client/?url=http%3A%2F%2Fhost%20with%20space%3A8081';
+  const result = verifyLaunchTarget('adb.exe', 'emulator-5554', 'com.merxus.mobile.qa', uri, execute, {});
+  assert.equal(result.ok, true);
+  const reverse = calls.find((args) => args.includes('reverse') && args.includes('tcp:8081') && !args.includes('--list'));
+  assert.deepEqual(reverse.slice(-3), ['reverse', 'tcp:8081', 'tcp:8081']);
+  const resolve = calls.find((args) => args.includes('resolve-activity'));
+  assert.equal(resolve.at(-1), uri);
+});
+
+test('launch preflight rejects a deep link that resolves to another activity', () => {
+  const execute = (_command, args) => {
+    if (args.includes('pm')) return { status: 0, stdout: 'package:com.merxus.mobile.qa\n' };
+    if (args.includes('dumpsys')) return { status: 0, stdout: 'com.merxus.mobile.MainActivity' };
+    if (args.includes('resolve-activity')) return { status: 0, stdout: 'com.merxus.mobile.qa/expo.modules.devlauncher.launcher.DevLauncherActivity' };
+    return { status: 0, stdout: 'host-17 tcp:8081 tcp:8081' };
+  };
+  const result = verifyLaunchTarget('adb.exe', 'emulator-5554', 'com.merxus.mobile.qa', 'exp+merxus-mobile://wrong', execute, {});
+  assert.equal(result.ok, false);
+  assert.equal(result.code, 'DEEPLINK_RESOLUTION_FAILED');
+  assert.match(result.resolvedOutput, /DevLauncherActivity/);
+});
+
+test('launch command timeout is reported distinctly from an adb exit failure', () => {
+  const result = startApplication('adb.exe', 'emulator-5554', 'com.merxus.mobile.qa', 'exp+merxus-mobile://timeout', (_command, args) => {
+    if (args.includes('force-stop')) return { status: 0, stdout: '' };
+    const error = new Error('spawnSync adb ETIMEDOUT');
+    error.code = 'ETIMEDOUT';
+    return { error };
+  }, {});
+  assert.equal(result.ok, false);
+  assert.equal(result.code, 'LAUNCH_COMMAND_TIMEOUT');
+  assert.equal(result.exitCode, null);
+});
+
+test('launch command returns raw nonzero result and a specific failure code', () => {
+  const result = startApplication('adb.exe', 'emulator-5554', 'com.merxus.mobile.qa', 'exp+merxus-mobile://invalid', (_command, args) => {
+    if (args.includes('force-stop')) return { status: 0, stdout: '' };
+    return { status: 1, stdout: 'Starting: Intent {}', stderr: 'Error: Activity not started' };
+  }, {});
+  assert.equal(result.ok, false);
+  assert.equal(result.code, 'ADB_LAUNCH_FAILED');
+  assert.equal(result.exitCode, 1);
+  assert.match(result.stderr, /Activity not started/);
+  assert.match(result.error, /ADB_LAUNCH_FAILED/);
 });
 
 test('rendered probe recognizes the selected app foreground and PID', () => {
@@ -67,7 +153,7 @@ test('rendered probe reports root and auth readiness timings without login or re
   const report = await waitForRenderedRuntime({
     adb: 'adb.exe', maestro: 'maestro.bat', deviceId: 'emulator-5554', appId: 'com.merxus.mobile.qa',
     launchUri: 'exp+merxus-mobile://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081',
-    execute, spawn, terminate: () => {}, env: {}, timeoutMs: 60000, pollMs: 1,
+    execute, spawn, terminate: () => {}, env: {}, timeoutMs: 60000, pollMs: 1, preflight: false,
   });
   assert.equal(report.ok, true);
   assert.equal(report.readySelector, 'screen.auth.login');
@@ -96,7 +182,7 @@ function readinessOptions(overrides = {}) {
   return {
     adb: 'adb.exe', maestro: 'maestro.bat', deviceId: 'emulator-5554', appId: 'com.merxus.mobile.qa',
     launchUri: 'exp+merxus-mobile://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081',
-    execute, spawn, terminate: () => {}, env: {}, timeoutMs: 100, pollMs: 10,
+    execute, spawn, terminate: () => {}, env: {}, timeoutMs: 100, pollMs: 10, preflight: false,
     now: () => fakeNow,
     sleep: async (ms) => { fakeNow += ms; },
     ...overrides,
@@ -184,7 +270,7 @@ test('observer timeout with a live QA process is classified as observer failure 
       observerBudget = timeoutMs;
       fakeNow = 60_000;
       return { ok: false, code: 143, signal: 'SIGTERM', timedOut: true, output: 'UiAutomationService already registered' };
-    }, env: {}, timeoutMs: 60_000, pollMs: 1, now: () => fakeNow,
+    }, env: {}, timeoutMs: 60_000, pollMs: 1, now: () => fakeNow, preflight: false,
   });
   assert.equal(report.reason, 'OBSERVER_FAILURE');
   assert.equal(observerBudget, 60_000);

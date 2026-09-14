@@ -362,9 +362,13 @@ async function checkMobileRuntime(env, options) {
     } catch (error) {
       rendered = { ok: false, reason: 'PROBE_ERROR', error: error.message, elapsedMs: 0 };
     }
+    const launchDetail = rendered.launchDiagnostics?.launch?.launch || rendered.launchDiagnostics?.launch || rendered.launchDiagnostics;
+    const launchSummary = launchDetail && (launchDetail.command || launchDetail.exitCode !== undefined)
+      ? `; launchCommand=${launchDetail.displayCommand || launchDetail.command || 'unknown'}; launchExit=${launchDetail.exitCode ?? 'unknown'}${launchDetail.stdout ? `; launchStdout=${String(launchDetail.stdout).slice(-240)}` : ''}${launchDetail.stderr ? `; launchStderr=${String(launchDetail.stderr).slice(-240)}` : ''}`
+      : '';
     checks.push(rendered.ok
       ? result('passed', 'mobile.runtime-rendered', `QA app rendered ${rendered.readySelector} (PID ${rendered.appPid || 'unknown'}) in ${rendered.elapsedMs}ms; launch=${rendered.launchStartedAt}, qaRoot=${rendered.qaRootReadyAt}, appReady=${rendered.appReadyAt}.`, rendered)
-      : result('failed', 'mobile.runtime-rendered', `QA app did not reach rendered readiness (${rendered.reason || 'unknown'}); intermediate=${rendered.intermediateStateKind || 'unknown'}; elapsed=${rendered.elapsedMs}ms${rendered.diagnosticArtifacts?.hierarchyPath ? `; hierarchy=${rendered.diagnosticArtifacts.hierarchyPath}` : ''}.`, rendered));
+      : result('failed', 'mobile.runtime-rendered', `QA app did not reach rendered readiness (${rendered.reason || 'unknown'}); intermediate=${rendered.intermediateStateKind || 'unknown'}; elapsed=${rendered.elapsedMs}ms${launchSummary}${rendered.diagnosticArtifacts?.hierarchyPath ? `; hierarchy=${rendered.diagnosticArtifacts.hierarchyPath}` : ''}.`, rendered));
   }
   return checks;
 }

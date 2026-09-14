@@ -32,11 +32,106 @@ function readAppState(adb, deviceId, appId, execute = spawnCommandSync, env = pr
   };
 }
 
-function startApplication(adb, deviceId, appId, launchUri, execute = spawnCommandSync, env = process.env) {
-  const stop = execute(adb, ['-s', deviceId, 'shell', 'am', 'force-stop', appId], { env, encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
-  if (stop.error || stop.status !== 0) return { ok: false, error: `force-stop failed: ${stop.stderr || stop.error?.message || stop.status}` };
-  const launch = execute(adb, ['-s', deviceId, 'shell', 'am', 'start', '-a', 'android.intent.action.VIEW', '-d', launchUri, '-p', appId], { env, encoding: 'utf8', timeout: 15_000, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
-  return launch.error || launch.status !== 0 ? { ok: false, error: `launch failed: ${launch.stderr || launch.error?.message || launch.status}` } : { ok: true };
+function commandSnapshot(command, args, result, startedAt, endedAt) {
+  return {
+    command,
+    args: [...args],
+    displayCommand: [command, ...args].map((argument) => /\s/.test(argument) ? JSON.stringify(argument) : argument).join(' '),
+    exitCode: Number.isInteger(result?.status) ? result.status : null,
+    signal: result?.signal || null,
+    stdout: String(result?.stdout || '').slice(-4000),
+    stderr: String(result?.stderr || '').slice(-4000),
+    error: result?.error ? String(result.error.message || result.error) : null,
+    elapsedMs: Math.max(0, endedAt - startedAt),
+  };
+}
+
+function commandFailure(code, label, snapshot) {
+  const detail = snapshot.stderr || snapshot.error || snapshot.stdout || `exit code ${snapshot.exitCode}`;
+  return {
+    ok: false,
+    code,
+    ...snapshot,
+    error: `${label} failed (${code}): ${detail}`,
+  };
+}
+
+function runLaunchCommand(command, args, execute, env, timeout, now = Date.now) {
+  const startedAt = now();
+  let result;
+  try {
+    result = execute(command, args, { env, encoding: 'utf8', timeout, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] }) || {};
+  } catch (error) {
+    result = { error };
+  }
+  const endedAt = now();
+  return { result, snapshot: commandSnapshot(command, args, result, startedAt, endedAt) };
+}
+
+function verifyLaunchTarget(adb, deviceId, appId, launchUri, execute = spawnCommandSync, env = process.env, options = {}) {
+  const now = options.now || Date.now;
+  const expectedActivity = options.expectedActivity || 'com.merxus.mobile.MainActivity';
+  const runShell = (args, timeout) => runLaunchCommand(adb, ['-s', deviceId, 'shell', ...args], execute, env, timeout, now);
+  const runHost = (args, timeout) => runLaunchCommand(adb, ['-s', deviceId, ...args], execute, env, timeout, now);
+
+  const packageCheck = runShell(['pm', 'list', 'packages', appId], 5000);
+  if (packageCheck.result.error || packageCheck.result.status !== 0 || !String(packageCheck.result.stdout || '').split(/\r?\n/).some((line) => line.trim() === `package:${appId}`)) {
+    return commandFailure('APP_PACKAGE_MISSING', `Package ${appId}`, packageCheck.snapshot);
+  }
+
+  const activityCheck = runShell(['dumpsys', 'package', appId], 8000);
+  const activityText = `${activityCheck.result.stdout || ''}\n${activityCheck.result.stderr || ''}`;
+  if (activityCheck.result.error || activityCheck.result.status !== 0 || !activityText.includes(expectedActivity)) {
+    return commandFailure('ACTIVITY_RESOLUTION_FAILED', `Activity ${expectedActivity}`, activityCheck.snapshot);
+  }
+
+  const deepLinkCheck = runShell(['cmd', 'package', 'resolve-activity', '--brief', '-a', 'android.intent.action.VIEW', '-d', launchUri], 8000);
+  const resolved = `${deepLinkCheck.result.stdout || ''}\n${deepLinkCheck.result.stderr || ''}`;
+  const expectedComponent = `${appId}/${expectedActivity}`;
+  if (deepLinkCheck.result.error || deepLinkCheck.result.status !== 0 || !resolved.includes(appId) || !resolved.includes(expectedActivity)) {
+    const failure = commandFailure('DEEPLINK_RESOLUTION_FAILED', `Deep link ${launchUri} did not resolve to ${expectedComponent}`, deepLinkCheck.snapshot);
+    failure.resolvedOutput = resolved.slice(-4000);
+    return failure;
+  }
+
+  const reverseCheck = runHost(['reverse', '--list'], 5000);
+  const reverseText = `${reverseCheck.result.stdout || ''}\n${reverseCheck.result.stderr || ''}`;
+  if (!/(?:^|\s)tcp:8081\s+tcp:8081(?:\s|$)/m.test(reverseText)) {
+    const reverseSetup = runHost(['reverse', 'tcp:8081', 'tcp:8081'], 5000);
+    if (reverseSetup.result.error || reverseSetup.result.status !== 0) {
+      return commandFailure('ADB_REVERSE_SETUP_FAILED', 'ADB reverse tcp:8081 -> tcp:8081', reverseSetup.snapshot);
+    }
+  }
+  return {
+    ok: true,
+    expectedActivity,
+    expectedComponent,
+    deepLink: launchUri,
+    reverse: 'tcp:8081 -> tcp:8081',
+    checks: { package: packageCheck.snapshot, activity: activityCheck.snapshot, deepLink: deepLinkCheck.snapshot, reverse: reverseCheck.snapshot },
+  };
+}
+
+function startApplication(adb, deviceId, appId, launchUri, execute = spawnCommandSync, env = process.env, options = {}) {
+  const now = options.now || Date.now;
+  const stopArgs = ['-s', deviceId, 'shell', 'am', 'force-stop', appId];
+  const stop = runLaunchCommand(adb, stopArgs, execute, env, 5000, now);
+  if (stop.result.error || stop.result.status !== 0) return commandFailure('ADB_LAUNCH_FAILED', 'force-stop', stop.snapshot);
+  // Keep launch non-blocking: semantic readiness owns startup timing, while
+  // adb returns the raw intent result immediately. The argument array is
+  // passed directly so encoded URIs and spaces are never shell-expanded.
+  const launchArgs = ['-s', deviceId, 'shell', 'am', 'start', '-a', 'android.intent.action.VIEW', '-d', launchUri, '-p', appId];
+  const launch = runLaunchCommand(adb, launchArgs, execute, env, 15_000, now);
+  if (launch.result.error) {
+    const timeout = launch.result.error.code === 'ETIMEDOUT' || /timed? ?out/i.test(String(launch.result.error.message || ''));
+    return commandFailure(timeout ? 'LAUNCH_COMMAND_TIMEOUT' : 'ADB_LAUNCH_FAILED', 'launch', launch.snapshot);
+  }
+  if (launch.result.status !== 0) return commandFailure('ADB_LAUNCH_FAILED', 'launch', launch.snapshot);
+  return { ok: true, command: adb, args: launchArgs, launch: launch.snapshot, stop: stop.snapshot };
+}
+
+function prepareApplicationLaunch(adb, deviceId, appId, launchUri, execute = spawnCommandSync, env = process.env, options = {}) {
+  return verifyLaunchTarget(adb, deviceId, appId, launchUri, execute, env, options);
 }
 
 function runFlow(maestro, deviceId, flowPath, env, timeoutMs, spawn = spawnCommand, terminate = terminateProcessTree) {
@@ -208,9 +303,28 @@ async function waitForRenderedRuntime(options = {}) {
   const rootFlow = path.join(FLOW_DIRECTORY, 'qa-root.yaml');
   if (!fs.existsSync(rootFlow)) throw new Error(`Rendered runtime flow is missing: ${rootFlow}`);
   const startedAt = now();
-  const launch = startApplication(adb, deviceId, appId, launchUri, execute, env);
   const deadline = startedAt + timeoutMs;
-  if (!launch.ok) return { ...appReadinessFailure('LAUNCH_FAILED', null, startedAt, timeoutMs, { probeEndMs: now() }), error: launch.error || null };
+  const launchPreparation = options.preflight === false
+    ? { ok: true, skipped: true }
+    : prepareApplicationLaunch(adb, deviceId, appId, launchUri, execute, env, { now, expectedActivity: options.expectedActivity });
+  if (!launchPreparation.ok) {
+    return {
+      ...appReadinessFailure(launchPreparation.code || 'ADB_LAUNCH_FAILED', null, startedAt, timeoutMs, {
+        probeEndMs: now(), launchDiagnostics: launchPreparation,
+      }),
+      error: launchPreparation.error || null,
+    };
+  }
+  if (now() >= deadline) {
+    return {
+      ...appReadinessFailure('LAUNCH_COMMAND_TIMEOUT', null, startedAt, timeoutMs, {
+        probeEndMs: now(), launchDiagnostics: launchPreparation,
+      }),
+      error: 'No logical readiness budget remained after launch preflight.',
+    };
+  }
+  const launch = startApplication(adb, deviceId, appId, launchUri, execute, env, { now });
+  if (!launch.ok) return { ...appReadinessFailure(launch.code || 'ADB_LAUNCH_FAILED', null, startedAt, timeoutMs, { probeEndMs: now(), launchDiagnostics: { preparation: launchPreparation, launch } }), error: launch.error || null };
   const observerStartedAt = now();
   const beforeObserver = readState(adb, deviceId, appId, execute, env);
   const observerBudget = Math.max(0, deadline - now());
@@ -227,7 +341,7 @@ async function waitForRenderedRuntime(options = {}) {
   if (!root.ok) {
     const failureAt = now();
     let reason;
-    if (!state.appPid) reason = 'APP_PROCESS_EXITED';
+    if (!state.appPid) reason = beforeObserver.appPid ? 'APP_PROCESS_EXITED' : 'APP_PROCESS_NOT_STARTED';
     else if (observerFailureMarker(root.output) || root.timedOut) reason = 'OBSERVER_FAILURE';
     else if (state.launcherForeground) {
       const launcher = await confirmLauncherForeground(readState, adb, deviceId, appId, execute, env, now, sleep, deadline);
@@ -235,7 +349,7 @@ async function waitForRenderedRuntime(options = {}) {
       observerAttempt.launcherConfirmation = launcher.observations.map((item) => ({ timestamp: new Date(item.at).toISOString(), appPid: item.state.appPid || null, appPidAlive: Boolean(item.state.appPid), foregroundActivity: item.state.activityText || null, launcherForeground: Boolean(item.state.launcherForeground) }));
     } else if (state.appForeground) reason = 'APP_FOREGROUND_AND_NOT_READY';
     else reason = 'QA_ROOT_NOT_READY';
-    const failed = appReadinessFailure(reason, state, startedAt, timeoutMs, { probeEndMs: failureAt, observerFailureAt: (reason === 'OBSERVER_FAILURE' ? new Date(failureAt).toISOString() : null), observerAttempts: [observerAttempt], flowOutput: String(root.output || '').slice(-2000) });
+    const failed = appReadinessFailure(reason, state, startedAt, timeoutMs, { probeEndMs: failureAt, observerFailureAt: (reason === 'OBSERVER_FAILURE' ? new Date(failureAt).toISOString() : null), observerAttempts: [observerAttempt], flowOutput: String(root.output || '').slice(-2000), launchDiagnostics: { preparation: launchPreparation, launch } });
     failed.diagnosticArtifacts = captureFailureArtifacts({ artifactDirectory, adb, deviceId, execute, env, hierarchy: '', state });
     return failed;
   }
@@ -288,6 +402,7 @@ async function waitForRenderedRuntime(options = {}) {
           readySelector: loginReady ? 'screen.auth.login' : 'screen.dashboard.ready',
           readinessSource: 'maestro',
           observerAttempts: [observerAttempt],
+          launchDiagnostics: { preparation: launchPreparation, launch },
           intermediateState: lastSummary,
           intermediateStateKind: intermediateKind,
           intermediateStateAt: intermediateAt !== null ? new Date(intermediateAt).toISOString() : null,
@@ -314,6 +429,7 @@ async function waitForRenderedRuntime(options = {}) {
     hierarchyError,
     hierarchy: lastHierarchy.slice(-16_000) || null,
     observerAttempts: [observerAttempt],
+    launchDiagnostics: { preparation: launchPreparation, launch },
   };
   const failed = appReadinessFailure('STABLE_SCREEN_NOT_READY', state, startedAt, timeoutMs, { ...details, probeEndMs: now(), stableScreenReadyAt: null });
   if (!lastHierarchy && hierarchyError) {
@@ -324,4 +440,4 @@ async function waitForRenderedRuntime(options = {}) {
   return failed;
 }
 
-module.exports = { DEFAULT_TIMEOUT_MS, readAppState, readUiHierarchy, readUiHierarchyResult, hierarchySummary, startApplication, runFlow, waitForRenderedRuntime };
+module.exports = { DEFAULT_TIMEOUT_MS, readAppState, readUiHierarchy, readUiHierarchyResult, hierarchySummary, verifyLaunchTarget, prepareApplicationLaunch, startApplication, runFlow, waitForRenderedRuntime };
