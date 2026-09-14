@@ -342,6 +342,7 @@ test('UiAutomation registration collision with a live QA process is classified a
   assert.equal(report.appPid, 4321);
   assert.equal(report.observerAttempts.length, 1);
   assert.match(report.observerAttempts[0].output, /UiAutomationService already registered/);
+  assert.equal(report.observerConflict.source, 'maestro_observer_registration');
   assert.ok(report.elapsedMs <= report.logicalBudgetMs);
   assert.ok(calls.some((args) => args.includes('force-stop')));
   assert.equal(fs.existsSync(lockPath), false);
@@ -427,6 +428,7 @@ test('failed observer with lingering instrumentation is classified as a conflict
   }));
   assert.equal(report.reason, 'OBSERVER_CONFLICT');
   assert.equal(report.observerProcessesAfter.activeDriverProcesses.length, 1);
+  assert.equal(report.observerConflict.source, 'maestro_instrumentation_teardown');
   assert.equal(report.observerCleanupVerified, undefined);
   assert.equal(fs.existsSync(lockPath), false);
   fs.rmSync(directory, { recursive: true, force: true });

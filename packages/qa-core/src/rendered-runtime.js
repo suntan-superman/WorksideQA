@@ -278,6 +278,19 @@ function observerFailureMarker(output) {
   return /uiautomationservice\s+already\s+registered|uiautomation(?:service)?\s+(?:startup|registration|connection)|observer\s+(?:failed|timeout|timed out)|hierarchy\s+(?:observer|dump)\s+(?:failed|unavailable)/i.test(String(output || ''));
 }
 
+function observerConflictDetails(output, snapshot, source = 'maestro_observer') {
+  const text = String(output || '');
+  const processLine = [...(snapshot?.deviceProcesses || []), ...(snapshot?.hostProcesses || [])]
+    .find((line) => /uiautomator|maestro|androidjunitrunner/i.test(String(line)));
+  const pidMatch = text.match(/(?:pid|process(?:Id)?)\s*[=:]\s*(\d+)/i) || String(processLine || '').match(/(?:^|\s)(\d{2,})(?:\s|$)/);
+  return {
+    source,
+    pid: pidMatch ? Number(pidMatch[1]) : null,
+    marker: /uiautomationservice\s+already\s+registered/i.test(text) ? 'UiAutomationService already registered' : null,
+    activeDriverProcesses: snapshot?.activeDriverProcesses || [],
+  };
+}
+
 function captureObserverProcesses(adb, deviceId, execute = spawnCommandSync, env = process.env, hostExecute = spawnCommandSync) {
   const hostCommand = process.platform === 'win32' ? 'tasklist.exe' : 'ps';
   const hostArgs = process.platform === 'win32' ? ['/FO', 'CSV', '/NH'] : ['-eo', 'pid=,comm=,args='];
@@ -421,8 +434,9 @@ async function waitForRenderedRuntime(options = {}) {
       ...appReadinessFailure('OBSERVER_CONFLICT', afterObserver, startedAt, timeoutMs, {
         probeEndMs: now(), observerFailureAt: new Date(now()).toISOString(), observerProcessesBefore, observerProcessesAfter,
         observerLock: { path: lockPath, owner: observerLock.owner || null }, launchDiagnostics: { preparation: launchPreparation, launch },
+        observerConflict: observerConflictDetails('', observerProcessesAfter, 'maestro_instrumentation_teardown'),
       }),
-      error: 'Maestro instrumentation remained active after the observer exited.',
+      error: 'Maestro instrumentation remained active after the observer exited (source=maestro_instrumentation_teardown).',
     };
   }
   const observerAttempt = {
@@ -447,7 +461,18 @@ async function waitForRenderedRuntime(options = {}) {
       observerAttempt.launcherConfirmation = launcher.observations.map((item) => ({ timestamp: new Date(item.at).toISOString(), appPid: item.state.appPid || null, appPidAlive: Boolean(item.state.appPid), foregroundActivity: item.state.activityText || null, launcherForeground: Boolean(item.state.launcherForeground) }));
     } else if (state.appForeground) reason = 'APP_FOREGROUND_AND_NOT_READY';
     else reason = 'QA_ROOT_NOT_READY';
-    const failed = appReadinessFailure(reason, state, startedAt, timeoutMs, { probeEndMs: failureAt, observerFailureAt: (reason === 'OBSERVER_FAILURE' || reason === 'OBSERVER_CONFLICT' ? new Date(failureAt).toISOString() : null), observerAttempts: [observerAttempt], flowOutput: String(root.output || '').slice(-2000), launchDiagnostics: { preparation: launchPreparation, launch }, observerLock: { path: lockPath, owner: observerLock.owner || null }, observerProcessesBefore });
+    const failed = appReadinessFailure(reason, state, startedAt, timeoutMs, {
+      probeEndMs: failureAt,
+      observerFailureAt: (reason === 'OBSERVER_FAILURE' || reason === 'OBSERVER_CONFLICT' ? new Date(failureAt).toISOString() : null),
+      observerAttempts: [observerAttempt],
+      flowOutput: String(root.output || '').slice(-2000),
+      launchDiagnostics: { preparation: launchPreparation, launch },
+      observerLock: { path: lockPath, owner: observerLock.owner || null },
+      observerProcessesBefore,
+      ...(reason === 'OBSERVER_CONFLICT'
+        ? { observerConflict: observerConflictDetails(root.output, observerProcessesAfter, 'maestro_observer_registration') }
+        : {}),
+    });
     failed.diagnosticArtifacts = captureFailureArtifacts({ artifactDirectory, adb, deviceId, execute, env, hierarchy: '', state });
     return failed;
   }
