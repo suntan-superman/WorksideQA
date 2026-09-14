@@ -30,7 +30,7 @@ function commandRuns(command, env) {
 }
 
 function withToolPaths(env = process.env, tools = []) {
-  const current = String(env.PATH || env.Path || '');
+  const current = String(env.PATH || env.Path || env.path || '');
   const additions = [process.execPath, ...tools.map((tool) => tool?.path)]
     .filter(Boolean)
     .map((candidate) => path.dirname(expandPath(candidate, env)))
@@ -39,21 +39,44 @@ function withToolPaths(env = process.env, tools = []) {
   return { ...env, PATH: entries.join(path.delimiter) };
 }
 
+function windowsCommandNames(command) {
+  if (path.extname(command)) return [command];
+  return [`${command}.cmd`, `${command}.bat`, `${command}.exe`, command];
+}
+
+function existingPathCandidates(command, env) {
+  const names = windowsCommandNames(command).map((name) => name.toLowerCase());
+  const pathValue = String(env.PATH || env.Path || env.path || '');
+  const candidates = [];
+  for (const directory of pathValue.split(path.delimiter).map((value) => value.trim()).filter(Boolean)) {
+    for (const name of names) {
+      const candidate = path.resolve(expandPath(path.join(directory, name), env));
+      if (fs.existsSync(candidate)) candidates.push(candidate);
+    }
+  }
+  return [...new Set(candidates)];
+}
+
 function pathLookup(command, env) {
   if (process.platform === 'win32') {
     // Prefer executable shims over extensionless Unix companion files that
     // Yarn/npm may place beside them. This is important when the resolved
     // path is passed directly to child_process on Windows.
-    const candidates = path.extname(command)
-      ? [command]
-      : [`${command}.cmd`, `${command}.bat`, `${command}.exe`, command];
+    const candidates = windowsCommandNames(command);
+    const whereCandidates = [];
     for (const name of candidates) {
       const where = spawnCommandSync('where.exe', [name], {
         env, encoding: 'utf8', timeout: 5000, windowsHide: true,
         stdio: ['ignore', 'pipe', 'ignore'],
       });
-      const first = String(where.stdout || '').split(/\r?\n/).map((line) => line.trim()).find(Boolean);
-      if (first && fs.existsSync(first) && commandRuns(first, env)) return path.resolve(first);
+      for (const entry of String(where.stdout || '').split(/\r?\n/).map((line) => line.trim()).filter(Boolean)) {
+        if (fs.existsSync(entry)) whereCandidates.push(path.resolve(entry));
+      }
+    }
+    // Evaluate every where.exe result, not just the first hit. A stale shim
+    // earlier on PATH must not hide a valid NVM/Yarn installation later on.
+    for (const candidate of [...new Set([...whereCandidates, ...existingPathCandidates(command, env)])]) {
+      if (commandRuns(candidate, env)) return candidate;
     }
     return null;
   }
@@ -118,4 +141,6 @@ module.exports = {
   withToolPaths,
   resolveTool,
   resolveTools,
+  windowsCommandNames,
+  existingPathCandidates,
 };

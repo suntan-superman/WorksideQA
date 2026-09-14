@@ -1,5 +1,7 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
+const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 const { expandPath, resolveTool } = require('../src/tool-resolver');
 
@@ -44,4 +46,24 @@ test('installed Firebase fallback is discovered when present', () => {
   const result = resolveTool('firebase', { ...process.env, PATH: '', Path: '' });
   assert.equal(path.normalize(result.path), path.normalize(expected));
   assert.equal(result.source, 'fallback');
+});
+
+test('Windows resolver evaluates later where.exe hits when an earlier shim is broken', () => {
+  if (process.platform !== 'win32') return;
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'worksideqa-tool-resolution-'));
+  const staleDir = path.join(root, 'stale');
+  const validDir = path.join(root, 'valid');
+  fs.mkdirSync(staleDir); fs.mkdirSync(validDir);
+  fs.writeFileSync(path.join(staleDir, 'firebase.cmd'), '@echo off\r\nexit /b 1\r\n', 'utf8');
+  fs.writeFileSync(path.join(validDir, 'firebase.cmd'), '@echo off\r\nexit /b 0\r\n', 'utf8');
+  const result = resolveTool('firebase', {
+    ...process.env,
+    PATH: `${staleDir}${path.delimiter}${validDir}`,
+    Path: '',
+    USERPROFILE: root,
+    LOCALAPPDATA: root,
+    APPDATA: root,
+  });
+  assert.equal(path.normalize(result.path), path.normalize(path.join(validDir, 'firebase.cmd')));
+  fs.rmSync(root, { recursive: true, force: true });
 });
