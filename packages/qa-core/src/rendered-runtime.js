@@ -390,6 +390,7 @@ async function waitForRenderedRuntime(options = {}) {
     output: String(root.output || '').slice(-2000),
     observerProcessesBefore,
     observerProcessesAfter,
+    observerCleanupVerified: observerProcessesAfter.activeDriverProcesses.length === 0,
   };
   let state = readState(adb, deviceId, appId, execute, env);
   if (!root.ok) {
