@@ -278,14 +278,21 @@ function observerFailureMarker(output) {
   return /uiautomationservice\s+already\s+registered|uiautomation(?:service)?\s+(?:startup|registration|connection)|observer\s+(?:failed|timeout|timed out)|hierarchy\s+(?:observer|dump)\s+(?:failed|unavailable)/i.test(String(output || ''));
 }
 
-function observerConflictDetails(output, snapshot, source = 'maestro_observer') {
+function observerConflictDetails(output, snapshot, source = 'maestro_observer', beforeSnapshot = null, phase = 'unknown') {
   const text = String(output || '');
   const processLine = [...(snapshot?.deviceProcesses || []), ...(snapshot?.hostProcesses || [])]
     .find((line) => /uiautomator|maestro|androidjunitrunner/i.test(String(line)));
   const pidMatch = text.match(/(?:pid|process(?:Id)?)\s*[=:]\s*(\d+)/i) || String(processLine || '').match(/(?:^|\s)(\d{2,})(?:\s|$)/);
+  const instrumentation = String(snapshot?.instrumentationState || '');
+  const componentMatch = instrumentation.match(/(?:Instrumentation|instrumentation)\s*:?\s*([^\s\r\n]+)/i);
+  const packageMatch = String(processLine || '').match(/(?:^|\s)([A-Za-z][\w.]+(?:\.test|\.runner)?)\s*$/);
   return {
     source,
     pid: pidMatch ? Number(pidMatch[1]) : null,
+    package: packageMatch ? packageMatch[1] : null,
+    instrumentationComponent: componentMatch ? componentMatch[1] : null,
+    phase,
+    preExisting: Boolean(beforeSnapshot?.activeDriverProcesses?.length),
     marker: /uiautomationservice\s+already\s+registered/i.test(text) ? 'UiAutomationService already registered' : null,
     activeDriverProcesses: snapshot?.activeDriverProcesses || [],
   };
@@ -314,6 +321,11 @@ function captureObserverProcesses(adb, deviceId, execute = spawnCommandSync, env
     const result = execute(adb, ['-s', deviceId, 'shell', 'pm', 'list', 'instrumentation'], { env, encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
     installedInstrumentationOutput = String(result?.stdout || '');
   } catch { /* diagnostics must not prevent a readiness probe */ }
+  let accessibilityOutput = '';
+  try {
+    const result = execute(adb, ['-s', deviceId, 'shell', 'dumpsys', 'accessibility'], { env, encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
+    accessibilityOutput = String(result?.stdout || '');
+  } catch { /* diagnostics must not prevent a readiness probe */ }
   const combined = `${hostOutput}\n${deviceOutput}`;
   const matching = combined.split(/\r?\n/).filter((line) => /maestro|dev\.mobile\.maestro|androidjunitrunner|uiautomator/i.test(line));
   return {
@@ -322,6 +334,7 @@ function captureObserverProcesses(adb, deviceId, execute = spawnCommandSync, env
     activeDriverProcesses: matching.slice(-80),
     instrumentationState: instrumentationOutput.slice(-12_000),
     installedInstrumentation: installedInstrumentationOutput.split(/\r?\n/).filter(Boolean).slice(-80),
+    accessibilityState: accessibilityOutput.slice(-12_000),
   };
 }
 
@@ -430,11 +443,13 @@ async function waitForRenderedRuntime(options = {}) {
   const observerProcessesAfter = observerIdle.snapshot;
   const afterObserver = readState(adb, deviceId, appId, execute, env);
   if (!observerIdle.idle) {
+    const conflictArtifacts = captureFailureArtifacts({ artifactDirectory, adb, deviceId, execute, env, hierarchy: '', state: afterObserver });
     return {
       ...appReadinessFailure('OBSERVER_CONFLICT', afterObserver, startedAt, timeoutMs, {
         probeEndMs: now(), observerFailureAt: new Date(now()).toISOString(), observerProcessesBefore, observerProcessesAfter,
         observerLock: { path: lockPath, owner: observerLock.owner || null }, launchDiagnostics: { preparation: launchPreparation, launch },
-        observerConflict: observerConflictDetails('', observerProcessesAfter, 'maestro_instrumentation_teardown'),
+        observerConflict: observerConflictDetails('', observerProcessesAfter, 'maestro_instrumentation_teardown', observerProcessesBefore, 'teardown'),
+        diagnosticArtifacts: conflictArtifacts,
       }),
       error: 'Maestro instrumentation remained active after the observer exited (source=maestro_instrumentation_teardown).',
     };
@@ -470,7 +485,7 @@ async function waitForRenderedRuntime(options = {}) {
       observerLock: { path: lockPath, owner: observerLock.owner || null },
       observerProcessesBefore,
       ...(reason === 'OBSERVER_CONFLICT'
-        ? { observerConflict: observerConflictDetails(root.output, observerProcessesAfter, 'maestro_observer_registration') }
+        ? { observerConflict: observerConflictDetails(root.output, observerProcessesAfter, 'maestro_observer_registration', observerProcessesBefore, 'startup_or_active') }
         : {}),
     });
     failed.diagnosticArtifacts = captureFailureArtifacts({ artifactDirectory, adb, deviceId, execute, env, hierarchy: '', state });

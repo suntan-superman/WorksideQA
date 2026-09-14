@@ -40,6 +40,7 @@ test('observer process snapshot captures device instrumentation without starting
   const execute = (_command, args) => {
     calls.push(args);
     if (args.includes('ps')) return { status: 0, stdout: 'u0_a123 4321 dev.mobile.maestro.test\\n' };
+    if (args.includes('accessibility')) return { status: 0, stdout: 'UiAutomationManager state\\n' };
     if (args.includes('dumpsys')) return { status: 0, stdout: 'Instrumentation: dev.mobile.maestro.test/androidx.test.runner.AndroidJUnitRunner\\n' };
     if (args.includes('pm')) return { status: 0, stdout: 'instrumentation:dev.mobile.maestro.test/androidx.test.runner.AndroidJUnitRunner\\n' };
     return { status: 0, stdout: '' };
@@ -48,6 +49,7 @@ test('observer process snapshot captures device instrumentation without starting
   const snapshot = captureObserverProcesses('adb.exe', 'emulator-5554', execute, {}, hostExecute);
   assert.match(snapshot.deviceProcesses[0], /dev\.mobile\.maestro\.test/);
   assert.match(snapshot.instrumentationState, /AndroidJUnitRunner/);
+  assert.match(snapshot.accessibilityState, /UiAutomationManager/);
   assert.match(snapshot.installedInstrumentation[0], /dev\.mobile\.maestro\.test/);
   assert.ok(calls.some((args) => args.includes('dumpsys') && args.includes('instrumentation')));
   assert.ok(calls.some((args) => args.includes('pm') && args.includes('instrumentation')));
