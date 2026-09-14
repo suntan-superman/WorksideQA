@@ -224,6 +224,7 @@ async function waitForRenderedRuntime(options = {}) {
           intermediateState: lastSummary,
           intermediateStateKind: intermediateKind,
           intermediateStateAt: intermediateAt !== null ? new Date(intermediateAt).toISOString() : null,
+          intermediateStateDurationMs: intermediateAt !== null ? Math.max(0, readyAt - intermediateAt) : null,
           lastHierarchyAt: new Date(lastHierarchyAt).toISOString(),
         };
       }
