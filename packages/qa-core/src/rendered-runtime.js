@@ -9,8 +9,6 @@ const {
 const ROOT = path.resolve(__dirname, '..', '..', '..');
 const FLOW_DIRECTORY = path.join(ROOT, 'packages', 'qa-core', 'src', 'rendered-runtime-flows');
 const DEFAULT_TIMEOUT_MS = 60_000;
-const FLOW_TIMEOUT_MS = 60_000;
-const CLI_STARTUP_GRACE_MS = 30_000;
 const DEFAULT_POLL_MS = 250;
 
 function readAppState(adb, deviceId, appId, execute = spawnCommandSync, env = process.env) {
@@ -20,12 +18,16 @@ function readAppState(adb, deviceId, appId, execute = spawnCommandSync, env = pr
   const foreground = execute(adb, ['-s', deviceId, 'shell', 'dumpsys', 'activity', 'activities'], { env, encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
   const activityText = String(foreground.stdout || '');
   const escapedAppId = appId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const appForeground = new RegExp(`(?:^|[\\s/])${escapedAppId}(?:[/\\s])`).test(activityText)
-    || (/(?:m?ResumedActivity|topResumedActivity)/.test(activityText) && activityText.includes(appId));
+  // dumpsys includes historical tasks as well as the current activity. Only
+  // resumed/focused lines establish foreground ownership; seeing the package
+  // elsewhere must not turn a launcher snapshot into an app-ready snapshot.
+  const foregroundLines = activityText.split(/\r?\n/).filter((line) => /(?:m?ResumedActivity|topResumedActivity|mFocusedApp|topDisplayFocusedRootTask)/i.test(line));
+  const foregroundText = foregroundLines.join('\n');
+  const appForeground = new RegExp(`(?:^|[\\s/])${escapedAppId}(?:[/\\s])`).test(foregroundText);
   return {
     appPid,
     appForeground,
-    launcherForeground: !appForeground && /launcher|home|devlauncher/i.test(activityText),
+    launcherForeground: !appForeground && /launcher|home|devlauncher/i.test(foregroundText || activityText),
     activityText: activityText.slice(-12_000),
   };
 }
@@ -154,16 +156,21 @@ function captureFailureArtifacts({ artifactDirectory, adb, deviceId, execute, en
 }
 
 function appReadinessFailure(reason, state, startedAt, timeoutMs, details = {}) {
-  const finishedAt = Date.now();
+  const finishedAt = details.probeEndMs ?? Date.now();
   return {
     ok: false,
     reason,
     appPid: state?.appPid || null,
     launchStartedAt: new Date(startedAt).toISOString(),
+    probeStart: new Date(startedAt).toISOString(),
+    probeEnd: new Date(finishedAt).toISOString(),
     qaRootReadyAt: details.qaRootReadyAt || null,
-    appReadyAt: null,
+    stableScreenReadyAt: details.stableScreenReadyAt || null,
+    appReadyAt: details.stableScreenReadyAt || null,
     elapsedMs: finishedAt - startedAt,
     timeoutMs,
+    logicalBudgetMs: timeoutMs,
+    failureCode: reason,
     launcherForeground: Boolean(state?.launcherForeground),
     foregroundActivity: state?.activityText || null,
     readinessSource: 'maestro',
@@ -171,10 +178,27 @@ function appReadinessFailure(reason, state, startedAt, timeoutMs, details = {}) 
   };
 }
 
+function observerFailureMarker(output) {
+  return /uiautomationservice\s+already\s+registered|uiautomation(?:service)?\s+(?:startup|registration|connection)|observer\s+(?:failed|timeout|timed out)|hierarchy\s+(?:observer|dump)\s+(?:failed|unavailable)/i.test(String(output || ''));
+}
+
+async function confirmLauncherForeground(readState, adb, deviceId, appId, execute, env, now, sleep, deadline) {
+  const observations = [];
+  const first = readState(adb, deviceId, appId, execute, env);
+  observations.push({ at: now(), state: first });
+  if (!first.launcherForeground) return { confirmed: false, observations };
+  const remaining = deadline - now();
+  if (remaining <= 0) return { confirmed: false, observations };
+  await sleep(Math.min(250, remaining));
+  const second = readState(adb, deviceId, appId, execute, env);
+  observations.push({ at: now(), state: second });
+  return { confirmed: Boolean(second.launcherForeground), observations };
+}
+
 async function waitForRenderedRuntime(options = {}) {
   const {
     adb, maestro, deviceId, appId, launchUri,
-    execute = spawnCommandSync, spawn = spawnCommand, terminate = terminateProcessTree,
+    execute = spawnCommandSync, spawn = spawnCommand, terminate = terminateProcessTree, runFlowImplementation = runFlow,
     now = Date.now, sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
     readHierarchy = null, readHierarchyResult = readUiHierarchyResult, readState = readAppState,
     timeoutMs = DEFAULT_TIMEOUT_MS, pollMs = DEFAULT_POLL_MS, artifactDirectory,
@@ -185,13 +209,35 @@ async function waitForRenderedRuntime(options = {}) {
   if (!fs.existsSync(rootFlow)) throw new Error(`Rendered runtime flow is missing: ${rootFlow}`);
   const startedAt = now();
   const launch = startApplication(adb, deviceId, appId, launchUri, execute, env);
-  if (!launch.ok) return { ...appReadinessFailure('LAUNCH_FAILED', null, startedAt, timeoutMs), error: launch.error || null };
   const deadline = startedAt + timeoutMs;
-  const root = await runFlow(maestro, deviceId, rootFlow, env, Math.min(FLOW_TIMEOUT_MS + CLI_STARTUP_GRACE_MS, Math.max(1, deadline - now()) + CLI_STARTUP_GRACE_MS), spawn, terminate);
+  if (!launch.ok) return { ...appReadinessFailure('LAUNCH_FAILED', null, startedAt, timeoutMs, { probeEndMs: now() }), error: launch.error || null };
+  const observerStartedAt = now();
+  const beforeObserver = readState(adb, deviceId, appId, execute, env);
+  const observerBudget = Math.max(0, deadline - now());
+  if (!observerBudget) return { ...appReadinessFailure('QA_ROOT_NOT_READY', beforeObserver, startedAt, timeoutMs, { probeEndMs: now(), observerFailureAt: new Date(now()).toISOString(), observerAttempts: [] }) };
+  const root = await runFlowImplementation(maestro, deviceId, rootFlow, env, observerBudget, spawn, terminate);
+  const afterObserver = readState(adb, deviceId, appId, execute, env);
+  const observerAttempt = {
+    before: { timestamp: new Date(observerStartedAt).toISOString(), appPid: beforeObserver.appPid || null, appPidAlive: Boolean(beforeObserver.appPid), foregroundActivity: beforeObserver.activityText || null, appForeground: Boolean(beforeObserver.appForeground), launcherForeground: Boolean(beforeObserver.launcherForeground) },
+    after: { timestamp: new Date(now()).toISOString(), appPid: afterObserver.appPid || null, appPidAlive: Boolean(afterObserver.appPid), foregroundActivity: afterObserver.activityText || null, appForeground: Boolean(afterObserver.appForeground), launcherForeground: Boolean(afterObserver.launcherForeground) },
+    result: { ok: Boolean(root.ok), code: root.code, signal: root.signal, timedOut: Boolean(root.timedOut), error: root.error || null },
+    output: String(root.output || '').slice(-2000),
+  };
   let state = readState(adb, deviceId, appId, execute, env);
   if (!root.ok) {
-    const reason = state.launcherForeground ? 'APP_NOT_FOREGROUND' : (!state.appPid ? 'APP_EXITED' : 'QA_ROOT_NOT_READY');
-    return { ...appReadinessFailure(reason, state, startedAt, timeoutMs), flowOutput: root.output.slice(-2000) };
+    const failureAt = now();
+    let reason;
+    if (!state.appPid) reason = 'APP_PROCESS_EXITED';
+    else if (observerFailureMarker(root.output) || root.timedOut) reason = 'OBSERVER_FAILURE';
+    else if (state.launcherForeground) {
+      const launcher = await confirmLauncherForeground(readState, adb, deviceId, appId, execute, env, now, sleep, deadline);
+      reason = launcher.confirmed ? 'LAUNCHER_FOREGROUND' : 'QA_ROOT_NOT_READY';
+      observerAttempt.launcherConfirmation = launcher.observations.map((item) => ({ timestamp: new Date(item.at).toISOString(), appPid: item.state.appPid || null, appPidAlive: Boolean(item.state.appPid), foregroundActivity: item.state.activityText || null, launcherForeground: Boolean(item.state.launcherForeground) }));
+    } else if (state.appForeground) reason = 'APP_FOREGROUND_AND_NOT_READY';
+    else reason = 'QA_ROOT_NOT_READY';
+    const failed = appReadinessFailure(reason, state, startedAt, timeoutMs, { probeEndMs: failureAt, observerFailureAt: (reason === 'OBSERVER_FAILURE' ? new Date(failureAt).toISOString() : null), observerAttempts: [observerAttempt], flowOutput: String(root.output || '').slice(-2000) });
+    failed.diagnosticArtifacts = captureFailureArtifacts({ artifactDirectory, adb, deviceId, execute, env, hierarchy: '', state });
+    return failed;
   }
   const rootReadyAt = now();
   let lastHierarchy = '';
@@ -203,11 +249,15 @@ async function waitForRenderedRuntime(options = {}) {
   while (now() <= deadline) {
     state = readState(adb, deviceId, appId, execute, env);
     if (!state.appPid) {
-      return { ...appReadinessFailure('APP_EXITED', state, startedAt, timeoutMs, { qaRootReadyAt: new Date(rootReadyAt).toISOString(), intermediateState: lastSummary, intermediateStateKind: intermediateKind, intermediateStateAt: intermediateAt !== null ? new Date(intermediateAt).toISOString() : null, lastHierarchyAt: new Date(lastHierarchyAt).toISOString() }) };
+      return { ...appReadinessFailure('APP_PROCESS_EXITED', state, startedAt, timeoutMs, { probeEndMs: now(), qaRootReadyAt: new Date(rootReadyAt).toISOString(), intermediateState: lastSummary, intermediateStateKind: intermediateKind, intermediateStateAt: intermediateAt !== null ? new Date(intermediateAt).toISOString() : null, lastHierarchyAt: new Date(lastHierarchyAt).toISOString(), observerAttempts: [observerAttempt] }) };
     }
-    if (state.launcherForeground || !state.appForeground) {
-      return { ...appReadinessFailure('APP_NOT_FOREGROUND', state, startedAt, timeoutMs, { qaRootReadyAt: new Date(rootReadyAt).toISOString(), intermediateState: lastSummary, intermediateStateKind: intermediateKind, intermediateStateAt: intermediateAt !== null ? new Date(intermediateAt).toISOString() : null, lastHierarchyAt: new Date(lastHierarchyAt).toISOString() }) };
+    if (!state.appForeground) {
+      const launcher = await confirmLauncherForeground(readState, adb, deviceId, appId, execute, env, now, sleep, deadline);
+      if (launcher.confirmed) {
+        return { ...appReadinessFailure('LAUNCHER_FOREGROUND', state, startedAt, timeoutMs, { probeEndMs: now(), qaRootReadyAt: new Date(rootReadyAt).toISOString(), intermediateState: lastSummary, intermediateStateKind: intermediateKind, intermediateStateAt: intermediateAt !== null ? new Date(intermediateAt).toISOString() : null, lastHierarchyAt: new Date(lastHierarchyAt).toISOString(), observerAttempts: [observerAttempt], foregroundConfirmation: launcher.observations.map((item) => ({ timestamp: new Date(item.at).toISOString(), foregroundActivity: item.state.activityText || null, appPid: item.state.appPid || null, appPidAlive: Boolean(item.state.appPid), launcherForeground: Boolean(item.state.launcherForeground) })) }) };
+      }
     }
+    if (now() > deadline) break;
     const hierarchyRead = readHierarchy
       ? readHierarchy(adb, deviceId, execute, env)
       : readHierarchyResult(adb, deviceId, execute, env);
@@ -225,12 +275,19 @@ async function waitForRenderedRuntime(options = {}) {
           ok: true,
           appPid: state.appPid || null,
           launchStartedAt: new Date(startedAt).toISOString(),
+          probeStart: new Date(startedAt).toISOString(),
+          probeEnd: new Date(readyAt).toISOString(),
           qaRootReadyAt: new Date(rootReadyAt).toISOString(),
+          stableScreenReadyAt: new Date(readyAt).toISOString(),
           appReadyAt: new Date(readyAt).toISOString(),
           elapsedMs: readyAt - startedAt,
           timeoutMs,
+          logicalBudgetMs: timeoutMs,
+          observerFailureAt: null,
+          failureCode: null,
           readySelector: loginReady ? 'screen.auth.login' : 'screen.dashboard.ready',
           readinessSource: 'maestro',
+          observerAttempts: [observerAttempt],
           intermediateState: lastSummary,
           intermediateStateKind: intermediateKind,
           intermediateStateAt: intermediateAt !== null ? new Date(intermediateAt).toISOString() : null,
@@ -256,9 +313,13 @@ async function waitForRenderedRuntime(options = {}) {
     lastHierarchyAt: new Date(lastHierarchyAt).toISOString(),
     hierarchyError,
     hierarchy: lastHierarchy.slice(-16_000) || null,
+    observerAttempts: [observerAttempt],
   };
-  const failed = appReadinessFailure('AUTH_OR_DASHBOARD_NOT_READY', state, startedAt, timeoutMs, details);
-  if (!lastHierarchy && hierarchyError) failed.reason = 'UI_HIERARCHY_UNAVAILABLE';
+  const failed = appReadinessFailure('STABLE_SCREEN_NOT_READY', state, startedAt, timeoutMs, { ...details, probeEndMs: now(), stableScreenReadyAt: null });
+  if (!lastHierarchy && hierarchyError) {
+    failed.reason = 'UI_HIERARCHY_UNAVAILABLE';
+    failed.failureCode = failed.reason;
+  }
   failed.diagnosticArtifacts = captureFailureArtifacts({ artifactDirectory, adb, deviceId, execute, env, hierarchy: lastHierarchy, state });
   return failed;
 }

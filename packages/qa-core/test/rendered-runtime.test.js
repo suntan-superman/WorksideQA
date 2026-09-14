@@ -31,6 +31,16 @@ test('rendered probe recognizes the selected app foreground and PID', () => {
   assert.match(state.activityText, /com\.merxus\.mobile\.qa/);
 });
 
+test('foreground detection ignores a historical QA task when the launcher is resumed', () => {
+  const execute = (_command, args) => args.includes('pidof')
+    ? { status: 0, stdout: '4321\n' }
+    : { status: 0, stdout: 'Task com.merxus.mobile.qa hidden\ntopResumedActivity: ActivityRecord{abc com.google.android.apps.nexuslauncher/.NexusLauncherActivity}' };
+  const state = readAppState('adb.exe', 'emulator-5554', 'com.merxus.mobile.qa', execute, {});
+  assert.equal(state.appPid, 4321);
+  assert.equal(state.appForeground, false);
+  assert.equal(state.launcherForeground, true);
+});
+
 test('hierarchy summary identifies the intermediate QA-root-only state', () => {
   const summary = hierarchySummary('<hierarchy><node resource-id="qa-environment-root" class="android.view.View" text="" content-desc=""/></hierarchy>');
   assert.deepEqual(summary.resourceIds, ['qa-environment-root']);
@@ -62,6 +72,10 @@ test('rendered probe reports root and auth readiness timings without login or re
   assert.equal(report.ok, true);
   assert.equal(report.readySelector, 'screen.auth.login');
   assert.equal(report.appPid, 4321);
+  assert.ok(report.probeStart);
+  assert.ok(report.probeEnd);
+  assert.equal(report.logicalBudgetMs, 60000);
+  assert.equal(report.observerFailureAt, null);
   assert.equal(calls.some((args) => args.includes('pm')), false);
   assert.equal(calls.some((args) => args.includes('force-stop')), true);
 });
@@ -112,7 +126,10 @@ test('rendered probe captures a bounded unresolved intermediate state', async ()
     readHierarchy: () => '<hierarchy><node resource-id="qa-environment-root" text="Loading workspace"/></hierarchy>',
   }));
   assert.equal(report.ok, false);
-  assert.equal(report.reason, 'AUTH_OR_DASHBOARD_NOT_READY');
+  assert.equal(report.reason, 'STABLE_SCREEN_NOT_READY');
+  assert.equal(report.logicalBudgetMs, 35);
+  assert.ok(report.probeStart);
+  assert.ok(report.probeEnd);
   assert.equal(report.intermediateStateKind, 'APP_BOOTSTRAP_LOADING');
   assert.equal(report.intermediateState.visibleText[0], 'Loading workspace');
   assert.ok(report.intermediateStateDurationMs >= 0);
@@ -129,7 +146,7 @@ test('rendered probe fails immediately when the app dies after QA root', async (
     readHierarchy: () => '<node resource-id="qa-environment-root"/>',
   }));
   assert.equal(report.ok, false);
-  assert.equal(report.reason, 'APP_EXITED');
+  assert.equal(report.reason, 'APP_PROCESS_EXITED');
 });
 
 test('rendered probe rejects a launcher that replaces the QA app', async () => {
@@ -138,7 +155,8 @@ test('rendered probe rejects a launcher that replaces the QA app', async () => {
     readHierarchy: () => '<node resource-id="qa-environment-root"/>',
   }));
   assert.equal(report.ok, false);
-  assert.equal(report.reason, 'APP_NOT_FOREGROUND');
+  assert.equal(report.reason, 'LAUNCHER_FOREGROUND');
+  assert.equal(report.foregroundConfirmation.length, 2);
 });
 
 test('rendered probe distinguishes an unavailable hierarchy observer from app readiness failure', async () => {
@@ -148,4 +166,45 @@ test('rendered probe distinguishes an unavailable hierarchy observer from app re
   assert.equal(report.ok, false);
   assert.equal(report.reason, 'UI_HIERARCHY_UNAVAILABLE');
   assert.match(report.hierarchyError, /already registered/);
+});
+
+test('observer timeout with a live QA process is classified as observer failure and stays within the absolute budget', async () => {
+  let fakeNow = 0;
+  let observerBudget = null;
+  const calls = [];
+  const execute = (_command, args) => {
+    calls.push(args);
+    if (args.includes('pidof')) return { status: 0, stdout: '4321' };
+    return { status: 0, stdout: 'mResumedActivity: ActivityRecord{abc com.merxus.mobile.qa/com.merxus.mobile.MainActivity}' };
+  };
+  const report = await waitForRenderedRuntime({
+    adb: 'adb.exe', maestro: 'maestro.bat', deviceId: 'emulator-5554', appId: 'com.merxus.mobile.qa',
+    launchUri: 'exp+merxus-mobile://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081',
+    execute, runFlowImplementation: async (_maestro, _device, _flow, _env, timeoutMs) => {
+      observerBudget = timeoutMs;
+      fakeNow = 60_000;
+      return { ok: false, code: 143, signal: 'SIGTERM', timedOut: true, output: 'UiAutomationService already registered' };
+    }, env: {}, timeoutMs: 60_000, pollMs: 1, now: () => fakeNow,
+  });
+  assert.equal(report.reason, 'OBSERVER_FAILURE');
+  assert.equal(observerBudget, 60_000);
+  assert.equal(report.appPid, 4321);
+  assert.equal(report.observerAttempts.length, 1);
+  assert.match(report.observerAttempts[0].output, /UiAutomationService already registered/);
+  assert.ok(report.elapsedMs <= report.logicalBudgetMs);
+  assert.ok(calls.some((args) => args.includes('force-stop')));
+});
+
+test('a normal root observer receives only the remaining logical deadline, without the former grace extension', async () => {
+  let observedTimeout = null;
+  const report = await waitForRenderedRuntime(readinessOptions({
+    timeoutMs: 20,
+    runFlowImplementation: async (_maestro, _device, _flow, _env, timeoutMs) => {
+      observedTimeout = timeoutMs;
+      return { ok: true, code: 0, signal: null, output: '' };
+    },
+    readHierarchy: () => '<node resource-id="qa-environment-root"/><node resource-id="screen.auth.login"/>',
+  }));
+  assert.equal(report.ok, true);
+  assert.equal(observedTimeout, 20);
 });
