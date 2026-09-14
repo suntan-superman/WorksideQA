@@ -98,7 +98,8 @@ function commandVersion(command, env) {
     env, encoding: 'utf8', timeout: 10000, windowsHide: true,
     stdio: ['ignore', 'pipe', 'pipe'],
   });
-  return String(outcome.stdout || outcome.stderr || '').trim().split(/\r?\n/)[0] || null;
+  const lines = String(outcome.stdout || outcome.stderr || '').trim().split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  return lines.find((line) => /\d+\.\d+\.\d+/.test(line)) || lines[0] || null;
 }
 
 function resolveMaestro(env) {
