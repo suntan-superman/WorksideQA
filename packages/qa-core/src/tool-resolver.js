@@ -1,0 +1,121 @@
+const fs = require('node:fs');
+const path = require('node:path');
+const { spawnCommandSync } = require('../../qa-utils/src');
+
+const TOOL_OVERRIDES = {
+  node: 'WORKSIDEQA_NODE_BIN',
+  npm: 'WORKSIDEQA_NPM_BIN',
+  firebase: 'WORKSIDEQA_FIREBASE_BIN',
+  adb: 'WORKSIDEQA_ADB_BIN',
+  maestro: 'WORKSIDEQA_MAESTRO_BIN',
+  java: 'WORKSIDEQA_JAVA_BIN',
+};
+
+function expandPath(value, env = process.env) {
+  let expanded = String(value || '').trim().replace(/^['"]|['"]$/g, '');
+  expanded = expanded.replace(/%([A-Z][A-Z0-9_]*)%/gi, (_, key) => String(env[key] || ''));
+  expanded = expanded.replace(/\$env:([A-Z][A-Z0-9_]*)/gi, (_, key) => String(env[key] || ''));
+  if (expanded.startsWith('~')) expanded = path.join(env.USERPROFILE || env.HOME || '', expanded.slice(1));
+  return expanded;
+}
+
+function commandRuns(command, env) {
+  if (!command) return false;
+  const runtimeEnv = withToolPaths(env, [{ path: command }, { path: process.execPath }]);
+  const outcome = spawnCommandSync(command, ['--version'], {
+    env: runtimeEnv, encoding: 'utf8', timeout: 10000, windowsHide: true,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  return !outcome.error && outcome.status === 0;
+}
+
+function withToolPaths(env = process.env, tools = []) {
+  const current = String(env.PATH || env.Path || '');
+  const additions = [process.execPath, ...tools.map((tool) => tool?.path)]
+    .filter(Boolean)
+    .map((candidate) => path.dirname(expandPath(candidate, env)))
+    .filter(Boolean);
+  const entries = [...new Set([...additions, ...current.split(path.delimiter).filter(Boolean)])];
+  return { ...env, PATH: entries.join(path.delimiter) };
+}
+
+function pathLookup(command, env) {
+  if (process.platform === 'win32') {
+    // Prefer executable shims over extensionless Unix companion files that
+    // Yarn/npm may place beside them. This is important when the resolved
+    // path is passed directly to child_process on Windows.
+    const candidates = path.extname(command)
+      ? [command]
+      : [`${command}.cmd`, `${command}.bat`, `${command}.exe`, command];
+    for (const name of candidates) {
+      const where = spawnCommandSync('where.exe', [name], {
+        env, encoding: 'utf8', timeout: 5000, windowsHide: true,
+        stdio: ['ignore', 'pipe', 'ignore'],
+      });
+      const first = String(where.stdout || '').split(/\r?\n/).map((line) => line.trim()).find(Boolean);
+      if (first && fs.existsSync(first) && commandRuns(first, env)) return path.resolve(first);
+    }
+    return null;
+  }
+  const where = spawnCommandSync('sh', ['-lc', `command -v -- "$1"`, 'worksideqa', command], {
+    env, encoding: 'utf8', timeout: 5000, windowsHide: true,
+    stdio: ['ignore', 'pipe', 'ignore'],
+  });
+  const first = String(where.stdout || '').trim().split(/\r?\n/).find(Boolean);
+  return first && commandRuns(first, env) ? first : (commandRuns(command, env) ? command : null);
+}
+
+function fallbackCandidates(name, env) {
+  const userProfile = env.USERPROFILE || '';
+  const localAppData = env.LOCALAPPDATA || path.join(userProfile, 'AppData', 'Local');
+  const appData = env.APPDATA || path.join(userProfile, 'AppData', 'Roaming');
+  const sdkRoots = [env.ANDROID_HOME, env.ANDROID_SDK_ROOT, path.join(localAppData, 'Android', 'Sdk')].filter(Boolean);
+  const candidates = [];
+  if (name === 'node') candidates.push(process.execPath);
+  if (name === 'npm') {
+    candidates.push(path.join(path.dirname(process.execPath), process.platform === 'win32' ? 'npm.cmd' : 'npm'));
+    if (process.platform === 'win32') candidates.push(path.join(appData, 'npm', 'npm.cmd'));
+  }
+  if (name === 'firebase' && process.platform === 'win32') {
+    candidates.push(
+      path.join(localAppData, 'Yarn', 'Data', 'global', 'node_modules', '.bin', 'firebase.cmd'),
+      path.join(localAppData, 'Yarn', 'bin', 'firebase.cmd'),
+      path.join(appData, 'npm', 'firebase.cmd'),
+      path.join(userProfile, '.yarn', 'bin', 'firebase.cmd'),
+    );
+  }
+  if (name === 'adb' && process.platform === 'win32') candidates.push(...sdkRoots.map((root) => path.join(root, 'platform-tools', 'adb.exe')));
+  if (name === 'maestro' && process.platform === 'win32') candidates.push(path.join(userProfile, '.maestro', 'bin', 'maestro.bat'));
+  if (name === 'java' && env.JAVA_HOME) candidates.push(path.join(env.JAVA_HOME, 'bin', process.platform === 'win32' ? 'java.exe' : 'java'));
+  return candidates;
+}
+
+function resolveTool(name, env = process.env) {
+  const overrideKey = TOOL_OVERRIDES[name];
+  const override = overrideKey && String(env[overrideKey] || '').trim();
+  if (override) {
+    const candidate = expandPath(override, env);
+    if ((path.isAbsolute(candidate) && fs.existsSync(candidate) && commandRuns(candidate, env)) || (!path.isAbsolute(candidate) && commandRuns(candidate, env))) {
+      return { name, path: path.isAbsolute(candidate) ? path.resolve(candidate) : candidate, source: 'local-config', overrideKey };
+    }
+    return { name, path: null, source: 'local-config', overrideKey, error: `Override ${overrideKey} does not resolve to a runnable executable: ${candidate}` };
+  }
+  const pathResult = pathLookup(name, env);
+  if (pathResult) return { name, path: pathResult, source: 'PATH' };
+  for (const candidate of fallbackCandidates(name, env)) {
+    if (fs.existsSync(candidate) && commandRuns(candidate, env)) return { name, path: path.resolve(candidate), source: 'fallback' };
+  }
+  return { name, path: null, source: 'missing', error: `${name} is not available through PATH or supported fallback locations.` };
+}
+
+function resolveTools(env = process.env) {
+  return Object.fromEntries(Object.keys(TOOL_OVERRIDES).map((name) => [name, resolveTool(name, env)]));
+}
+
+module.exports = {
+  TOOL_OVERRIDES,
+  expandPath,
+  withToolPaths,
+  resolveTool,
+  resolveTools,
+};

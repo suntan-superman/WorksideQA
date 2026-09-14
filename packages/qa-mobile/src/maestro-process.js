@@ -3,6 +3,7 @@ const {
   spawnCommandSync,
   terminateProcessTree,
 } = require("../../qa-utils/src/process-launcher");
+const { resolveTool } = require("../../qa-core/src/tool-resolver");
 
 const MAESTRO_COMMAND = "maestro";
 
@@ -23,16 +24,21 @@ function validateArgs(args) {
 function createMaestroProcessHelper(
   spawnImplementation = spawnCommand,
   spawnSyncImplementation = spawnCommandSync,
-  terminateImplementation = terminateProcessTree
+  terminateImplementation = terminateProcessTree,
+  resolveImplementation = null,
 ) {
+  const isDefaultImplementation = spawnImplementation === spawnCommand && spawnSyncImplementation === spawnCommandSync;
+  const resolveCommand = resolveImplementation || (isDefaultImplementation
+    ? (environment) => resolveTool("maestro", environment).path || MAESTRO_COMMAND
+    : () => MAESTRO_COMMAND);
   return {
     spawnMaestro(args, options = {}) {
       validateArgs(args);
-      return spawnImplementation(MAESTRO_COMMAND, args, options);
+      return spawnImplementation(resolveCommand(options.env || process.env), args, options);
     },
     spawnMaestroSync(args, options = {}) {
       validateArgs(args);
-      return spawnSyncImplementation(MAESTRO_COMMAND, args, options);
+      return spawnSyncImplementation(resolveCommand(options.env || process.env), args, options);
     },
     terminateMaestro(child, signal = "SIGTERM") {
       return terminateImplementation(child, signal);

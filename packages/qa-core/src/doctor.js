@@ -14,6 +14,7 @@ const net = require('node:net');
 const { spawnCommandSync } = require('../../qa-utils/src');
 const { fromRoot, fileExists } = require('../../qa-utils/src');
 const { loadProductManifest, validateManifest } = require('../../qa-config/src');
+const { resolveTool, resolveTools } = require('./tool-resolver');
 
 const WORKSIDEQA_ROOT = fromRoot();
 const DEFAULTS = {
@@ -94,14 +95,6 @@ function mergedEnvironment(localConfig) {
   return env;
 }
 
-function commandExists(command, env) {
-  const outcome = spawnCommandSync(command, ['--version'], {
-    env, encoding: 'utf8', timeout: 10000, windowsHide: true,
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
-  return !outcome.error && outcome.status === 0;
-}
-
 function commandVersion(command, env) {
   const outcome = spawnCommandSync(command, ['--version'], {
     env, encoding: 'utf8', timeout: 10000, windowsHide: true,
@@ -111,35 +104,9 @@ function commandVersion(command, env) {
   return [...lines].reverse().find((line) => /\d+\.\d+\.\d+/.test(line)) || lines[0] || null;
 }
 
-function resolveMaestro(env) {
-  if (commandExists('maestro', env)) return 'maestro';
-  if (process.platform === 'win32') {
-    const candidate = path.join(env.USERPROFILE || '', '.maestro', 'bin', 'maestro.bat');
-    if (fs.existsSync(candidate) && commandExists(candidate, env)) return candidate;
-  }
-  return null;
-}
-
 function resolveCommand(command, env) {
-  if (command === 'maestro') return resolveMaestro(env);
-  if (commandExists(command, env)) return command;
-  if (process.platform === 'win32') {
-    const candidates = [`${command}.cmd`, `${command}.bat`];
-    if (command === 'adb') {
-      const sdkRoots = [env.ANDROID_HOME, env.ANDROID_SDK_ROOT, path.join(env.LOCALAPPDATA || '', 'Android', 'Sdk')].filter(Boolean);
-      candidates.push(...sdkRoots.map((root) => path.join(root, 'platform-tools', 'adb.exe')));
-    }
-    if (command === 'npm') candidates.push(path.join(path.dirname(process.execPath), 'npm.cmd'));
-    if (command === 'firebase') {
-      candidates.push(
-        path.join(env.LOCALAPPDATA || '', 'Yarn', 'bin', 'firebase.cmd'),
-        path.join(env.APPDATA || '', 'npm', 'firebase.cmd'),
-        path.join(env.USERPROFILE || '', '.yarn', 'bin', 'firebase.cmd'),
-      );
-    }
-    for (const candidate of candidates) if (fs.existsSync(candidate) && commandExists(candidate, env)) return candidate;
-  }
-  return null;
+  const normalized = String(command || '').replace(/\.(cmd|bat|exe)$/i, '').toLowerCase();
+  return resolveTool(normalized, env).path;
 }
 
 async function probeUrl(url, options = {}) {
@@ -279,21 +246,13 @@ function checkManifests(product = 'all') {
 
 function checkTools(env) {
   const checks = [];
-  for (const [id, command, required] of [
-    ['tool.node', process.execPath, true],
-    ['tool.npm', process.platform === 'win32' ? 'npm.cmd' : 'npm', true],
-    ['tool.firebase', 'firebase', true],
-    ['tool.adb', 'adb', true],
-  ]) {
-    const resolved = resolveCommand(command, env);
-    checks.push(resolved
-      ? result('passed', id, `${commandVersion(resolved, env) || command} available.`, { command: resolved })
-      : result(required ? 'failed' : 'warning', id, `${command} is not available on PATH.`));
+  const tools = resolveTools(env);
+  for (const name of ['node', 'npm', 'firebase', 'adb', 'maestro', 'java']) {
+    const resolved = tools[name];
+    checks.push(resolved.path
+      ? result('passed', `tool.${name}`, `${resolved.path} (${commandVersion(resolved.path, env) || name})`, { command: resolved.path, source: resolved.source })
+      : result('failed', `tool.${name}`, resolved.error || `${name} is unavailable.`));
   }
-  const maestro = resolveMaestro(env);
-  checks.push(maestro
-    ? result('passed', 'tool.maestro', `${commandVersion(maestro, env) || 'Maestro'} available.`, { command: maestro })
-    : result('failed', 'tool.maestro', 'Maestro is not available on PATH or %USERPROFILE%\\.maestro\\bin.'));
   return checks;
 }
 
@@ -343,7 +302,9 @@ function runAuthVerify(env, options) {
   if (options.offline || options.skipAuth) return result('skipped', 'auth.verify', 'Auth identity command skipped.');
   if (options.product === 'sageset') {
     const root = env.SAGESET_MOBILE_REPO ? path.dirname(env.SAGESET_MOBILE_REPO) : DEFAULTS.sagesetRoot;
-    const outcome = spawnCommandSync(process.platform === 'win32' ? 'npm.cmd' : 'npm', ['--prefix', 'functions', 'run', 'verify:maestro-fixtures'], {
+    const npm = resolveCommand('npm', env);
+    if (!npm) return result('failed', 'auth.verify.sageset', 'npm is unavailable; cannot verify SageSet fixtures.');
+    const outcome = spawnCommandSync(npm, ['--prefix', 'functions', 'run', 'verify:maestro-fixtures'], {
       cwd: root, env, encoding: 'utf8', timeout: 30000, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'],
     });
     return !outcome.error && outcome.status === 0
@@ -351,7 +312,9 @@ function runAuthVerify(env, options) {
       : result('failed', 'auth.verify.sageset', 'SageSet verify:maestro-fixtures failed.');
   }
   const backendRoot = env.MERXUS_BACKEND_REPO || path.join(DEFAULTS.merxusRoot, 'merxus-ai-backend');
-  const outcome = spawnCommandSync(process.platform === 'win32' ? 'npm.cmd' : 'npm', ['run', 'qa:maestro:auth:verify'], {
+  const npm = resolveCommand('npm', env);
+  if (!npm) return result('failed', 'auth.verify', 'npm is unavailable; cannot verify Merxus fixtures.');
+  const outcome = spawnCommandSync(npm, ['run', 'qa:maestro:auth:verify'], {
     cwd: backendRoot, env, encoding: 'utf8', timeout: 30000, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'],
   });
   return !outcome.error && outcome.status === 0

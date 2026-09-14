@@ -7,6 +7,7 @@ const { spawn } = require('cross-spawn');
 const { spawnCommandSync } = require('../../qa-utils/src');
 const { fromRoot } = require('../../qa-utils/src');
 const { parsePowerShellConfig, mergedEnvironment, runDoctor, DEFAULTS, resolveCommand } = require('./doctor');
+const { resolveTools, withToolPaths } = require('./tool-resolver');
 
 const STATE_DIRECTORY = fromRoot('.worksideqa');
 const STATE_PATH = path.join(STATE_DIRECTORY, 'runtime-state.json');
@@ -86,9 +87,10 @@ function saveState(state) {
   fs.renameSync(temporary, STATE_PATH);
 }
 
-function serviceDefinitions(product, env) {
-  const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-  const firebase = process.platform === 'win32' ? 'firebase.cmd' : 'firebase';
+function serviceDefinitions(product, env, tools = null) {
+  const resolved = tools || {};
+  const npm = resolved.npm?.path || (process.platform === 'win32' ? 'npm.cmd' : 'npm');
+  const firebase = resolved.firebase?.path || (process.platform === 'win32' ? 'firebase.cmd' : 'firebase');
   if (product === 'sageset') {
     const root = path.resolve(env.SAGESET_MOBILE_REPO || DEFAULTS.sagesetRoot);
     return [{
@@ -451,13 +453,17 @@ function assertPortsAvailable(definition, existingRecord, ownerResolver = portOw
 
 async function startProduct(product) {
   const local = parsePowerShellConfig(DEFAULTS.localConfig);
-  const env = mergedEnvironment(local);
+  const initialEnv = mergedEnvironment(local);
+  const tools = resolveTools(initialEnv);
+  const env = withToolPaths(initialEnv, Object.values(tools));
   const configCheck = await runDoctor({ product, offline: true, skipAuth: true, strict: false, environment: env, localConfig: local });
   if (configCheck.checks.some((check) => check.status === 'failed')) {
     printReport(configCheck);
     throw new Error(`${product} configuration is not ready; no service was started.`);
   }
-  const definitions = serviceDefinitions(product, env);
+  const unresolved = Object.values(tools).filter((tool) => !tool.path);
+  if (unresolved.length) throw new Error(`Required tool resolution failed: ${unresolved.map((tool) => tool.error || tool.name).join('; ')}`);
+  const definitions = serviceDefinitions(product, env, tools);
   const state = loadState();
   state.products[product] = state.products[product] || { services: [] };
   const records = state.products[product].services || [];
@@ -508,7 +514,7 @@ async function startProduct(product) {
   if (product === 'merxus') {
     const device = String(env.MERXUS_ANDROID_EMULATOR_ID || '').trim();
     if (!device) throw new Error('MERXUS_ANDROID_EMULATOR_ID is required for Merxus startup.');
-    const adb = resolveCommand('adb', env) || (process.platform === 'win32' ? 'adb.exe' : 'adb');
+    const adb = tools.adb.path;
     const stateResult = spawnCommandSync(adb, ['-s', device, 'get-state'], { encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
     if (stateResult.error || stateResult.status !== 0 || String(stateResult.stdout).trim() !== 'device') throw new Error(`Android emulator ${device} is not online; start the configured emulator and rerun qa:start.`);
     const reverse = spawnCommandSync(adb, ['-s', device, 'reverse', 'tcp:8081', 'tcp:8081'], { encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });

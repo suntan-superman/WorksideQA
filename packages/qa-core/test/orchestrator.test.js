@@ -25,6 +25,19 @@ test('Merxus startup definitions are dependency ordered and bounded to canonical
   assert.equal(definitions[2].args.at(-1), '--clear');
 });
 
+test('startup definitions use the resolver paths when supplied', () => {
+  const definitions = serviceDefinitions('merxus', {
+    MERXUS_MOBILE_REPO: 'C:\\Merxus\\mobile',
+    MERXUS_BACKEND_REPO: 'C:\\Merxus\\backend',
+  }, {
+    firebase: { path: 'C:\\Tools\\firebase.cmd' },
+    npm: { path: 'C:\\Tools\\npm.cmd' },
+  });
+  assert.equal(definitions[0].executable, 'C:\\Tools\\firebase.cmd');
+  assert.equal(definitions[1].executable, 'C:\\Tools\\npm.cmd');
+  assert.equal(definitions[2].executable, 'C:\\Tools\\npm.cmd');
+});
+
 test('qa:start forces canonical Maestro Metro inputs over inherited production values', () => {
   const env = canonicalMerxusMetroEnvironment({
     EXPO_PUBLIC_ENVIRONMENT: 'production',
