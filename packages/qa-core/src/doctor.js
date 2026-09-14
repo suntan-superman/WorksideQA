@@ -16,6 +16,7 @@ const { fromRoot, fileExists } = require('../../qa-utils/src');
 const { loadProductManifest, validateManifest } = require('../../qa-config/src');
 const { resolveTool, resolveTools } = require('./tool-resolver');
 const { DEFAULT_LOCAL_CONFIG_PATH, parsePowerShellConfig } = require('./local-config');
+const { waitForRenderedRuntime, DEFAULT_TIMEOUT_MS } = require('./rendered-runtime');
 
 const WORKSIDEQA_ROOT = fromRoot();
 const DEFAULTS = {
@@ -336,6 +337,31 @@ async function checkMobileRuntime(env, options) {
     checks.push(!served.error && served.status === 0
       ? result('passed', 'mobile.runtime-served', 'Running Metro serves the validated Maestro Android manifest.')
       : result('failed', 'mobile.runtime-served', 'Running Metro is absent, stale, or serving a non-Maestro runtime.'));
+  }
+  if (options.offline) {
+    checks.push(result('skipped', 'mobile.runtime-rendered', 'Rendered app check skipped (--offline).'));
+  } else if (checks.some((check) => check.id === 'mobile.runtime-served' && check.status === 'failed')) {
+    checks.push(result('failed', 'mobile.runtime-rendered', 'Rendered app check was not attempted because served Metro is not ready.'));
+  } else {
+    let rendered;
+    try {
+      const manifest = validateManifest(loadProductManifest('merxus'));
+      const device = manifest.mobile?.devices?.androidEmulator;
+      const deviceId = String(env.MERXUS_ANDROID_EMULATOR_ID || '').trim();
+      const adb = resolveCommand('adb', env);
+      const maestro = resolveCommand('maestro', env);
+      rendered = device && adb && maestro && deviceId
+        ? await waitForRenderedRuntime({
+          adb, maestro, deviceId, appId: device.appId || manifest.mobile.appId,
+          launchUri: device.launchUri, env, timeoutMs: Number(env.WORKSIDEQA_RENDERED_RUNTIME_TIMEOUT_MS || DEFAULT_TIMEOUT_MS),
+        })
+        : { ok: false, reason: 'CONFIGURATION_MISSING', elapsedMs: 0 };
+    } catch (error) {
+      rendered = { ok: false, reason: 'PROBE_ERROR', error: error.message, elapsedMs: 0 };
+    }
+    checks.push(rendered.ok
+      ? result('passed', 'mobile.runtime-rendered', `QA app rendered ${rendered.readySelector} (PID ${rendered.appPid || 'unknown'}) in ${rendered.elapsedMs}ms; launch=${rendered.launchStartedAt}, qaRoot=${rendered.qaRootReadyAt}, appReady=${rendered.appReadyAt}.`, rendered)
+      : result('failed', 'mobile.runtime-rendered', `QA app did not reach rendered readiness (${rendered.reason || 'unknown'}).`, rendered));
   }
   return checks;
 }
