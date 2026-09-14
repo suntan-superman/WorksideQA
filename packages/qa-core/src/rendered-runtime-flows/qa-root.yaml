@@ -1,6 +1,33 @@
 appId: com.merxus.mobile.qa
 ---
+- evalScript: ${output.worksideqaStableScreen = false}
+- evalScript: ${output.worksideqaStableScreenAttempts = 0}
 - extendedWaitUntil:
     visible:
       id: qa-environment-root
-    timeout: 55000
+    timeout: 60000
+- repeat:
+    while:
+      true: ${output.worksideqaStableScreen != true && output.worksideqaStableScreenAttempts < 200}
+    commands:
+      - evalScript: ${output.worksideqaStableScreenAttempts = output.worksideqaStableScreenAttempts + 1}
+      - runFlow:
+          when:
+            visible:
+              id: screen.auth.login
+          commands:
+            - evalScript: ${output.worksideqaStableScreen = true}
+      - runFlow:
+          when:
+            visible:
+              id: screen.dashboard.ready
+          commands:
+            - evalScript: ${output.worksideqaStableScreen = true}
+      - waitForAnimationToEnd:
+          timeout: 250
+- runFlow:
+    when:
+      true: ${output.worksideqaStableScreen != true}
+    commands:
+      - assertVisible:
+          id: screen.auth.login

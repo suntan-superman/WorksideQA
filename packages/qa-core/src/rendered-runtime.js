@@ -452,6 +452,41 @@ async function waitForRenderedRuntime(options = {}) {
     return failed;
   }
   const rootReadyAt = now();
+  // The root Maestro flow also verifies terminal app readiness. Running a
+  // second adb `uiautomator dump` observer here races Maestro's teardown and
+  // can produce UiAutomationService registration conflicts. Keep the direct
+  // hierarchy loop available for injected diagnostics/tests, but production
+  // readiness relies on the single Maestro observer flow.
+  const secondaryHierarchyEnabled = Boolean(
+    readHierarchy || options.allowSecondaryHierarchy || options.readHierarchyResult
+  );
+  if (!secondaryHierarchyEnabled) {
+    const readyAt = now();
+    return {
+      ok: true,
+      appPid: state.appPid || null,
+      launchStartedAt: new Date(startedAt).toISOString(),
+      probeStart: new Date(startedAt).toISOString(),
+      probeEnd: new Date(readyAt).toISOString(),
+      qaRootReadyAt: new Date(rootReadyAt).toISOString(),
+      stableScreenReadyAt: new Date(readyAt).toISOString(),
+      appReadyAt: new Date(readyAt).toISOString(),
+      elapsedMs: readyAt - startedAt,
+      timeoutMs,
+      logicalBudgetMs: timeoutMs,
+      observerFailureAt: null,
+      failureCode: null,
+      readySelector: 'screen.auth.login|screen.dashboard.ready',
+      readinessSource: 'maestro',
+      observerAttempts: [observerAttempt],
+      launchDiagnostics: { preparation: launchPreparation, launch },
+      intermediateState: null,
+      intermediateStateKind: null,
+      intermediateStateAt: null,
+      intermediateStateDurationMs: null,
+      lastHierarchyAt: null,
+    };
+  }
   let lastHierarchy = '';
   let lastSummary = null;
   let intermediateAt = null;

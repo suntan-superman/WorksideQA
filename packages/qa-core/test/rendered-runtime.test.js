@@ -13,6 +13,15 @@ const {
   waitForRenderedRuntime,
 } = require('../src/rendered-runtime');
 
+test('qa-root flow verifies terminal readiness in the same bounded Maestro observer', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'rendered-runtime-flows', 'qa-root.yaml'), 'utf8');
+  assert.match(source, /id: qa-environment-root/);
+  assert.match(source, /id: screen\.auth\.login/);
+  assert.match(source, /id: screen\.dashboard\.ready/);
+  assert.match(source, /while:/);
+  assert.match(source, /worksideqaStableScreenAttempts < 200/);
+});
+
 test('rendered probe launches the manifest URI with the explicit Android device', () => {
   const calls = [];
   const execute = (command, args) => {
@@ -178,6 +187,10 @@ test('rendered probe reports root and auth readiness timings without login or re
     launchUri: 'exp+merxus-mobile://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081',
     execute, spawn, terminate: () => {}, env: {}, timeoutMs: 60000, pollMs: 1, preflight: false,
     observerProcessSnapshot: () => ({ hostProcesses: [], deviceProcesses: [], activeDriverProcesses: [] }),
+    // This test exercises the optional diagnostic hierarchy reader. The
+    // production path now verifies terminal readiness inside qa-root.yaml's
+    // single Maestro observer and does not issue a second uiautomator dump.
+    readHierarchy: () => '<node resource-id="qa-environment-root"/><node resource-id="screen.auth.login"/>',
   });
   assert.equal(report.ok, true);
   assert.equal(report.readySelector, 'screen.auth.login');
@@ -188,6 +201,31 @@ test('rendered probe reports root and auth readiness timings without login or re
   assert.equal(report.observerFailureAt, null);
   assert.equal(calls.some((args) => args.includes('pm')), false);
   assert.equal(calls.some((args) => args.includes('force-stop')), true);
+});
+
+test('normal rendered readiness does not start a second adb hierarchy observer', async () => {
+  const calls = [];
+  const execute = (_command, args) => {
+    calls.push(args);
+    if (args.includes('pidof')) return { status: 0, stdout: '4321' };
+    return { status: 0, stdout: 'mResumedActivity: ActivityRecord{abc com.merxus.mobile.qa/com.merxus.mobile.MainActivity}' };
+  };
+  const spawn = () => {
+    const child = new EventEmitter();
+    child.stdout = new EventEmitter();
+    child.stderr = new EventEmitter();
+    process.nextTick(() => child.emit('close', 0, null));
+    return child;
+  };
+  const report = await waitForRenderedRuntime({
+    adb: 'adb.exe', maestro: 'maestro.bat', deviceId: 'emulator-5554', appId: 'com.merxus.mobile.qa',
+    launchUri: 'exp+merxus-mobile://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081',
+    execute, spawn, terminate: () => {}, env: {}, timeoutMs: 60000, pollMs: 1, preflight: false,
+    observerProcessSnapshot: () => ({ hostProcesses: [], deviceProcesses: [], activeDriverProcesses: [] }),
+  });
+  assert.equal(report.ok, true);
+  assert.equal(report.readySelector, 'screen.auth.login|screen.dashboard.ready');
+  assert.equal(calls.some((args) => args.includes('uiautomator')), false);
 });
 
 function readinessOptions(overrides = {}) {
