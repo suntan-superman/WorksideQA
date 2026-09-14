@@ -6,6 +6,7 @@ const test = require('node:test');
 const { PassThrough } = require('node:stream');
 const { acquireObserverLock, readLock } = require('../src');
 const { runProcess } = require('../../qa-mobile/src/maestro-runner');
+const { spawnMaestroSyncExclusive } = require('../../qa-mobile/src/maestro-process');
 
 function temporaryLock() {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'worksideqa-observer-'));
@@ -56,6 +57,17 @@ test('Maestro feature execution cannot overlap an active rendered observer', asy
     cwd: process.cwd(), env: process.env, logStream: new PassThrough(), secretValues: [],
     timeoutMs: 1000, observerLockPath: fixture.path,
   }), (error) => error.code === 'OBSERVER_BUSY');
+  active.release();
+  fs.rmSync(fixture.directory, { recursive: true, force: true });
+});
+
+test('direct synchronous Maestro feature execution shares the observer mutex', () => {
+  const fixture = temporaryLock();
+  const active = acquireObserverLock(fixture.path, { product: 'merxus', stage: 'rendered-runtime' });
+  assert.throws(
+    () => spawnMaestroSyncExclusive(['test', 'flow.yaml'], { observerLockPath: fixture.path }),
+    (error) => error.code === 'OBSERVER_BUSY',
+  );
   active.release();
   fs.rmSync(fixture.directory, { recursive: true, force: true });
 });

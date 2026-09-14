@@ -355,3 +355,21 @@ test('rendered probe waits for the observer driver to exit before a second hiera
   assert.equal(hierarchyRead, true);
   assert.equal(report.observerAttempts[0].observerCleanupVerified, true);
 });
+
+test('failed observer with lingering instrumentation is classified as a conflict after cleanup inspection', async () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'worksideqa-observer-failure-'));
+  const lockPath = path.join(directory, 'observer.lock');
+  let phase = 0;
+  const report = await waitForRenderedRuntime(readinessOptions({
+    observerLockPath: lockPath,
+    observerProcessSnapshot: () => phase++ === 0
+      ? { hostProcesses: [], deviceProcesses: [], activeDriverProcesses: [] }
+      : { hostProcesses: [], deviceProcesses: ['dev.mobile.maestro.test'], activeDriverProcesses: ['dev.mobile.maestro.test'] },
+    runFlowImplementation: async () => ({ ok: false, code: 143, signal: 'SIGTERM', timedOut: true, output: 'observer timed out' }),
+  }));
+  assert.equal(report.reason, 'OBSERVER_CONFLICT');
+  assert.equal(report.observerProcessesAfter.activeDriverProcesses.length, 1);
+  assert.equal(report.observerCleanupVerified, undefined);
+  assert.equal(fs.existsSync(lockPath), false);
+  fs.rmSync(directory, { recursive: true, force: true });
+});

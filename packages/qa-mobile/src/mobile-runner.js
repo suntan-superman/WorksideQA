@@ -1,6 +1,6 @@
 const path = require("path");
 const { fileExists, fromRoot } = require("../../qa-utils/src");
-const { spawnMaestroSync } = require("./maestro-process");
+const { spawnMaestroSync, spawnMaestroSyncExclusive } = require("./maestro-process");
 const { loadLocalQaConfig } = require("../../qa-core/src/local-config");
 
 function check(status, name, message) {
@@ -39,7 +39,7 @@ function runMobileChecks(config, options = {}) {
         continue;
       }
 
-      const result = spawnMaestroSync(["test", flowPath], { encoding: "utf8" });
+      const result = spawnMaestroSyncExclusive(["test", flowPath], { encoding: "utf8", product: config.key, stage: "mobile-runner" });
       checks.push(result.status === 0 ? check("passed", `maestro ${flow.name}`, "Flow completed.") : check("failed", `maestro ${flow.name}`, result.stderr || result.stdout || "Flow failed."));
     }
   }

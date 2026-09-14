@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const { ensureDir, fromRoot, readJson, slugTimestamp, spawnCommandSync, toPosixPath, writeText } = require("../../qa-utils/src");
 const { runMaestroFlows, validateMaestroConfiguration } = require("./maestro-runner");
-const { spawnMaestroSync } = require("./maestro-process");
+const { spawnMaestroSync, spawnMaestroSyncExclusive } = require("./maestro-process");
 const {
   finalizeCertification,
   redactText,
@@ -112,7 +112,7 @@ function validateSafetyValues(validated, environment, { requireCredentials = tru
 
 function defaultCommandSync(command, args, options = {}) {
   if (command === "maestro") {
-    return spawnMaestroSync(args, {
+    return spawnMaestroSyncExclusive(args, {
       cwd: options.cwd,
       env: options.env,
       encoding: "utf8",

@@ -66,9 +66,11 @@ fs.writeFileSync(process.env.MAESTRO_CAPTURE_PATH, JSON.stringify(args));
     logStream: new PassThrough(),
     secretValues: [],
     timeoutMs: 75,
+    observerLockPath: path.join(fixtureDirectory, "observer.lock"),
   });
   assert.equal(timedOut.timedOut, true);
   assert.notEqual(timedOut.signal, undefined);
+  assert.equal(fs.existsSync(path.join(fixtureDirectory, "observer.lock")), false);
 }
 
 console.log("Portable Maestro process execution contract verified.");

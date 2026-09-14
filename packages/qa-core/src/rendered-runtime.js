@@ -387,18 +387,24 @@ async function waitForRenderedRuntime(options = {}) {
     root = await runFlowImplementation(maestro, deviceId, rootFlow, env, observerBudget, spawn, terminate);
   } catch (error) {
     root = { ok: false, code: null, signal: null, timedOut: false, error, output: '' };
-  } finally {
-    observerLock.release();
   }
   const observerCapture = (phase) => options.observerProcessSnapshot
     ? options.observerProcessSnapshot(phase)
     : captureObserverProcesses(adb, deviceId, execute, env);
-  const observerIdle = root.ok
-    ? await waitForObserverIdle(() => observerCapture('after'), now, sleep, deadline)
-    : (() => { const snapshot = observerCapture('after'); return { idle: !snapshot?.activeDriverProcesses?.length, snapshot }; })();
+  let observerIdle;
+  try {
+    // Keep the mutex held until Maestro's instrumentation has actually
+    // disappeared. Releasing it immediately on child close permits a second
+    // command to register UiAutomation while the first driver is tearing down.
+    observerIdle = root.ok
+      ? await waitForObserverIdle(() => observerCapture('after'), now, sleep, deadline)
+      : (() => { const snapshot = observerCapture('after'); return { idle: !snapshot?.activeDriverProcesses?.length, snapshot }; })();
+  } finally {
+    observerLock.release();
+  }
   const observerProcessesAfter = observerIdle.snapshot;
   const afterObserver = readState(adb, deviceId, appId, execute, env);
-  if (root.ok && !observerIdle.idle) {
+  if (!observerIdle.idle) {
     return {
       ...appReadinessFailure('OBSERVER_CONFLICT', afterObserver, startedAt, timeoutMs, {
         probeEndMs: now(), observerFailureAt: new Date(now()).toISOString(), observerProcessesBefore, observerProcessesAfter,

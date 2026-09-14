@@ -3,9 +3,16 @@ const {
   spawnCommandSync,
   terminateProcessTree,
 } = require("../../qa-utils/src/process-launcher");
+const { fromRoot } = require("../../qa-utils/src");
+const { acquireObserverLock } = require("../../qa-utils/src/observer-lock");
 const { resolveTool } = require("../../qa-core/src/tool-resolver");
 
 const MAESTRO_COMMAND = "maestro";
+const OBSERVER_LOCK_PATH = fromRoot('.worksideqa', 'maestro-observer.lock');
+
+function isObserverInvocation(args) {
+  return Array.isArray(args) && args.some((argument) => ["test", "hierarchy", "screenshot"].includes(argument));
+}
 
 function validateArgs(args) {
   if (!Array.isArray(args) || args.some((argument) => typeof argument !== "string")) {
@@ -48,10 +55,38 @@ function createMaestroProcessHelper(
 
 const { spawnMaestro, spawnMaestroSync, terminateMaestro } = createMaestroProcessHelper();
 
+/**
+ * Serialize direct synchronous Maestro observer commands (for example the
+ * release runner or legacy mobile runner) with the rendered-runtime probe.
+ * Version checks intentionally remain lock-free because they do not register
+ * UiAutomation. Callers receive OBSERVER_BUSY rather than racing a live
+ * observer session.
+ */
+function spawnMaestroSyncExclusive(args, options = {}) {
+  validateArgs(args);
+  if (options.serializeMaestro === false || !isObserverInvocation(args)) {
+    return spawnMaestroSync(args, options);
+  }
+  const lockPath = options.observerLockPath || OBSERVER_LOCK_PATH;
+  const lock = acquireObserverLock(lockPath, {
+    product: options.product || null,
+    deviceId: options.deviceId || null,
+    stage: options.stage || 'synchronous-observer',
+    command: 'maestro',
+  });
+  if (!lock.ok) throw lock.error || new Error('Maestro observer is busy.');
+  try {
+    return spawnMaestroSync(args, options);
+  } finally {
+    lock.release();
+  }
+}
+
 module.exports = {
   MAESTRO_COMMAND,
   createMaestroProcessHelper,
   spawnMaestro,
   spawnMaestroSync,
+  spawnMaestroSyncExclusive,
   terminateMaestro,
 };
