@@ -443,15 +443,19 @@ async function waitForRenderedRuntime(options = {}) {
   const observerProcessesAfter = observerIdle.snapshot;
   const afterObserver = readState(adb, deviceId, appId, execute, env);
   if (!observerIdle.idle) {
+    const ownObserverTimedOut = Boolean(root.timedOut);
+    const conflictReason = ownObserverTimedOut ? 'OBSERVER_FAILURE' : 'OBSERVER_CONFLICT';
     const conflictArtifacts = captureFailureArtifacts({ artifactDirectory, adb, deviceId, execute, env, hierarchy: '', state: afterObserver });
     return {
-      ...appReadinessFailure('OBSERVER_CONFLICT', afterObserver, startedAt, timeoutMs, {
+      ...appReadinessFailure(conflictReason, afterObserver, startedAt, timeoutMs, {
         probeEndMs: now(), observerFailureAt: new Date(now()).toISOString(), observerProcessesBefore, observerProcessesAfter,
         observerLock: { path: lockPath, owner: observerLock.owner || null }, launchDiagnostics: { preparation: launchPreparation, launch },
-        observerConflict: observerConflictDetails('', observerProcessesAfter, 'maestro_instrumentation_teardown', observerProcessesBefore, 'teardown'),
+        observerConflict: observerConflictDetails('', observerProcessesAfter, ownObserverTimedOut ? 'maestro_observer_teardown' : 'maestro_instrumentation_teardown', observerProcessesBefore, 'teardown'),
         diagnosticArtifacts: conflictArtifacts,
       }),
-      error: 'Maestro instrumentation remained active after the observer exited (source=maestro_instrumentation_teardown).',
+      error: ownObserverTimedOut
+        ? 'The rendered Maestro observer exceeded its bounded budget and remained active during teardown (source=maestro_observer_teardown).'
+        : 'Maestro instrumentation remained active after the observer exited (source=maestro_instrumentation_teardown).',
     };
   }
   const observerAttempt = {

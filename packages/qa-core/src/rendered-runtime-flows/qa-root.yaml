@@ -5,7 +5,9 @@ appId: com.merxus.mobile.qa
 - extendedWaitUntil:
     visible:
       id: qa-environment-root
-    timeout: 60000
+    # Leave bounded time inside the 60s outer probe for terminal-screen
+    # polling and graceful Maestro instrumentation teardown.
+    timeout: 50000
 - repeat:
     while:
       true: ${output.worksideqaStableScreen != true && output.worksideqaStableScreenAttempts < 200}
