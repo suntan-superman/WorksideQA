@@ -35,13 +35,12 @@ const reload = 'settings.sms.reload';
 const save = 'settings.sms.save';
 const scrollIndex = commands.findIndex((command) => command.scrollUntilVisible?.element?.id === field);
 assert.ok(scrollIndex >= 0);
-assert.deepEqual(commands.slice(scrollIndex, scrollIndex + 8), [
+assert.deepEqual(commands.slice(scrollIndex, scrollIndex + 7), [
   { scrollUntilVisible: { element: { id: field }, direction: 'DOWN' } },
   { assertVisible: { id: field, text: '^2$' } },
   { assertVisible: { id: state, text: '^idle$' } },
   { tapOn: { id: helper } },
   { extendedWaitUntil: { visible: { id: state, text: '^hydrated$' }, timeout: 10000 } },
-  { extendedWaitUntil: { visible: { id: 'settings.sms.reloaded' }, timeout: 5000 } },
   { scrollUntilVisible: { element: { id: field }, direction: 'UP', timeout: 5000 } },
   { assertVisible: { id: field, text: '^2$' } },
 ]);
@@ -63,10 +62,10 @@ try {
   assert.equal(resumeCommands.filter((command) => command.tapOn?.id === helper).length, 1);
   assert.equal(resumeCommands.filter((command) => command.tapOn?.id === reload).length, 0);
   assert.equal(resumeCommands.filter((command) => command.tapOn?.id === save).length, 0);
-  assert.match(JSON.stringify(resumeCommands), /settings\.sms\.reloaded/);
-  const generatedReloadedIndex = resumeCommands.findIndex((command) => command.extendedWaitUntil?.visible?.id === 'settings.sms.reloaded');
-  assert.ok(generatedReloadedIndex >= 0);
-  assert.equal(resumeCommands.slice(generatedReloadedIndex + 1).filter((command) => command.scrollUntilVisible?.element?.id === field && command.scrollUntilVisible.centerElement === true).length, 0, 'final retry-max verification never destructively centers the field');
+  assert.equal(resumeCommands.filter((command) => command.extendedWaitUntil?.visible?.id === 'settings.sms.reloaded').length, 0, 'iOS diagnostic does not require the unreliable product marker');
+  const generatedHydratedIndex = resumeCommands.findIndex((command) => command.extendedWaitUntil?.visible?.id === state && command.extendedWaitUntil.visible.text === '^hydrated$');
+  assert.ok(generatedHydratedIndex >= 0);
+  assert.equal(resumeCommands.slice(generatedHydratedIndex + 1).filter((command) => command.scrollUntilVisible?.element?.id === field && command.scrollUntilVisible.centerElement === true).length, 0, 'final retry-max verification never destructively centers the field');
 } finally {
   fs.rmSync(directory, { recursive: true, force: true });
 }

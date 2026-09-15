@@ -217,6 +217,8 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
     ? flow.iosPostReloadReanchor || null : null;
   const iosNonCenteredScrollTargets = selectedDevice.platform === 'ios'
     ? new Set(flow.iosNonCenteredScrollTargets || []) : new Set();
+  const iosReloadCompletionOracle = selectedDevice.platform === 'ios'
+    ? flow.iosReloadCompletionOracle || null : null;
   let reloadCompletionObserved = false;
   const androidImeDismissRules = selectedDevice.platform === 'android'
     ? flow.androidImeDismissAfterEdit || [] : [];
@@ -247,9 +249,11 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
 
   for (let commandIndex = 0; commandIndex < commands.length; commandIndex += 1) {
     const command = commands[commandIndex];
-    if (iosPostReloadReanchor && command?.extendedWaitUntil?.visible?.id === 'settings.sms.reloaded') {
+    const isProductReloadCompletion = command?.extendedWaitUntil?.visible?.id === (iosReloadCompletionOracle?.productMarkerId || 'settings.sms.reloaded');
+    if (iosPostReloadReanchor && isProductReloadCompletion) {
       reloadCompletionObserved = true;
     }
+    if (iosReloadCompletionOracle && isProductReloadCompletion) continue;
     // On configured iOS simulator fields dismiss BEFORE the value assertion:
     // the keyboard can hide an otherwise correctly edited input. Consume only
     // the exact input -> assertion -> hideKeyboard pair; other flows stay intact.

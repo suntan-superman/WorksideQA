@@ -63,10 +63,6 @@ appId: com.merxus.mobile.qa
       id: settings.sms.qa-reload-state
       text: '^hydrated$'
     timeout: 10000
-- extendedWaitUntil:
-    visible:
-      id: settings.sms.reloaded
-    timeout: 5000
 - scrollUntilVisible:
     element:
       id: settings.sms.notification-retry-max-attempts

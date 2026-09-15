@@ -148,6 +148,12 @@ try {
     centerElement: false,
   });
   assert.deepEqual(ownerBFlow.iosNonCenteredScrollTargets, ['settings.sms.notification-retry-max-attempts']);
+  assert.deepEqual(ownerBFlow.iosReloadCompletionOracle, {
+    productMarkerId: 'settings.sms.reloaded',
+    stateId: 'settings.sms.qa-reload-state',
+    state: 'hydrated',
+    timeoutMs: 10000,
+  });
   assert.deepEqual(ownerBFlow.authoritativeResult, {
     mutationExpected: true, externalProviderInvocationCount: 0, blockedProviderAttemptCount: 0,
     crossTenantLeakageCount: 0, successAuditCount: 1, operationReceiptCount: 1,
@@ -188,11 +194,13 @@ try {
     },
   });
   const ownerBIosReloadedWaitIndex = ownerBIosResume.findIndex((command) => command.extendedWaitUntil?.visible?.id === 'settings.sms.reloaded');
-  assert.ok(ownerBIosReloadedWaitIndex > ownerBIosReloadHelperIndex, 'iOS retains the real product reload completion wait');
-  assert.ok(!ownerBIosResume.some((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.reloaded' && command.scrollUntilVisible.centerElement === true), 'iOS does not center-scroll the dynamic success marker');
+  assert.equal(ownerBIosReloadedWaitIndex, -1, 'iOS uses the handler-derived hydrated state instead of the unreliable product marker');
+  const ownerBIosHydratedWaitIndex = ownerBIosResume.findIndex((command) => command.extendedWaitUntil?.visible?.id === 'settings.sms.qa-reload-state' && command.extendedWaitUntil.visible.text === '^hydrated$');
+  assert.ok(ownerBIosHydratedWaitIndex > ownerBIosReloadHelperIndex, 'iOS waits for the real handler-derived hydrated state');
+  assert.ok(!ownerBIosResume.some((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.reloaded'), 'iOS does not traverse to the unreliable product marker');
   const ownerBIosFinalValueIndex = ownerBIosResume.map((command, index) => ({ command, index })).filter(({ command }) => command.assertVisible?.id === 'settings.sms.notification-retry-max-attempts' && command.assertVisible.text === '^3$').at(-1)?.index;
-  assert.ok(ownerBIosFinalValueIndex > ownerBIosReloadedWaitIndex, 'iOS verifies the persisted retry-max value after reload');
-  const ownerBIosFinalReanchor = ownerBIosResume.slice(ownerBIosReloadedWaitIndex + 1).find((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.notification-retry-max-attempts');
+  assert.ok(ownerBIosFinalValueIndex > ownerBIosHydratedWaitIndex, 'iOS verifies the persisted retry-max value after reload');
+  const ownerBIosFinalReanchor = ownerBIosResume.slice(ownerBIosHydratedWaitIndex + 1).find((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.notification-retry-max-attempts');
   assert.deepEqual(ownerBIosFinalReanchor.scrollUntilVisible, { element: { id: 'settings.sms.notification-retry-max-attempts' }, direction: 'UP', timeout: 10000 }, 'iOS post-Reload re-anchor remains bounded without destructive centering');
   assert.equal(ownerBIosResume.filter((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.notification-retry-max-attempts' && command.scrollUntilVisible.centerElement === true).length, 0, 'iOS retry-max traversals never destructively center');
   const ownerBEditIndex = ownerBIosResume.findIndex((command) => command.assertVisible?.id === 'settings.sms.qa-focus-notification-retry-max-attempts-state' && command.assertVisible.text === '^blurred$');
@@ -212,6 +220,7 @@ try {
   assert.equal(ownerBIosResume.some((command) => command.assertVisible?.id === 'settings.sms.notification-retry-max-attempts' && command.assertVisible.focused === true), false, 'iOS uses the React focus marker');
   const ownerBAndroidEditIndex = ownerBAndroidCommands.findIndex((command) => command.tapOn?.id === 'settings.sms.notification-retry-max-attempts');
   assert.ok(ownerBAndroidCommands.some((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.notification-retry-max-attempts' && command.scrollUntilVisible.centerElement === true), 'Android retains centered retry-max traversal');
+  assert.ok(ownerBAndroidCommands.some((command) => command.extendedWaitUntil?.visible?.id === 'settings.sms.reloaded'), 'Android retains the real product Reload marker assertion');
   assert.deepEqual(ownerBAndroidCommands.slice(ownerBAndroidEditIndex, ownerBAndroidEditIndex + 5), [
     { tapOn: { id: 'settings.sms.notification-retry-max-attempts' } },
     { eraseText: 100 },
