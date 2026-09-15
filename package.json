@@ -48,6 +48,8 @@
     "qa:merxus:maestro:diagnostic:ios-text-input-focus:ios": "node packages/qa-mobile/src/maestro-cli.js --product merxus --suite diagnostic-ios-text-input-focus --device iosSimulator",
     "qa:merxus:maestro:diagnostic:ios-text-input-focus-doubletap:validate": "node packages/qa-mobile/src/maestro-cli.js --product merxus --suite diagnostic-ios-text-input-focus-doubletap --validate",
     "qa:merxus:maestro:diagnostic:ios-text-input-focus-doubletap:ios": "node packages/qa-mobile/src/maestro-cli.js --product merxus --suite diagnostic-ios-text-input-focus-doubletap --device iosSimulator",
+    "qa:merxus:maestro:diagnostic:ios-text-input-focus-qahelper:validate": "node packages/qa-mobile/src/maestro-cli.js --product merxus --suite diagnostic-ios-text-input-focus-qahelper --validate",
+    "qa:merxus:maestro:diagnostic:ios-text-input-focus-qahelper:ios": "node packages/qa-mobile/src/maestro-cli.js --product merxus --suite diagnostic-ios-text-input-focus-qahelper --device iosSimulator",
     "test:merxus:phase2:settings": "node packages/qa-mobile/test/merxus-phase2-settings.test.js && node packages/qa-mobile/test/ui-correlation.test.js",
   "test:qa-doctor": "node --test packages/qa-core/test/doctor.test.js packages/qa-core/test/orchestrator.test.js packages/qa-core/test/tool-resolver.test.js packages/qa-core/test/local-config.test.js packages/qa-core/test/metro-bundle.test.js packages/qa-core/test/rendered-runtime.test.js packages/qa-utils/test/observer-lock.test.js",
     "qa:sageset:maestro:phase1": "node packages/qa-mobile/src/maestro-cli.js --product sageset --suite phase1",
