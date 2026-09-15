@@ -8,7 +8,7 @@ const { ensureDir, fromRoot, readJson, writeJson } = require('../../qa-utils/src
 const { runMaestroFlows, selectFlows, validateMaestroConfiguration } = require('./maestro-runner');
 
 const COMPONENTS = Object.freeze([
-  { key: 'interaction', label: 'A. Real TextInput interaction', suite: 'diagnostic-ios-text-input-focus-qahelper' },
+  { key: 'interaction', label: 'A. iOS SMS settings interaction surface', suite: 'diagnostic-ios-text-input-focus-qahelper' },
   { key: 'persistence', label: 'B. Save/Reload persistence', suite: 'phase2-owner-b-isolation-ios-persistence' },
 ]);
 

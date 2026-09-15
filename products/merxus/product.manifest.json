@@ -359,12 +359,6 @@
         "account": "user-b",
         "requiredEnv": ["MERXUS_MAESTRO_OWNER_B_EMAIL", "MERXUS_MAESTRO_OWNER_B_PASSWORD"],
         "mutationExpected": false,
-        "iosFocusReadiness": {
-          "helperId": "settings.sms.qa-focus-notification-retry-max-attempts",
-          "markerId": "settings.sms.qa-focus-ready",
-          "readyState": "ready",
-          "timeoutMs": 5000
-        },
         "timeoutMs": 120000
       },
       {

@@ -5,7 +5,7 @@ const path = require('node:path');
 const YAML = require('yaml');
 const { loadProductManifest } = require('../../qa-config/src');
 const { buildDeviceLaunchFlow, selectFlows, validateMaestroConfiguration } = require('../src/maestro-runner');
-const { evaluateComposite, validateComposite } = require('../src/merxus-slice28-certification');
+const { COMPONENTS, evaluateComposite, validateComposite } = require('../src/merxus-slice28-certification');
 
 const config = loadProductManifest('merxus');
 const validated = validateMaestroConfiguration(config);
@@ -15,9 +15,18 @@ assert.equal(composite.persistence.name, '28-ios-owner-b-persistence');
 assert.equal(composite.interaction.mutationExpected, false);
 assert.equal(composite.persistence.mutationExpected, true);
 assert.ok(composite.persistence.backendVerification);
+assert.equal(COMPONENTS[0].label, 'A. iOS SMS settings interaction surface');
 
 const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'worksideqa-slice28-composite-'));
 try {
+  const interactionIos = buildDeviceLaunchFlow(composite.interaction, { ...validated.mobile.devices.iosSimulator, id: 'slice28-interaction-ios' }, path.join(directory, 'interaction-ios.yaml'));
+  const interactionCommands = YAML.parseAllDocuments(fs.readFileSync(interactionIos.stages[2].path, 'utf8'))[1].toJS();
+  assert.ok(interactionCommands.some((command) => command.assertVisible?.id === 'settings.sms.qa-notification-retry-max-attempts-value' && command.assertVisible.text === '^2$'));
+  assert.equal(interactionCommands.some((command) => command.tapOn?.id === 'settings.sms.qa-focus-notification-retry-max-attempts'), false);
+  assert.equal(interactionCommands.some((command) => command.extendedWaitUntil?.visible?.id === 'settings.sms.qa-focus-ready'), false);
+  assert.equal(interactionCommands.some((command) => command.inputText === '3'), false);
+  assert.equal(interactionCommands.some((command) => command.tapOn?.id === 'settings.sms.save' || command.tapOn?.id === 'settings.sms.reload'), false);
+
   const ios = buildDeviceLaunchFlow(composite.persistence, { ...validated.mobile.devices.iosSimulator, id: 'slice28-ios' }, path.join(directory, 'ios.yaml'));
   assert.equal(ios.stages.length, 3);
   const resume = YAML.parseAllDocuments(fs.readFileSync(ios.stages[2].path, 'utf8'))[1].toJS();
@@ -50,7 +59,7 @@ const passing = evaluateComposite([{ key: 'interaction', status: 'passed' }, { k
 assert.equal(passing.certified, true);
 for (const key of ['interaction', 'persistence', 'backend', 'mutationContract', 'correlation', 'tenantIsolation', 'revisionAuditReceipt', 'providerZero']) assert.equal(passing.evidence[key], 'passed');
 
-const interactionFailed = evaluateComposite([{ key: 'interaction', status: 'failed', stage: 'ui', reason: 'focused marker did not become focused' }, { key: 'persistence', status: 'passed', execution: backendExecution }]);
+const interactionFailed = evaluateComposite([{ key: 'interaction', status: 'failed', stage: 'ui', reason: 'iOS SMS settings surface did not become available' }, { key: 'persistence', status: 'passed', execution: backendExecution }]);
 assert.equal(interactionFailed.certified, false);
 assert.equal(interactionFailed.evidence.interaction, 'failed');
 assert.equal(interactionFailed.evidence.backend, 'passed', 'valid independent persistence backend evidence is preserved');

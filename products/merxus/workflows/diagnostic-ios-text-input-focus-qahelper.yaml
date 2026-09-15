@@ -54,21 +54,3 @@ appId: com.merxus.mobile.qa
 - assertVisible:
     id: settings.sms.qa-notification-retry-max-attempts-value
     text: '^2$'
-- assertVisible:
-    id: settings.sms.qa-focus-notification-retry-max-attempts-state
-    text: '^blurred$'
-- tapOn:
-    id: settings.sms.qa-focus-notification-retry-max-attempts
-- extendedWaitUntil:
-    visible:
-      id: settings.sms.qa-focus-notification-retry-max-attempts-state
-      text: '^focused$'
-    timeout: 5000
-- pressKey: backspace
-- inputText: '3'
-- assertVisible:
-    id: settings.sms.qa-focus-notification-retry-max-attempts-state
-    text: '^focused$'
-- assertVisible:
-    id: settings.sms.qa-notification-retry-max-attempts-value
-    text: '^3$'

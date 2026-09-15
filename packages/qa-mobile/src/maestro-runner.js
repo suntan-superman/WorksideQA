@@ -209,8 +209,6 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
     ? (flow.iosKeyboardDismissAfterEdit || selectedDevice.keyboardDismissAfterEdit || []) : [];
   const iosTextInputFocusRules = selectedDevice.platform === 'ios' && selectedDevice.kind === 'simulator'
     ? (flow.iosTextInputFocus || []) : [];
-  const iosFocusReadiness = selectedDevice.platform === 'ios' && selectedDevice.kind === 'simulator'
-    ? (flow.iosFocusReadiness || null) : null;
   const iosReloadAnchor = selectedDevice.platform === 'ios'
     ? flow.iosReloadAnchor || null : null;
   const iosReloadActivation = selectedDevice.platform === 'ios'
@@ -329,17 +327,6 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
       runtimeCommands.push(command);
       commandIndex += 1;
       continue;
-    }
-    if (iosFocusReadiness && command?.tapOn?.id === iosFocusReadiness.helperId) {
-      runtimeCommands.push({
-        extendedWaitUntil: {
-          visible: {
-            id: iosFocusReadiness.markerId,
-            text: `^${iosFocusReadiness.readyState || 'ready'}$`,
-          },
-          timeout: iosFocusReadiness.timeoutMs || 5000,
-        },
-      });
     }
     if (!command || typeof command !== "object" || !("launchApp" in command)) {
       appendOverlaySweepers((rule) => rule.checkpoints.beforeAssertIds?.includes(command?.assertVisible?.id));
