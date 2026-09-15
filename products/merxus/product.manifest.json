@@ -214,7 +214,7 @@
       "args": ["run", "qa:maestro:reset", "--"],
       "projectId": "merxus-maestro-local",
       "passGeneration": true,
-      "scenarios": ["login-owner-a", "phase2-settings-update-owner-a", "phase2-settings-retry-owner-a", "phase2-settings-retry-delay-owner-a", "phase2-settings-digest-enabled-roundtrip-owner-a", "phase2-settings-unsaved-reload-owner-a", "phase2-settings-manager-mutation-owner-a", "phase2-settings-staff-mutation-denial-a"],
+      "scenarios": ["login-owner-a", "phase2-settings-update-owner-a", "phase2-settings-retry-owner-a", "phase2-settings-retry-delay-owner-a", "phase2-settings-digest-enabled-roundtrip-owner-a", "phase2-settings-unsaved-reload-owner-a", "phase2-settings-manager-mutation-owner-a", "phase2-settings-staff-mutation-denial-a", "phase2-settings-owner-b-isolation"],
       "environment": {
         "MERXUS_QA_ENVIRONMENT": "maestro",
         "MERXUS_MAESTRO_FIREBASE_PROJECT_ID": "merxus-maestro-local",
@@ -239,10 +239,42 @@
         "args": ["run", "qa:maestro:verify", "--"],
         "argumentName": "--case",
         "includeScenario": true,
-        "mutations": ["login-owner-a", "tenant-isolation-a-b", "logout-no-mutation", "phase2-settings-update-owner-a", "phase2-settings-retry-owner-a", "phase2-settings-retry-delay-owner-a", "phase2-settings-digest-enabled-roundtrip-owner-a", "phase2-settings-unsaved-reload-owner-a", "phase2-settings-manager-mutation-owner-a", "phase2-settings-staff-mutation-denial-a"]
+        "mutations": ["login-owner-a", "tenant-isolation-a-b", "logout-no-mutation", "phase2-settings-update-owner-a", "phase2-settings-retry-owner-a", "phase2-settings-retry-delay-owner-a", "phase2-settings-digest-enabled-roundtrip-owner-a", "phase2-settings-unsaved-reload-owner-a", "phase2-settings-manager-mutation-owner-a", "phase2-settings-staff-mutation-denial-a", "phase2-settings-owner-b-isolation"]
       }
     },
     "flows": [
+      {
+        "name": "28-tenant-settings-owner-b-isolation",
+        "path": "products/merxus/workflows/28-tenant-settings-owner-b-isolation.yaml",
+        "fixtureScenario": "phase2-settings-owner-b-isolation",
+        "backendVerification": "phase2-settings-owner-b-isolation",
+        "mutationExpected": true,
+        "iosReloadAnchor": {
+          "targetId": "settings.sms.save",
+          "direction": "DOWN",
+          "timeoutMs": 20000,
+          "centerElement": true,
+          "followUp": {
+            "targetId": "settings.sms.reload",
+            "direction": "DOWN",
+            "timeoutMs": 5000,
+            "centerElement": true
+          }
+        },
+        "account": "user-b",
+        "requiredEnv": ["MERXUS_MAESTRO_OWNER_B_EMAIL", "MERXUS_MAESTRO_OWNER_B_PASSWORD"],
+        "timeoutMs": 180000,
+        "authoritativeResult": {
+          "mutationExpected": true,
+          "externalProviderInvocationCount": 0,
+          "blockedProviderAttemptCount": 0,
+          "crossTenantLeakageCount": 0,
+          "successAuditCount": 1,
+          "operationReceiptCount": 1,
+          "tenantAUnchanged": true,
+          "revision": 2
+        }
+      },
       {
         "name": "27-tenant-settings-staff-mutation-denial-a",
         "path": "products/merxus/workflows/27-tenant-settings-staff-mutation-denial-a.yaml",
@@ -462,6 +494,7 @@
         "phase2-retry-delay": ["23-tenant-settings-retry-delay-owner-a"],
         "phase2-manager-mutation": ["26-tenant-settings-manager-mutation-owner-a"],
         "phase2-staff-denial": ["27-tenant-settings-staff-mutation-denial-a"],
+        "phase2-owner-b-isolation": ["28-tenant-settings-owner-b-isolation"],
         "phase1": ["00-launch-environment", "01-login-owner-a", "02-tenant-isolation", "03-logout"]
       }
     }

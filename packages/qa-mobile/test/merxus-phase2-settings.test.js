@@ -111,6 +111,42 @@ try {
   assert.ok(staffSaveScrollIndex >= 0 && staffSaveScrollIndex < staffSaveDisabledIndex, 'iOS Staff flow re-anchors Save before its disabled assertion');
   assert.deepEqual(staffResume[staffSaveScrollIndex].scrollUntilVisible, { element: { id: 'settings.sms.save' }, direction: 'DOWN', timeout: 20000, centerElement: true });
   assert.ok(staffSaveDisabledIndex < staffForbiddenIndex, 'iOS Staff flow checks forbidden state after Save re-anchor');
+  const ownerBFlows = selectFlows(config, { suite: 'phase2-owner-b-isolation' });
+  assert.equal(ownerBFlows.length, 1);
+  const ownerBFlow = ownerBFlows[0];
+  assert.equal(ownerBFlow.name, '28-tenant-settings-owner-b-isolation');
+  assert.equal(ownerBFlow.account, 'user-b');
+  assert.equal(ownerBFlow.fixtureScenario, 'phase2-settings-owner-b-isolation');
+  assert.equal(ownerBFlow.backendVerification, 'phase2-settings-owner-b-isolation');
+  assert.deepEqual(ownerBFlow.requiredEnv, ['MERXUS_MAESTRO_OWNER_B_EMAIL', 'MERXUS_MAESTRO_OWNER_B_PASSWORD']);
+  assert.equal(ownerBFlow.timeoutMs, 180000);
+  assert.deepEqual(ownerBFlow.authoritativeResult, {
+    mutationExpected: true, externalProviderInvocationCount: 0, blockedProviderAttemptCount: 0,
+    crossTenantLeakageCount: 0, successAuditCount: 1, operationReceiptCount: 1,
+    tenantAUnchanged: true, revision: 2,
+  });
+  const ownerBCommands = YAML.parseAllDocuments(fs.readFileSync(ownerBFlow.path, 'utf8'))[1].toJS();
+  assert.ok(ownerBCommands.some((command) => command.inputText === '${MERXUS_MAESTRO_OWNER_B_EMAIL}'));
+  assert.ok(ownerBCommands.some((command) => command.inputText === '${MERXUS_MAESTRO_OWNER_B_PASSWORD}'));
+  assert.ok(ownerBCommands.some((command) => command.assertVisible?.id === 'dashboard.tenant.name' && command.assertVisible.text === 'Merxus Maestro Tenant B'));
+  assert.ok(ownerBCommands.some((command) => command.assertVisible?.id === 'settings.tenant.id' && command.assertVisible.text === 'merxus-maestro-tenant-b'));
+  assert.ok(ownerBCommands.some((command) => command.assertVisible?.id === 'settings.sms.notification-retry-max-attempts' && command.assertVisible.text === '^2$'));
+  assert.ok(ownerBCommands.some((command) => command.assertVisible?.id === 'settings.sms.notification-retry-max-attempts' && command.assertVisible.text === '^3$'));
+  assert.equal(ownerBCommands.filter((command) => command.tapOn?.id === 'settings.sms.save').length, 1);
+  assert.ok(ownerBCommands.some((command) => command.evalScript?.includes('WORKSIDEQA_CORRELATION')));
+  const ownerBAndroid = buildDeviceLaunchFlow(ownerBFlow, { ...config.mobile.devices.androidEmulator, id: 'owner-b-explicit-android' }, path.join(directory, 'owner-b-android', 'runtime.yaml'));
+  const ownerBAndroidCommands = YAML.parseAllDocuments(fs.readFileSync(ownerBAndroid.path, 'utf8'))[1].toJS();
+  assert.ok(ownerBAndroidCommands.some((command) => command.tapOn?.id === 'settings.sms.notification-retry-max-attempts'));
+  const ownerBIos = buildDeviceLaunchFlow(ownerBFlow, { ...config.mobile.devices.iosSimulator, id: 'owner-b-explicit-ios' }, path.join(directory, 'owner-b-ios', 'runtime.yaml'));
+  assert.equal(ownerBIos.stages.length, 3, 'Owner B mutation retains the certified iOS split flow');
+  assert.ok(ownerBIos.launchPlan.launchArgs.includes('owner-b-explicit-ios'));
+  const ownerBIosResume = YAML.parseAllDocuments(fs.readFileSync(ownerBIos.stages[2].path, 'utf8'))[1].toJS();
+  assert.ok(ownerBIosResume.some((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.save'));
+  assert.ok(ownerBIosResume.some((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.reload'));
+  const ownerBSaveScroll = ownerBIosResume.find((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.save');
+  const ownerBReloadScroll = ownerBIosResume.find((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.reload');
+  assert.deepEqual(ownerBSaveScroll.scrollUntilVisible, { element: { id: 'settings.sms.save' }, direction: 'DOWN', timeout: 20000, centerElement: true });
+  assert.deepEqual(ownerBReloadScroll.scrollUntilVisible, { element: { id: 'settings.sms.reload' }, direction: 'DOWN', timeout: 5000, centerElement: true });
   const ios = buildDeviceLaunchFlow(flow, { ...config.mobile.devices.iosSimulator, id: 'explicit-udid', descriptorName: 'iosSimulator' }, path.join(directory, 'runtime.yaml'));
   assert.equal(ios.stages.length, 3);
   assert.ok(ios.launchPlan.launchArgs.includes('explicit-udid'));

@@ -42,6 +42,6 @@ function parseAuthoritativeResult(stdout, expected, uiOutput, generation) {
   }
   for (const key of ['requestId', 'operationId']) if (diagnostics.uiCorrelation[key] !== result[key]) throw correlationError(`UI/backend ${key} mismatch`, diagnostics);
   diagnostics.correlationMatched = true;
-  return { ...Object.fromEntries(['generation', 'verificationCase', 'externalProviderInvocationCount', 'blockedProviderAttemptCount', 'crossTenantLeakageCount', 'successAuditCount', 'operationReceiptCount', 'tenantBUnchanged', 'revision', 'requestId', 'operationId'].map((key) => [key, result[key]])), ...diagnostics };
+  return { ...Object.fromEntries(['generation', 'verificationCase', 'mutationExpected', 'externalProviderInvocationCount', 'blockedProviderAttemptCount', 'crossTenantLeakageCount', 'successAuditCount', 'operationReceiptCount', 'tenantAUnchanged', 'tenantBUnchanged', 'revision', 'requestId', 'operationId'].map((key) => [key, result[key]])), ...diagnostics };
 }
 module.exports = { parseAuthoritativeResult };
