@@ -189,6 +189,8 @@ try {
   const result = { ok: true, generation: 'generation-1', ...flow.authoritativeResult, requestId: 'request-1', operationId: 'operation-1' };
   const ui = 'WORKSIDEQA_CORRELATION={"requestId":"request-1","operationId":"operation-1"}';
   assert.equal(parseAuthoritativeResult(JSON.stringify(result), flow.authoritativeResult, ui, 'generation-1').successAuditCount, 1);
+  const ownerBResult = { ok: true, generation: 'generation-1', verificationCase: ownerBFlow.backendVerification, requestId: 'request-owner-b', operationId: 'operation-owner-b', ...ownerBFlow.authoritativeResult };
+  assert.deepEqual(parseAuthoritativeResult(JSON.stringify(ownerBResult), ownerBFlow.authoritativeResult, 'WORKSIDEQA_CORRELATION={"requestId":"request-owner-b","operationId":"operation-owner-b"}', 'generation-1').tenantAUnchanged, true);
   for (const extra of [{ successAuditCount: 2 }, { crossTenantLeakageCount: undefined }, { externalProviderInvocationCount: 1 }, { generation: 'stale' }, { requestId: 'wrong' }]) assert.throws(() => parseAuthoritativeResult(JSON.stringify({ ...result, ...extra }), flow.authoritativeResult, ui, 'generation-1'));
   assert.throws(() => parseAuthoritativeResult(JSON.stringify(result), flow.authoritativeResult, '', 'generation-1'));
   console.log('PASS Merxus Phase 2 isolated flow, certified iOS split, authoritative counters and UI correlation contracts');
