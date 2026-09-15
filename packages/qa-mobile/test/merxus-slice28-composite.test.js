@@ -46,10 +46,32 @@ const backendExecution = { results: [{ status: 'passed', stages: { backend: { st
   externalProviderInvocationCount: 0, blockedProviderAttemptCount: 0,
   requestId: 'request-1', operationId: 'operation-1',
 } }] };
-assert.equal(evaluateComposite([{ key: 'interaction', status: 'passed' }, { key: 'persistence', status: 'passed', execution: backendExecution }]).certified, true);
-assert.equal(evaluateComposite([{ key: 'interaction', status: 'failed' }, { key: 'persistence', status: 'passed', execution: backendExecution }]).certified, false);
-assert.equal(evaluateComposite([{ key: 'interaction', status: 'passed' }, { key: 'persistence', status: 'failed', execution: backendExecution }]).certified, false);
-assert.equal(evaluateComposite([{ key: 'interaction', status: 'passed' }, { key: 'persistence', status: 'passed', execution: { results: [{ status: 'passed', stages: { backend: { status: 'failed' } } }] } }]).certified, false);
+const passing = evaluateComposite([{ key: 'interaction', status: 'passed' }, { key: 'persistence', status: 'passed', execution: backendExecution }]);
+assert.equal(passing.certified, true);
+for (const key of ['interaction', 'persistence', 'backend', 'mutationContract', 'correlation', 'tenantIsolation', 'revisionAuditReceipt', 'providerZero']) assert.equal(passing.evidence[key], 'passed');
+
+const interactionFailed = evaluateComposite([{ key: 'interaction', status: 'failed', stage: 'ui', reason: 'focused marker did not become focused' }, { key: 'persistence', status: 'passed', execution: backendExecution }]);
+assert.equal(interactionFailed.certified, false);
+assert.equal(interactionFailed.evidence.interaction, 'failed');
+assert.equal(interactionFailed.evidence.backend, 'passed', 'valid independent persistence backend evidence is preserved');
+assert.equal(interactionFailed.evidence.tenantIsolation, 'passed');
+
+const persistenceFailed = evaluateComposite([{ key: 'interaction', status: 'passed' }, { key: 'persistence', status: 'failed', stage: 'ui', reason: 'settings.sms.save not visible' }]);
+assert.equal(persistenceFailed.certified, false);
+for (const key of ['backend', 'mutationContract', 'correlation', 'tenantIsolation', 'revisionAuditReceipt', 'providerZero']) assert.equal(persistenceFailed.evidence[key], 'blocked');
+
+const bothFailed = evaluateComposite([{ key: 'interaction', status: 'failed' }, { key: 'persistence', status: 'failed' }]);
+assert.equal(bothFailed.certified, false);
+for (const key of ['backend', 'mutationContract', 'correlation', 'tenantIsolation', 'revisionAuditReceipt', 'providerZero']) assert.equal(bothFailed.evidence[key], 'blocked');
+
+const verifierFailed = evaluateComposite([{ key: 'interaction', status: 'passed' }, { key: 'persistence', status: 'failed', execution: { results: [{ status: 'failed', stages: { backend: { status: 'failed' } }, failureStage: 'backend' }] } }]);
+assert.equal(verifierFailed.certified, false);
+for (const key of ['backend', 'mutationContract', 'correlation', 'tenantIsolation', 'revisionAuditReceipt', 'providerZero']) assert.equal(verifierFailed.evidence[key], 'failed');
+
+const backendNotRun = evaluateComposite([{ key: 'interaction', status: 'passed' }, { key: 'persistence', status: 'passed', execution: { results: [{ status: 'passed', stages: { backend: { status: 'not-run' } } }] } }]);
+assert.equal(backendNotRun.certified, false);
+for (const key of ['backend', 'mutationContract', 'correlation', 'tenantIsolation', 'revisionAuditReceipt', 'providerZero']) assert.equal(backendNotRun.evidence[key], 'not-run');
+
 assert.equal(evaluateComposite([{ key: 'interaction', status: 'passed' }, { key: 'persistence', status: 'passed', execution: { results: [{ status: 'passed', stages: { backend: { status: 'passed' } }, authoritativeResult: { ...backendExecution.results[0].authoritativeResult, mutationExpected: false } }] } }]).certified, false);
 assert.equal(evaluateComposite([{ key: 'interaction', status: 'passed' }, { key: 'persistence', status: 'passed', execution: { results: [{ status: 'passed', stages: { backend: { status: 'passed' } }, authoritativeResult: { ...backendExecution.results[0].authoritativeResult, operationId: null } }] } }]).certified, false);
 assert.deepEqual(selectFlows(validated, { suite: 'phase2-owner-b-isolation' }).map((flow) => flow.name), ['28-tenant-settings-owner-b-isolation'], 'Android monolithic flow remains unchanged');
