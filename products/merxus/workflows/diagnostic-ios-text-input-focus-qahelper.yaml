@@ -46,13 +46,13 @@ appId: com.merxus.mobile.qa
     direction: DOWN
 - tapOn:
     id: settings.sms.open
-- scrollUntilVisible:
-    element:
-      id: settings.sms.notification-retry-max-attempts
-    direction: DOWN
-    centerElement: true
+- extendedWaitUntil:
+    visible:
+      id: settings.sms.qa-notification-retry-max-attempts-value
+      text: '^2$'
+    timeout: 5000
 - assertVisible:
-    id: settings.sms.notification-retry-max-attempts
+    id: settings.sms.qa-notification-retry-max-attempts-value
     text: '^2$'
 - assertVisible:
     id: settings.sms.qa-focus-notification-retry-max-attempts-state
@@ -70,5 +70,5 @@ appId: com.merxus.mobile.qa
     id: settings.sms.qa-focus-notification-retry-max-attempts-state
     text: '^focused$'
 - assertVisible:
-    id: settings.sms.notification-retry-max-attempts
+    id: settings.sms.qa-notification-retry-max-attempts-value
     text: '^3$'
