@@ -84,6 +84,7 @@ assert.deepEqual(staffFlow.authoritativeResult, {
 const staffCommands = YAML.parseAllDocuments(fs.readFileSync(staffFlow.path, 'utf8'))[1].toJS();
 assert.ok(staffCommands.some((command) => command.assertVisible?.id === 'settings.user.role' && command.assertVisible.text === 'staff'));
 assert.ok(staffCommands.some((command) => command.assertVisible?.id === 'settings.sms.daily-digest-time' && command.assertVisible.text === '^18:00$' && command.assertVisible.enabled === false));
+assert.ok(staffCommands.some((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.save' && command.scrollUntilVisible.direction === 'DOWN' && command.scrollUntilVisible.timeout === 20000 && command.scrollUntilVisible.centerElement === true));
 assert.ok(staffCommands.some((command) => command.assertVisible?.id === 'settings.sms.save' && command.assertVisible.enabled === false));
 assert.ok(staffCommands.some((command) => command.assertVisible?.id === 'settings.sms.forbidden'));
 assert.equal(staffCommands.some((command) => command.inputText === '18:30'), false);
@@ -104,6 +105,12 @@ try {
   const staffResume = YAML.parseAllDocuments(fs.readFileSync(staffIos.stages[2].path, 'utf8'))[1].toJS();
   assert.ok(staffResume.some((command) => command.assertVisible?.id === 'settings.sms.forbidden'));
   assert.ok(staffResume.some((command) => command.tapOn?.id === 'settings.sms.reload'));
+  const staffSaveScrollIndex = staffResume.findIndex((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.save');
+  const staffSaveDisabledIndex = staffResume.findIndex((command) => command.assertVisible?.id === 'settings.sms.save' && command.assertVisible.enabled === false);
+  const staffForbiddenIndex = staffResume.findIndex((command) => command.assertVisible?.id === 'settings.sms.forbidden');
+  assert.ok(staffSaveScrollIndex >= 0 && staffSaveScrollIndex < staffSaveDisabledIndex, 'iOS Staff flow re-anchors Save before its disabled assertion');
+  assert.deepEqual(staffResume[staffSaveScrollIndex].scrollUntilVisible, { element: { id: 'settings.sms.save' }, direction: 'DOWN', timeout: 20000, centerElement: true });
+  assert.ok(staffSaveDisabledIndex < staffForbiddenIndex, 'iOS Staff flow checks forbidden state after Save re-anchor');
   const ios = buildDeviceLaunchFlow(flow, { ...config.mobile.devices.iosSimulator, id: 'explicit-udid', descriptorName: 'iosSimulator' }, path.join(directory, 'runtime.yaml'));
   assert.equal(ios.stages.length, 3);
   assert.ok(ios.launchPlan.launchArgs.includes('explicit-udid'));

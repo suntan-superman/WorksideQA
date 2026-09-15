@@ -66,6 +66,16 @@ appId: com.merxus.mobile.qa
     id: settings.sms.daily-digest-time
     text: '^18:00$'
     enabled: false
+- scrollUntilVisible:
+    element:
+      id: settings.sms.save
+    direction: DOWN
+    timeout: 20000
+    centerElement: true
+- extendedWaitUntil:
+    visible:
+      id: settings.sms.save
+    timeout: 5000
 - assertVisible:
     id: settings.sms.save
     enabled: false
