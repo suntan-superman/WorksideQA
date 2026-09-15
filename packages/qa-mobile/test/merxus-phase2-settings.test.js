@@ -127,6 +127,9 @@ try {
     focusTimeoutMs: 5000,
     initialValueTimeoutMs: 5000,
     revealFieldAfterFocus: true,
+    revealAnchorId: 'settings.sms.save',
+    revealAnchorDirection: 'DOWN',
+    revealAnchorTimeoutMs: 20000,
   }]);
   assert.deepEqual(ownerBFlow.iosKeyboardDismissAfterEdit, [{
     fieldId: 'settings.sms.notification-retry-max-attempts',
@@ -188,7 +191,7 @@ try {
   const ownerBIosResume = YAML.parseAllDocuments(fs.readFileSync(ownerBIos.stages[2].path, 'utf8'))[1].toJS();
   assert.ok(ownerBIosResume.some((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.save'));
   assert.ok(ownerBIosResume.some((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.reload'));
-  const ownerBSaveScroll = ownerBIosResume.find((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.save');
+  const ownerBSaveScroll = ownerBIosResume.find((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.save' && command.scrollUntilVisible.centerElement === true);
   const ownerBReloadScrollIndex = ownerBIosResume.findIndex((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.reload');
   const ownerBReloadScroll = ownerBIosResume.find((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.reload');
   assert.deepEqual(ownerBSaveScroll.scrollUntilVisible, { element: { id: 'settings.sms.save' }, direction: 'DOWN', timeout: 20000, centerElement: true });
@@ -212,6 +215,9 @@ try {
   assert.equal(ownerBIosResume.slice(ownerBIosHydratedWaitIndex + 1).filter((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.notification-retry-max-attempts').length, 0, 'iOS uses the persisted-value oracle without re-anchoring the omitted TextInput');
   assert.deepEqual(ownerBIosResume.filter((command) => command.assertVisible?.id === 'settings.sms.qa-notification-retry-max-attempts-value' && command.assertVisible.text === '^3$'), [{ assertVisible: { id: 'settings.sms.qa-notification-retry-max-attempts-value', text: '^3$' } }]);
   const ownerBEditIndex = ownerBIosResume.findIndex((command) => command.assertVisible?.id === 'settings.sms.qa-focus-notification-retry-max-attempts-state' && command.assertVisible.text === '^blurred$');
+  const ownerBIosFocusAnchorIndex = ownerBIosResume.findIndex((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.save');
+  assert.ok(ownerBIosFocusAnchorIndex >= 0 && ownerBIosFocusAnchorIndex < ownerBEditIndex, 'iOS positions the SMS form on the stable Save anchor before invoking the focus helper');
+  assert.deepEqual(ownerBIosResume[ownerBIosFocusAnchorIndex].scrollUntilVisible, { element: { id: 'settings.sms.save' }, direction: 'DOWN', timeout: 20000 });
   assert.equal(ownerBIosResume.slice(0, ownerBEditIndex).some((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.notification-retry-max-attempts'), false, 'iOS reveals retry-max through the existing focus helper instead of pre-scrolling to the intermittent TextInput');
   assert.deepEqual(ownerBIosResume.slice(ownerBEditIndex, ownerBEditIndex + 11), [
     { assertVisible: { id: 'settings.sms.qa-focus-notification-retry-max-attempts-state', text: '^blurred$' } },

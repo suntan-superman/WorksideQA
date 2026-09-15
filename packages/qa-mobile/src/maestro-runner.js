@@ -458,6 +458,15 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
       const scrollTargetId = command?.scrollUntilVisible?.element?.id;
       const focusRevealRule = iosTextInputFocusRules.find((rule) => rule.revealFieldAfterFocus && rule.fieldId === scrollTargetId);
       if (focusRevealRule) {
+        if (focusRevealRule.revealAnchorId) {
+          runtimeCommands.push({
+            scrollUntilVisible: {
+              element: { id: focusRevealRule.revealAnchorId },
+              direction: focusRevealRule.revealAnchorDirection || 'DOWN',
+              timeout: focusRevealRule.revealAnchorTimeoutMs || 20000,
+            },
+          });
+        }
         iosFocusPrelude = { rule: focusRevealRule, expectedText: null };
         continue;
       }

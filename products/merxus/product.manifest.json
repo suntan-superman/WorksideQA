@@ -268,7 +268,10 @@
             "markerId": "settings.sms.qa-focus-notification-retry-max-attempts-state",
             "focusTimeoutMs": 5000,
             "initialValueTimeoutMs": 5000,
-            "revealFieldAfterFocus": true
+            "revealFieldAfterFocus": true,
+            "revealAnchorId": "settings.sms.save",
+            "revealAnchorDirection": "DOWN",
+            "revealAnchorTimeoutMs": 20000
           }
         ],
         "iosReloadAnchor": {
