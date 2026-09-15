@@ -21,6 +21,14 @@ assert.equal(flow.account, 'user-b');
 assert.equal(flow.mutationExpected, false);
 assert.equal(flow.backendVerification, undefined);
 assert.equal(buildBackendVerificationPlan(config, flow), null, 'reload-helper probe has no backend verification stage');
+const field = 'settings.sms.notification-retry-max-attempts';
+const state = 'settings.sms.qa-reload-state';
+assert.deepEqual(flow.iosPostReloadValueOracle, {
+  sourceId: field,
+  oracleId: 'settings.sms.qa-notification-retry-max-attempts-value',
+  completionStateId: state,
+  completionState: 'hydrated',
+});
 assert.deepEqual(flow.requiredEnv, [
   'MERXUS_MAESTRO_OWNER_B_EMAIL',
   'MERXUS_MAESTRO_OWNER_B_PASSWORD',
@@ -28,8 +36,6 @@ assert.deepEqual(flow.requiredEnv, [
 
 const source = fs.readFileSync(flow.path, 'utf8');
 const commands = YAML.parseAllDocuments(source)[1].toJS();
-const field = 'settings.sms.notification-retry-max-attempts';
-const state = 'settings.sms.qa-reload-state';
 const helper = 'settings.sms.qa-reload';
 const reload = 'settings.sms.reload';
 const save = 'settings.sms.save';
@@ -65,7 +71,9 @@ try {
   assert.equal(resumeCommands.filter((command) => command.extendedWaitUntil?.visible?.id === 'settings.sms.reloaded').length, 0, 'iOS diagnostic does not require the unreliable product marker');
   const generatedHydratedIndex = resumeCommands.findIndex((command) => command.extendedWaitUntil?.visible?.id === state && command.extendedWaitUntil.visible.text === '^hydrated$');
   assert.ok(generatedHydratedIndex >= 0);
-  assert.equal(resumeCommands.slice(generatedHydratedIndex + 1).filter((command) => command.scrollUntilVisible?.element?.id === field && command.scrollUntilVisible.centerElement === true).length, 0, 'final retry-max verification never destructively centers the field');
+  const generatedOracleAssertions = resumeCommands.slice(generatedHydratedIndex + 1).filter((command) => command.assertVisible?.id === 'settings.sms.qa-notification-retry-max-attempts-value');
+  assert.deepEqual(generatedOracleAssertions, [{ assertVisible: { id: 'settings.sms.qa-notification-retry-max-attempts-value', text: '^2$' } }]);
+  assert.equal(resumeCommands.slice(generatedHydratedIndex + 1).filter((command) => command.scrollUntilVisible?.element?.id === field).length, 0, 'final retry-max verification uses the QA value oracle without scrolling the omitted TextInput');
 } finally {
   fs.rmSync(directory, { recursive: true, force: true });
 }

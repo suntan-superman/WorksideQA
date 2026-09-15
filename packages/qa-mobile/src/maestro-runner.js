@@ -219,6 +219,8 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
     ? new Set(flow.iosNonCenteredScrollTargets || []) : new Set();
   const iosReloadCompletionOracle = selectedDevice.platform === 'ios'
     ? flow.iosReloadCompletionOracle || null : null;
+  const iosPostReloadValueOracle = selectedDevice.platform === 'ios'
+    ? flow.iosPostReloadValueOracle || null : null;
   let reloadCompletionObserved = false;
   const androidImeDismissRules = selectedDevice.platform === 'android'
     ? flow.androidImeDismissAfterEdit || [] : [];
@@ -254,6 +256,22 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
       reloadCompletionObserved = true;
     }
     if (iosReloadCompletionOracle && isProductReloadCompletion) continue;
+    const isReloadStateCompletion = iosPostReloadValueOracle &&
+      command?.extendedWaitUntil?.visible?.id === iosPostReloadValueOracle.completionStateId &&
+      command.extendedWaitUntil.visible.text === `^${iosPostReloadValueOracle.completionState}$`;
+    if (isReloadStateCompletion) reloadCompletionObserved = true;
+    if (iosPostReloadValueOracle && reloadCompletionObserved) {
+      if (command?.scrollUntilVisible?.element?.id === iosPostReloadValueOracle.sourceId) continue;
+      if (command?.assertVisible?.id === iosPostReloadValueOracle.sourceId) {
+        runtimeCommands.push({
+          assertVisible: {
+            ...command.assertVisible,
+            id: iosPostReloadValueOracle.oracleId,
+          },
+        });
+        continue;
+      }
+    }
     // On configured iOS simulator fields dismiss BEFORE the value assertion:
     // the keyboard can hide an otherwise correctly edited input. Consume only
     // the exact input -> assertion -> hideKeyboard pair; other flows stay intact.
@@ -397,7 +415,7 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
         }
         continue;
       }
-      const isPostReloadReanchor = reloadCompletionObserved &&
+      const isPostReloadReanchor = iosPostReloadReanchor && reloadCompletionObserved &&
         command?.scrollUntilVisible?.element?.id === iosPostReloadReanchor?.targetId;
       if (isPostReloadReanchor) {
         const postReloadScroll = { ...command.scrollUntilVisible };

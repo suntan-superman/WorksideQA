@@ -300,6 +300,12 @@
           "state": "hydrated",
           "timeoutMs": 10000
         },
+        "iosPostReloadValueOracle": {
+          "sourceId": "settings.sms.notification-retry-max-attempts",
+          "oracleId": "settings.sms.qa-notification-retry-max-attempts-value",
+          "completionStateId": "settings.sms.qa-reload-state",
+          "completionState": "hydrated"
+        },
         "account": "user-b",
         "requiredEnv": ["MERXUS_MAESTRO_OWNER_B_EMAIL", "MERXUS_MAESTRO_OWNER_B_PASSWORD"],
         "timeoutMs": 180000,
@@ -357,6 +363,12 @@
         "account": "user-b",
         "requiredEnv": ["MERXUS_MAESTRO_OWNER_B_EMAIL", "MERXUS_MAESTRO_OWNER_B_PASSWORD"],
         "mutationExpected": false,
+        "iosPostReloadValueOracle": {
+          "sourceId": "settings.sms.notification-retry-max-attempts",
+          "oracleId": "settings.sms.qa-notification-retry-max-attempts-value",
+          "completionStateId": "settings.sms.qa-reload-state",
+          "completionState": "hydrated"
+        },
         "timeoutMs": 120000
       },
       {
