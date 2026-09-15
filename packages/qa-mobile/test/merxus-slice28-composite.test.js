@@ -31,13 +31,16 @@ try {
   assert.equal(ios.stages.length, 3);
   const resume = YAML.parseAllDocuments(fs.readFileSync(ios.stages[2].path, 'utf8'))[1].toJS();
   const ids = JSON.stringify(resume);
-  assert.ok(ids.includes('settings.sms.qa-focus-notification-retry-max-attempts'));
+  assert.ok(ids.includes('settings.sms.qa-set-notification-retry-max-attempts'));
   assert.ok(ids.includes('settings.sms.save'));
   assert.ok(ids.includes('settings.sms.qa-reload'));
   assert.ok(ids.includes('settings.sms.qa-reload-state'));
   assert.ok(ids.includes('settings.sms.qa-notification-retry-max-attempts-value'));
   assert.ok(ids.includes('WORKSIDEQA_CORRELATION='));
   assert.ok(resume.some((command) => command.assertVisible?.id === 'settings.sms.qa-notification-retry-max-attempts-value' && command.assertVisible.text === '^3$'));
+  assert.equal(resume.filter((command) => command.tapOn?.id === 'settings.sms.qa-set-notification-retry-max-attempts').length, 1);
+  assert.equal(resume.some((command) => command.tapOn?.id === 'settings.sms.notification-retry-max-attempts'), false);
+  assert.equal(resume.some((command) => command.inputText === '3'), false);
   assert.equal(resume.some((command) => command.extendedWaitUntil?.visible?.id === 'settings.sms.reloaded'), false);
   assert.equal(resume.some((command) => command.tapOn?.id === 'settings.sms.reload'), false);
 

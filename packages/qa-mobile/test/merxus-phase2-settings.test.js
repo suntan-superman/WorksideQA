@@ -185,7 +185,10 @@ try {
   assert.ok(ownerBAndroidCommands.some((command) => command.tapOn?.id === 'settings.sms.notification-retry-max-attempts'));
   assert.equal(ownerBAndroidCommands.filter((command) => command.tapOn?.id === 'settings.sms.reload').length, 1, 'Android retains the real Reload tap');
   assert.equal(ownerBAndroidCommands.filter((command) => command.tapOn?.id === 'settings.sms.qa-reload').length, 0, 'Android does not use the iOS QA Reload helper');
-  const ownerBIos = buildDeviceLaunchFlow(ownerBFlow, { ...config.mobile.devices.iosSimulator, id: 'owner-b-explicit-ios' }, path.join(directory, 'owner-b-ios', 'runtime.yaml'));
+  const ownerBIosFlow = selectFlows(config, { suite: 'phase2-owner-b-isolation-ios-persistence' })[0];
+  assert.equal(ownerBIosFlow.name, '28-ios-owner-b-persistence');
+  assert.equal(ownerBIosFlow.backendVerification, 'phase2-settings-owner-b-isolation');
+  const ownerBIos = buildDeviceLaunchFlow(ownerBIosFlow, { ...config.mobile.devices.iosSimulator, id: 'owner-b-explicit-ios' }, path.join(directory, 'owner-b-ios', 'runtime.yaml'));
   assert.equal(ownerBIos.stages.length, 3, 'Owner B mutation retains the certified iOS split flow');
   assert.ok(ownerBIos.launchPlan.launchArgs.includes('owner-b-explicit-ios'));
   const ownerBIosResume = YAML.parseAllDocuments(fs.readFileSync(ownerBIos.stages[2].path, 'utf8'))[1].toJS();
@@ -213,28 +216,24 @@ try {
   const ownerBIosFinalValueIndex = ownerBIosResume.map((command, index) => ({ command, index })).filter(({ command }) => command.assertVisible?.id === 'settings.sms.qa-notification-retry-max-attempts-value' && command.assertVisible.text === '^3$').at(-1)?.index;
   assert.ok(ownerBIosFinalValueIndex > ownerBIosHydratedWaitIndex, 'iOS verifies the persisted retry-max value after reload');
   assert.equal(ownerBIosResume.slice(ownerBIosHydratedWaitIndex + 1).filter((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.notification-retry-max-attempts').length, 0, 'iOS uses the persisted-value oracle without re-anchoring the omitted TextInput');
-  assert.deepEqual(ownerBIosResume.filter((command) => command.assertVisible?.id === 'settings.sms.qa-notification-retry-max-attempts-value' && command.assertVisible.text === '^3$'), [{ assertVisible: { id: 'settings.sms.qa-notification-retry-max-attempts-value', text: '^3$' } }]);
-  const ownerBEditIndex = ownerBIosResume.findIndex((command) => command.assertVisible?.id === 'settings.sms.qa-focus-notification-retry-max-attempts-state' && command.assertVisible.text === '^blurred$');
-  const ownerBIosFocusAnchorIndex = ownerBIosResume.findIndex((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.save');
-  assert.ok(ownerBIosFocusAnchorIndex >= 0 && ownerBIosFocusAnchorIndex < ownerBEditIndex, 'iOS positions the SMS form on the stable Save anchor before invoking the focus helper');
-  assert.deepEqual(ownerBIosResume[ownerBIosFocusAnchorIndex].scrollUntilVisible, { element: { id: 'settings.sms.save' }, direction: 'DOWN', timeout: 20000 });
-  assert.equal(ownerBIosResume.slice(0, ownerBEditIndex).some((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.notification-retry-max-attempts'), false, 'iOS reveals retry-max through the existing focus helper instead of pre-scrolling to the intermittent TextInput');
-  assert.deepEqual(ownerBIosResume.slice(ownerBEditIndex, ownerBEditIndex + 11), [
-    { assertVisible: { id: 'settings.sms.qa-focus-notification-retry-max-attempts-state', text: '^blurred$' } },
-    { tapOn: { id: 'settings.sms.qa-focus-notification-retry-max-attempts' } },
-    { extendedWaitUntil: { visible: { id: 'settings.sms.qa-focus-notification-retry-max-attempts-state', text: '^focused$' }, timeout: 5000 } },
-    { extendedWaitUntil: { visible: { id: 'settings.sms.notification-retry-max-attempts' }, timeout: 5000 } },
-    { assertVisible: { id: 'settings.sms.notification-retry-max-attempts', text: '^2$' } },
-    { pressKey: 'backspace' },
-    { inputText: '3' },
-    { extendedWaitUntil: { visible: { id: 'settings.sms.qa-dismiss-keyboard' }, timeout: 5000 } },
-    { tapOn: { id: 'settings.sms.qa-dismiss-keyboard' } },
-    { scrollUntilVisible: { element: { id: 'settings.sms.notification-retry-max-attempts' }, direction: 'UP', timeout: 10000 } },
-    { assertVisible: { id: 'settings.sms.notification-retry-max-attempts', text: '^3$' } },
+  assert.equal(ownerBIosResume.filter((command) => command.assertVisible?.id === 'settings.sms.qa-notification-retry-max-attempts-value' && command.assertVisible.text === '^3$').length, 2, 'iOS verifies the draft and persisted retry-max values through the read-only oracle');
+  const ownerBIosDraftSetupIndex = ownerBIosResume.findIndex((command) => command.tapOn?.id === 'settings.sms.qa-set-notification-retry-max-attempts');
+  assert.ok(ownerBIosDraftSetupIndex >= 0, 'iOS uses the strictly QA-gated draft setup control');
+  assert.deepEqual(ownerBIosResume.slice(ownerBIosDraftSetupIndex - 2, ownerBIosDraftSetupIndex + 4), [
+    { extendedWaitUntil: { visible: { id: 'settings.sms.qa-notification-retry-max-attempts-value', text: '^2$' }, timeout: 10000 } },
+    { assertVisible: { id: 'settings.sms.qa-notification-retry-max-attempts-value', text: '^2$' } },
+    { tapOn: { id: 'settings.sms.qa-set-notification-retry-max-attempts' } },
+    { extendedWaitUntil: { visible: { id: 'settings.sms.qa-notification-retry-max-attempts-value', text: '^3$' }, timeout: 5000 } },
+    { assertVisible: { id: 'settings.sms.qa-notification-retry-max-attempts-value', text: '^3$' } },
+    { scrollUntilVisible: { element: { id: 'settings.sms.save' }, direction: 'DOWN', timeout: 20000, centerElement: true } },
   ]);
-  assert.equal(ownerBIosResume.some((command) => command.tapOn?.id === 'settings.sms.notification-retry-max-attempts'), false, 'iOS uses the QA focus helper, not a direct TextInput tap');
+  assert.equal(ownerBIosResume.some((command) => command.tapOn?.id === 'settings.sms.notification-retry-max-attempts'), false, 'iOS does not tap the unreliable TextInput');
+  assert.equal(ownerBIosResume.some((command) => command.inputText === '3'), false, 'iOS draft setup does not use Maestro keyboard entry');
+  assert.equal(ownerBIosResume.some((command) => command.tapOn?.id === 'settings.sms.qa-focus-notification-retry-max-attempts'), false, 'iOS does not invoke the focus helper for persistence');
+  assert.equal(ownerBIosResume.some((command) => command.extendedWaitUntil?.visible?.id === 'settings.sms.qa-focus-notification-retry-max-attempts-state'), false, 'iOS persistence does not depend on the focus marker');
+  assert.equal(ownerBIosResume.some((command) => command.tapOn?.id === 'settings.sms.notification-retry-max-attempts'), false, 'iOS uses the QA draft setup, not a direct TextInput tap');
   assert.equal(ownerBIosResume.some((command) => command.doubleTapOn?.id === 'settings.sms.notification-retry-max-attempts'), false, 'iOS does not double tap the real TextInput');
-  assert.equal(ownerBIosResume.some((command) => command.assertVisible?.id === 'settings.sms.notification-retry-max-attempts' && command.assertVisible.focused === true), false, 'iOS uses the React focus marker');
+  assert.equal(ownerBIosResume.some((command) => command.assertVisible?.id === 'settings.sms.notification-retry-max-attempts' && command.assertVisible.focused === true), false, 'iOS persistence does not assert Maestro TextInput focus');
   const ownerBAndroidEditIndex = ownerBAndroidCommands.findIndex((command) => command.tapOn?.id === 'settings.sms.notification-retry-max-attempts');
   assert.ok(ownerBAndroidCommands.some((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.notification-retry-max-attempts' && command.scrollUntilVisible.centerElement === true), 'Android retains centered retry-max traversal');
   assert.ok(ownerBAndroidCommands.some((command) => command.extendedWaitUntil?.visible?.id === 'settings.sms.reloaded'), 'Android retains the real product Reload marker assertion');

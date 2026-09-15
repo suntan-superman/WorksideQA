@@ -46,27 +46,24 @@ appId: com.merxus.mobile.qa
     direction: DOWN
 - tapOn:
     id: settings.sms.open
-- scrollUntilVisible:
-    element:
-      id: settings.sms.notification-retry-max-attempts
-    direction: DOWN
-    timeout: 20000
-    centerElement: true
 - extendedWaitUntil:
     visible:
-      id: settings.sms.notification-retry-max-attempts
-    timeout: 5000
+      id: settings.sms.qa-notification-retry-max-attempts-value
+      text: '^2$'
+    timeout: 10000
 - assertVisible:
-    id: settings.sms.notification-retry-max-attempts
+    id: settings.sms.qa-notification-retry-max-attempts-value
     text: '^2$'
 - tapOn:
-    id: settings.sms.notification-retry-max-attempts
-- eraseText: 100
-- inputText: '3'
+    id: settings.sms.qa-set-notification-retry-max-attempts
+- extendedWaitUntil:
+    visible:
+      id: settings.sms.qa-notification-retry-max-attempts-value
+      text: '^3$'
+    timeout: 5000
 - assertVisible:
-    id: settings.sms.notification-retry-max-attempts
+    id: settings.sms.qa-notification-retry-max-attempts-value
     text: '^3$'
-- hideKeyboard
 - scrollUntilVisible:
     element:
       id: settings.sms.save

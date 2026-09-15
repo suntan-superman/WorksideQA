@@ -382,31 +382,6 @@
         "fixtureScenario": "phase2-settings-owner-b-isolation",
         "backendVerification": "phase2-settings-owner-b-isolation",
         "mutationExpected": true,
-        "iosTextInputFocus": [
-          {
-            "fieldId": "settings.sms.notification-retry-max-attempts",
-            "helperId": "settings.sms.qa-focus-notification-retry-max-attempts",
-            "markerId": "settings.sms.qa-focus-notification-retry-max-attempts-state",
-            "focusTimeoutMs": 5000,
-            "initialValueTimeoutMs": 5000,
-            "revealFieldAfterFocus": true,
-            "revealAnchorId": "settings.sms.save",
-            "revealAnchorDirection": "DOWN",
-            "revealAnchorTimeoutMs": 20000
-          }
-        ],
-        "iosKeyboardDismissAfterEdit": [
-          {
-            "fieldId": "settings.sms.notification-retry-max-attempts",
-            "targetId": "settings.sms.qa-dismiss-keyboard",
-            "reanchorAfterDismiss": {
-              "targetId": "settings.sms.notification-retry-max-attempts",
-              "direction": "UP",
-              "timeoutMs": 10000,
-              "centerElement": false
-            }
-          }
-        ],
         "iosReloadAnchor": {
           "targetId": "settings.sms.save",
           "direction": "DOWN",
