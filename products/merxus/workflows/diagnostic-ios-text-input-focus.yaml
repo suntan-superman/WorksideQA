@@ -1,0 +1,62 @@
+appId: com.merxus.mobile.qa
+---
+- launchApp:
+    clearState: true
+- assertVisible:
+    id: screen.auth.login
+- tapOn:
+    id: auth.login.email
+- eraseText: 128
+- inputText: ${MERXUS_MAESTRO_OWNER_B_EMAIL}
+- tapOn:
+    id: auth.login.password
+- eraseText: 128
+- inputText: ${MERXUS_MAESTRO_OWNER_B_PASSWORD}
+- hideKeyboard
+- assertVisible:
+    id: auth.login.submit
+    enabled: true
+- tapOn:
+    id: auth.login.submit
+- extendedWaitUntil:
+    visible:
+      id: screen.dashboard.ready
+    timeout: 20000
+- assertVisible:
+    id: dashboard.tenant.name
+    text: 'Merxus Maestro Tenant B'
+- assertVisible:
+    id: dashboard.user.role
+    text: 'owner'
+- tapOn:
+    id: settings.open
+- extendedWaitUntil:
+    visible:
+      id: screen.settings.ready
+    timeout: 15000
+- assertVisible:
+    id: settings.tenant.id
+    text: 'merxus-maestro-tenant-b'
+- assertVisible:
+    id: settings.user.role
+    text: 'owner'
+- scrollUntilVisible:
+    element:
+      id: settings.sms.open
+    direction: DOWN
+- tapOn:
+    id: settings.sms.open
+- scrollUntilVisible:
+    element:
+      id: settings.sms.notification-retry-max-attempts
+    direction: DOWN
+    centerElement: true
+- assertVisible:
+    id: settings.sms.notification-retry-max-attempts
+    text: '^2$'
+- tapOn:
+    id: settings.sms.notification-retry-max-attempts
+    retryTapIfNoChange: true
+- assertVisible:
+    id: settings.sms.notification-retry-max-attempts
+    focused: true
