@@ -213,6 +213,9 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
     ? flow.iosReloadAnchor || null : null;
   const iosReloadActivation = selectedDevice.platform === 'ios'
     ? flow.iosReloadActivation || null : null;
+  const iosPostReloadReanchor = selectedDevice.platform === 'ios'
+    ? flow.iosPostReloadReanchor || null : null;
+  let reloadCompletionObserved = false;
   const androidImeDismissRules = selectedDevice.platform === 'android'
     ? flow.androidImeDismissAfterEdit || [] : [];
   const androidImeDismissBoundaries = [];
@@ -242,6 +245,9 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
 
   for (let commandIndex = 0; commandIndex < commands.length; commandIndex += 1) {
     const command = commands[commandIndex];
+    if (iosPostReloadReanchor && command?.extendedWaitUntil?.visible?.id === 'settings.sms.reloaded') {
+      reloadCompletionObserved = true;
+    }
     // On configured iOS simulator fields dismiss BEFORE the value assertion:
     // the keyboard can hide an otherwise correctly edited input. Consume only
     // the exact input -> assertion -> hideKeyboard pair; other flows stay intact.
@@ -382,6 +388,20 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
             },
           });
         }
+        continue;
+      }
+      const isPostReloadReanchor = reloadCompletionObserved &&
+        command?.scrollUntilVisible?.element?.id === iosPostReloadReanchor?.targetId;
+      if (isPostReloadReanchor) {
+        const postReloadScroll = { ...command.scrollUntilVisible };
+        delete postReloadScroll.centerElement;
+        runtimeCommands.push({
+          scrollUntilVisible: {
+            ...postReloadScroll,
+            ...(iosPostReloadReanchor.timeoutMs ? { timeout: iosPostReloadReanchor.timeoutMs } : {}),
+            ...(iosPostReloadReanchor.centerElement === true ? { centerElement: true } : {}),
+          },
+        });
         continue;
       }
       runtimeCommands.push(command);

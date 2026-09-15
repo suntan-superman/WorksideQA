@@ -287,6 +287,11 @@
           "state": "hydrated",
           "timeoutMs": 10000
         },
+        "iosPostReloadReanchor": {
+          "targetId": "settings.sms.notification-retry-max-attempts",
+          "timeoutMs": 10000,
+          "centerElement": false
+        },
         "account": "user-b",
         "requiredEnv": ["MERXUS_MAESTRO_OWNER_B_EMAIL", "MERXUS_MAESTRO_OWNER_B_PASSWORD"],
         "timeoutMs": 180000,

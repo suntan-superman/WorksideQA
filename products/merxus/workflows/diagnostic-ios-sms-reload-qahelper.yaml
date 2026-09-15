@@ -73,7 +73,6 @@ appId: com.merxus.mobile.qa
       id: settings.sms.notification-retry-max-attempts
     direction: UP
     timeout: 5000
-    centerElement: true
 - assertVisible:
     id: settings.sms.notification-retry-max-attempts
     text: '^2$'

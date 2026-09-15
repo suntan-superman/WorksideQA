@@ -42,7 +42,7 @@ assert.deepEqual(commands.slice(scrollIndex, scrollIndex + 8), [
   { tapOn: { id: helper } },
   { extendedWaitUntil: { visible: { id: state, text: '^hydrated$' }, timeout: 10000 } },
   { extendedWaitUntil: { visible: { id: 'settings.sms.reloaded' }, timeout: 5000 } },
-  { scrollUntilVisible: { element: { id: field }, direction: 'UP', timeout: 5000, centerElement: true } },
+  { scrollUntilVisible: { element: { id: field }, direction: 'UP', timeout: 5000 } },
   { assertVisible: { id: field, text: '^2$' } },
 ]);
 assert.equal(commands.filter((command) => command.tapOn?.id === helper).length, 1);
@@ -64,6 +64,9 @@ try {
   assert.equal(resumeCommands.filter((command) => command.tapOn?.id === reload).length, 0);
   assert.equal(resumeCommands.filter((command) => command.tapOn?.id === save).length, 0);
   assert.match(JSON.stringify(resumeCommands), /settings\.sms\.reloaded/);
+  const generatedReloadedIndex = resumeCommands.findIndex((command) => command.extendedWaitUntil?.visible?.id === 'settings.sms.reloaded');
+  assert.ok(generatedReloadedIndex >= 0);
+  assert.equal(resumeCommands.slice(generatedReloadedIndex + 1).filter((command) => command.scrollUntilVisible?.element?.id === field && command.scrollUntilVisible.centerElement === true).length, 0, 'final retry-max verification never destructively centers the field');
 } finally {
   fs.rmSync(directory, { recursive: true, force: true });
 }
