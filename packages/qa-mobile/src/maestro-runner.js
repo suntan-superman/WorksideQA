@@ -202,8 +202,11 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
     ? selectedDevice.deterministicTextReset
     : null;
   let deterministicTextResetApplied = false;
+  // A flow may opt into the same bounded post-dismiss re-anchor architecture
+  // for a field whose viewport is known to move on iOS. Keep the device
+  // defaults intact so already-certified flows remain byte-for-byte stable.
   const keyboardDismissRules = selectedDevice.platform === 'ios' && selectedDevice.kind === 'simulator'
-    ? selectedDevice.keyboardDismissAfterEdit || [] : [];
+    ? (flow.iosKeyboardDismissAfterEdit || selectedDevice.keyboardDismissAfterEdit || []) : [];
   const iosReloadAnchor = selectedDevice.platform === 'ios'
     ? flow.iosReloadAnchor || null : null;
   const androidImeDismissRules = selectedDevice.platform === 'android'

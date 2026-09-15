@@ -120,6 +120,16 @@ try {
   assert.equal(ownerBFlow.backendVerification, 'phase2-settings-owner-b-isolation');
   assert.deepEqual(ownerBFlow.requiredEnv, ['MERXUS_MAESTRO_OWNER_B_EMAIL', 'MERXUS_MAESTRO_OWNER_B_PASSWORD']);
   assert.equal(ownerBFlow.timeoutMs, 180000);
+  assert.deepEqual(ownerBFlow.iosKeyboardDismissAfterEdit, [{
+    fieldId: 'settings.sms.notification-retry-max-attempts',
+    targetId: 'settings.sms.qa-dismiss-keyboard',
+    reanchorAfterDismiss: {
+      targetId: 'settings.sms.notification-retry-max-attempts',
+      direction: 'UP',
+      timeoutMs: 10000,
+      centerElement: true,
+    },
+  }]);
   assert.deepEqual(ownerBFlow.authoritativeResult, {
     mutationExpected: true, externalProviderInvocationCount: 0, blockedProviderAttemptCount: 0,
     crossTenantLeakageCount: 0, successAuditCount: 1, operationReceiptCount: 1,
@@ -147,6 +157,16 @@ try {
   const ownerBReloadScroll = ownerBIosResume.find((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.reload');
   assert.deepEqual(ownerBSaveScroll.scrollUntilVisible, { element: { id: 'settings.sms.save' }, direction: 'DOWN', timeout: 20000, centerElement: true });
   assert.deepEqual(ownerBReloadScroll.scrollUntilVisible, { element: { id: 'settings.sms.reload' }, direction: 'DOWN', timeout: 5000, centerElement: true });
+  const ownerBEditIndex = ownerBIosResume.findIndex((command) => command.tapOn?.id === 'settings.sms.notification-retry-max-attempts');
+  assert.deepEqual(ownerBIosResume.slice(ownerBEditIndex, ownerBEditIndex + 7), [
+    { tapOn: { id: 'settings.sms.notification-retry-max-attempts' } },
+    { eraseText: 100 },
+    { inputText: '3' },
+    { extendedWaitUntil: { visible: { id: 'settings.sms.qa-dismiss-keyboard' }, timeout: 5000 } },
+    { tapOn: { id: 'settings.sms.qa-dismiss-keyboard' } },
+    { scrollUntilVisible: { element: { id: 'settings.sms.notification-retry-max-attempts' }, direction: 'UP', timeout: 10000, centerElement: true } },
+    { assertVisible: { id: 'settings.sms.notification-retry-max-attempts', text: '^3$' } },
+  ]);
   const ios = buildDeviceLaunchFlow(flow, { ...config.mobile.devices.iosSimulator, id: 'explicit-udid', descriptorName: 'iosSimulator' }, path.join(directory, 'runtime.yaml'));
   assert.equal(ios.stages.length, 3);
   assert.ok(ios.launchPlan.launchArgs.includes('explicit-udid'));
