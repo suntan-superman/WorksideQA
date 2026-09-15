@@ -41,7 +41,7 @@ assert.deepEqual(commands.slice(scrollIndex, scrollIndex + 7), [
   { assertVisible: { id: state, text: '^idle$' } },
   { tapOn: { id: helper } },
   { extendedWaitUntil: { visible: { id: state, text: '^hydrated$' }, timeout: 10000 } },
-  { scrollUntilVisible: { element: { id: field }, direction: 'UP', timeout: 5000 } },
+  { scrollUntilVisible: { element: { id: field }, direction: 'DOWN', timeout: 5000 } },
   { assertVisible: { id: field, text: '^2$' } },
 ]);
 assert.equal(commands.filter((command) => command.tapOn?.id === helper).length, 1);

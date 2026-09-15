@@ -144,6 +144,7 @@ try {
   });
   assert.deepEqual(ownerBFlow.iosPostReloadReanchor, {
     targetId: 'settings.sms.notification-retry-max-attempts',
+    direction: 'DOWN',
     timeoutMs: 10000,
     centerElement: false,
   });
@@ -201,7 +202,7 @@ try {
   const ownerBIosFinalValueIndex = ownerBIosResume.map((command, index) => ({ command, index })).filter(({ command }) => command.assertVisible?.id === 'settings.sms.notification-retry-max-attempts' && command.assertVisible.text === '^3$').at(-1)?.index;
   assert.ok(ownerBIosFinalValueIndex > ownerBIosHydratedWaitIndex, 'iOS verifies the persisted retry-max value after reload');
   const ownerBIosFinalReanchor = ownerBIosResume.slice(ownerBIosHydratedWaitIndex + 1).find((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.notification-retry-max-attempts');
-  assert.deepEqual(ownerBIosFinalReanchor.scrollUntilVisible, { element: { id: 'settings.sms.notification-retry-max-attempts' }, direction: 'UP', timeout: 10000 }, 'iOS post-Reload re-anchor remains bounded without destructive centering');
+  assert.deepEqual(ownerBIosFinalReanchor.scrollUntilVisible, { element: { id: 'settings.sms.notification-retry-max-attempts' }, direction: 'DOWN', timeout: 10000 }, 'iOS post-Reload re-anchor uses the proven direction without destructive centering');
   assert.equal(ownerBIosResume.filter((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.notification-retry-max-attempts' && command.scrollUntilVisible.centerElement === true).length, 0, 'iOS retry-max traversals never destructively center');
   const ownerBEditIndex = ownerBIosResume.findIndex((command) => command.assertVisible?.id === 'settings.sms.qa-focus-notification-retry-max-attempts-state' && command.assertVisible.text === '^blurred$');
   assert.deepEqual(ownerBIosResume.slice(ownerBEditIndex, ownerBEditIndex + 9), [

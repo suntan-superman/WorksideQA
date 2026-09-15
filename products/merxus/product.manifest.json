@@ -289,6 +289,7 @@
         },
         "iosPostReloadReanchor": {
           "targetId": "settings.sms.notification-retry-max-attempts",
+          "direction": "DOWN",
           "timeoutMs": 10000,
           "centerElement": false
         },

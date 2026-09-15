@@ -405,6 +405,7 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
         runtimeCommands.push({
           scrollUntilVisible: {
             ...postReloadScroll,
+            ...(iosPostReloadReanchor.direction ? { direction: iosPostReloadReanchor.direction } : {}),
             ...(iosPostReloadReanchor.timeoutMs ? { timeout: iosPostReloadReanchor.timeoutMs } : {}),
             ...(iosPostReloadReanchor.centerElement === true ? { centerElement: true } : {}),
           },
