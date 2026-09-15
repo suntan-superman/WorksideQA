@@ -645,9 +645,9 @@ function validateMaestroConfiguration(config) {
       if (flow.backendVerification && !fixtures.verification?.mutations?.includes(flow.backendVerification)) {
         throw new Error(`Flow ${flow.name} references unsupported backend verification ${flow.backendVerification}.`);
       }
-      const accountCredentialPrefixes = { 'user-a': 'userA', 'user-b': 'userB', 'manager-a': 'managerA' };
+      const accountCredentialPrefixes = { 'user-a': 'userA', 'user-b': 'userB', 'manager-a': 'managerA', 'staff-a': 'staffA' };
       if (!Object.hasOwn(accountCredentialPrefixes, flow.account)) {
-        throw new Error(`Flow ${flow.name} must declare account user-a, user-b, or manager-a.`);
+        throw new Error(`Flow ${flow.name} must declare account user-a, user-b, manager-a, or staff-a.`);
       }
       const accountPrefix = accountCredentialPrefixes[flow.account];
       const accountCredentialKeys = [

@@ -214,7 +214,7 @@
       "args": ["run", "qa:maestro:reset", "--"],
       "projectId": "merxus-maestro-local",
       "passGeneration": true,
-      "scenarios": ["login-owner-a", "phase2-settings-update-owner-a", "phase2-settings-retry-owner-a", "phase2-settings-retry-delay-owner-a", "phase2-settings-digest-enabled-roundtrip-owner-a", "phase2-settings-unsaved-reload-owner-a", "phase2-settings-manager-mutation-owner-a"],
+      "scenarios": ["login-owner-a", "phase2-settings-update-owner-a", "phase2-settings-retry-owner-a", "phase2-settings-retry-delay-owner-a", "phase2-settings-digest-enabled-roundtrip-owner-a", "phase2-settings-unsaved-reload-owner-a", "phase2-settings-manager-mutation-owner-a", "phase2-settings-staff-mutation-denial-a"],
       "environment": {
         "MERXUS_QA_ENVIRONMENT": "maestro",
         "MERXUS_MAESTRO_FIREBASE_PROJECT_ID": "merxus-maestro-local",
@@ -230,17 +230,54 @@
       },
       "roleCredentialEnvKeys": {
         "managerAEmail": "MERXUS_MAESTRO_MANAGER_A_EMAIL",
-        "managerAPassword": "MERXUS_MAESTRO_MANAGER_A_PASSWORD"
+        "managerAPassword": "MERXUS_MAESTRO_MANAGER_A_PASSWORD",
+        "staffAEmail": "MERXUS_MAESTRO_STAFF_A_EMAIL",
+        "staffAPassword": "MERXUS_MAESTRO_STAFF_A_PASSWORD"
       },
       "verification": {
         "command": "npm",
         "args": ["run", "qa:maestro:verify", "--"],
         "argumentName": "--case",
         "includeScenario": true,
-        "mutations": ["login-owner-a", "tenant-isolation-a-b", "logout-no-mutation", "phase2-settings-update-owner-a", "phase2-settings-retry-owner-a", "phase2-settings-retry-delay-owner-a", "phase2-settings-digest-enabled-roundtrip-owner-a", "phase2-settings-unsaved-reload-owner-a", "phase2-settings-manager-mutation-owner-a"]
+        "mutations": ["login-owner-a", "tenant-isolation-a-b", "logout-no-mutation", "phase2-settings-update-owner-a", "phase2-settings-retry-owner-a", "phase2-settings-retry-delay-owner-a", "phase2-settings-digest-enabled-roundtrip-owner-a", "phase2-settings-unsaved-reload-owner-a", "phase2-settings-manager-mutation-owner-a", "phase2-settings-staff-mutation-denial-a"]
       }
     },
     "flows": [
+      {
+        "name": "27-tenant-settings-staff-mutation-denial-a",
+        "path": "products/merxus/workflows/27-tenant-settings-staff-mutation-denial-a.yaml",
+        "fixtureScenario": "phase2-settings-staff-mutation-denial-a",
+        "backendVerification": "phase2-settings-staff-mutation-denial-a",
+        "mutationExpected": false,
+        "iosReloadAnchor": {
+          "targetId": "settings.sms.save",
+          "direction": "DOWN",
+          "timeoutMs": 20000,
+          "centerElement": true,
+          "followUp": {
+            "targetId": "settings.sms.reload",
+            "direction": "DOWN",
+            "timeoutMs": 5000,
+            "centerElement": true
+          }
+        },
+        "account": "staff-a",
+        "requiredEnv": ["MERXUS_MAESTRO_STAFF_A_EMAIL", "MERXUS_MAESTRO_STAFF_A_PASSWORD"],
+        "timeoutMs": 180000,
+        "authoritativeResult": {
+          "mutationExpected": false,
+          "uiCorrelationCount": 0,
+          "correlationCount": 0,
+          "externalProviderInvocationCount": 0,
+          "blockedProviderAttemptCount": 0,
+          "crossTenantLeakageCount": 0,
+          "successAuditCount": 0,
+          "authorizationDenialAuditCount": 0,
+          "operationReceiptCount": 0,
+          "tenantBUnchanged": true,
+          "revision": 1
+        }
+      },
       {
         "name": "26-tenant-settings-manager-mutation-owner-a",
         "path": "products/merxus/workflows/26-tenant-settings-manager-mutation-owner-a.yaml",
@@ -424,6 +461,7 @@
         "phase2-retry": ["22-tenant-settings-retry-owner-a"],
         "phase2-retry-delay": ["23-tenant-settings-retry-delay-owner-a"],
         "phase2-manager-mutation": ["26-tenant-settings-manager-mutation-owner-a"],
+        "phase2-staff-denial": ["27-tenant-settings-staff-mutation-denial-a"],
         "phase1": ["00-launch-environment", "01-login-owner-a", "02-tenant-isolation", "03-logout"]
       }
     }

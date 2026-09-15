@@ -1,0 +1,105 @@
+appId: com.merxus.mobile.qa
+---
+- launchApp:
+    clearState: true
+- assertVisible:
+    id: screen.auth.login
+- tapOn:
+    id: auth.login.email
+- eraseText: 128
+- inputText: ${MERXUS_MAESTRO_STAFF_A_EMAIL}
+- tapOn:
+    id: auth.login.password
+- eraseText: 128
+- inputText: ${MERXUS_MAESTRO_STAFF_A_PASSWORD}
+- hideKeyboard
+- assertVisible:
+    id: auth.login.submit
+    enabled: true
+- tapOn:
+    id: auth.login.submit
+- extendedWaitUntil:
+    visible:
+      id: screen.dashboard.ready
+    timeout: 20000
+- assertVisible:
+    id: dashboard.tenant.name
+    text: 'Merxus Maestro Tenant A'
+- assertVisible:
+    id: dashboard.user.role
+    text: 'staff'
+- tapOn:
+    id: settings.open
+- extendedWaitUntil:
+    visible:
+      id: screen.settings.ready
+    timeout: 15000
+- assertVisible:
+    id: settings.tenant.id
+    text: 'merxus-maestro-tenant-a'
+- assertVisible:
+    id: settings.user.role
+    text: 'staff'
+- scrollUntilVisible:
+    element:
+      id: settings.sms.open
+    direction: DOWN
+- tapOn:
+    id: settings.sms.open
+- scrollUntilVisible:
+    element:
+      id: settings.sms.daily-digest-time
+    direction: DOWN
+    timeout: 20000
+    centerElement: true
+- extendedWaitUntil:
+    visible:
+      id: settings.sms.daily-digest-time
+    timeout: 5000
+- assertVisible:
+    id: settings.sms.daily-digest-time
+    text: '^18:00$'
+    enabled: false
+- tapOn:
+    id: settings.sms.daily-digest-time
+- assertVisible:
+    id: settings.sms.daily-digest-time
+    text: '^18:00$'
+    enabled: false
+- assertVisible:
+    id: settings.sms.save
+    enabled: false
+- assertVisible:
+    id: settings.sms.forbidden
+- assertNotVisible:
+    id: settings.sms.saved
+- assertNotVisible:
+    id: settings.sms.request-id
+- assertNotVisible:
+    id: settings.sms.operation-id
+- scrollUntilVisible:
+    element:
+      id: settings.sms.reload
+    direction: DOWN
+    timeout: 20000
+    centerElement: true
+- extendedWaitUntil:
+    visible:
+      id: settings.sms.reload
+    timeout: 5000
+- tapOn:
+    id: settings.sms.reload
+- extendedWaitUntil:
+    visible:
+      id: settings.sms.reloaded
+    timeout: 15000
+- scrollUntilVisible:
+    element:
+      id: settings.sms.daily-digest-time
+    direction: UP
+    timeout: 20000
+    centerElement: true
+- assertVisible:
+    id: settings.sms.daily-digest-time
+    text: '^18:00$'
+    enabled: false

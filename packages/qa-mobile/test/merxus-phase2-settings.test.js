@@ -66,6 +66,29 @@ assert.ok(managerCommands.some((command) => command.inputText === '${MERXUS_MAES
 assert.ok(managerCommands.some((command) => command.assertVisible?.id === 'settings.sms.daily-digest-time' && command.assertVisible.text === '^18:00$'));
 assert.ok(managerCommands.some((command) => command.assertVisible?.id === 'settings.sms.daily-digest-time' && command.assertVisible.text === '^18:30$'));
 assert.equal(managerCommands.filter((command) => command.tapOn?.id === 'settings.sms.save').length, 1);
+const staffFlows = selectFlows(config, { suite: 'phase2-staff-denial' });
+assert.equal(staffFlows.length, 1);
+const staffFlow = staffFlows[0];
+assert.equal(staffFlow.name, '27-tenant-settings-staff-mutation-denial-a');
+assert.equal(staffFlow.account, 'staff-a');
+assert.equal(staffFlow.fixtureScenario, 'phase2-settings-staff-mutation-denial-a');
+assert.equal(staffFlow.backendVerification, 'phase2-settings-staff-mutation-denial-a');
+assert.equal(staffFlow.mutationExpected, false);
+assert.deepEqual(staffFlow.requiredEnv, ['MERXUS_MAESTRO_STAFF_A_EMAIL', 'MERXUS_MAESTRO_STAFF_A_PASSWORD']);
+assert.deepEqual(staffFlow.authoritativeResult, {
+  mutationExpected: false, uiCorrelationCount: 0, correlationCount: 0,
+  externalProviderInvocationCount: 0, blockedProviderAttemptCount: 0,
+  crossTenantLeakageCount: 0, successAuditCount: 0, authorizationDenialAuditCount: 0,
+  operationReceiptCount: 0, tenantBUnchanged: true, revision: 1,
+});
+const staffCommands = YAML.parseAllDocuments(fs.readFileSync(staffFlow.path, 'utf8'))[1].toJS();
+assert.ok(staffCommands.some((command) => command.assertVisible?.id === 'settings.user.role' && command.assertVisible.text === 'staff'));
+assert.ok(staffCommands.some((command) => command.assertVisible?.id === 'settings.sms.daily-digest-time' && command.assertVisible.text === '^18:00$' && command.assertVisible.enabled === false));
+assert.ok(staffCommands.some((command) => command.assertVisible?.id === 'settings.sms.save' && command.assertVisible.enabled === false));
+assert.ok(staffCommands.some((command) => command.assertVisible?.id === 'settings.sms.forbidden'));
+assert.equal(staffCommands.some((command) => command.inputText === '18:30'), false);
+assert.equal(staffCommands.some((command) => command.tapOn?.id === 'settings.sms.save'), false);
+assert.equal(staffCommands.some((command) => command.evalScript?.includes('WORKSIDEQA_CORRELATION')), false);
 const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'phase2-settings-'));
 try {
   const managerIos = buildDeviceLaunchFlow(managerFlow, { ...config.mobile.devices.iosSimulator, id: 'manager-explicit-udid', descriptorName: 'iosSimulator' }, path.join(directory, 'manager-ios', 'runtime.yaml'));
@@ -76,6 +99,11 @@ try {
   assert.ok(managerLogin.includes('${MERXUS_MAESTRO_MANAGER_A_PASSWORD}'));
   const managerResume = YAML.parseAllDocuments(fs.readFileSync(managerIos.stages[2].path, 'utf8'))[1].toJS();
   assert.ok(managerResume.some((command) => command.assertVisible?.id === 'settings.user.role' && command.assertVisible.text === 'manager'));
+  const staffIos = buildDeviceLaunchFlow(staffFlow, { ...config.mobile.devices.iosSimulator, id: 'staff-explicit-udid', descriptorName: 'iosSimulator' }, path.join(directory, 'staff-ios', 'runtime.yaml'));
+  assert.equal(staffIos.stages.length, 3, 'staff denial retains the certified iOS split flow');
+  const staffResume = YAML.parseAllDocuments(fs.readFileSync(staffIos.stages[2].path, 'utf8'))[1].toJS();
+  assert.ok(staffResume.some((command) => command.assertVisible?.id === 'settings.sms.forbidden'));
+  assert.ok(staffResume.some((command) => command.tapOn?.id === 'settings.sms.reload'));
   const ios = buildDeviceLaunchFlow(flow, { ...config.mobile.devices.iosSimulator, id: 'explicit-udid', descriptorName: 'iosSimulator' }, path.join(directory, 'runtime.yaml'));
   assert.equal(ios.stages.length, 3);
   assert.ok(ios.launchPlan.launchArgs.includes('explicit-udid'));
