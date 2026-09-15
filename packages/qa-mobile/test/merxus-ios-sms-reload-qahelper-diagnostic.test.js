@@ -35,14 +35,13 @@ const reload = 'settings.sms.reload';
 const save = 'settings.sms.save';
 const scrollIndex = commands.findIndex((command) => command.scrollUntilVisible?.element?.id === field);
 assert.ok(scrollIndex >= 0);
-assert.deepEqual(commands.slice(scrollIndex, scrollIndex + 9), [
+assert.deepEqual(commands.slice(scrollIndex, scrollIndex + 8), [
   { scrollUntilVisible: { element: { id: field }, direction: 'DOWN', centerElement: true } },
   { assertVisible: { id: field, text: '^2$' } },
   { assertVisible: { id: state, text: '^idle$' } },
   { tapOn: { id: helper } },
   { extendedWaitUntil: { visible: { id: state, text: '^hydrated$' }, timeout: 10000 } },
-  { scrollUntilVisible: { element: { id: 'settings.sms.reloaded' }, direction: 'DOWN', timeout: 5000, centerElement: true } },
-  { assertVisible: { id: 'settings.sms.reloaded' } },
+  { extendedWaitUntil: { visible: { id: 'settings.sms.reloaded' }, timeout: 5000 } },
   { scrollUntilVisible: { element: { id: field }, direction: 'UP', timeout: 5000, centerElement: true } },
   { assertVisible: { id: field, text: '^2$' } },
 ]);

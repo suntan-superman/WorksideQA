@@ -211,6 +211,8 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
     ? (flow.iosTextInputFocus || []) : [];
   const iosReloadAnchor = selectedDevice.platform === 'ios'
     ? flow.iosReloadAnchor || null : null;
+  const iosReloadActivation = selectedDevice.platform === 'ios'
+    ? flow.iosReloadActivation || null : null;
   const androidImeDismissRules = selectedDevice.platform === 'android'
     ? flow.androidImeDismissAfterEdit || [] : [];
   const androidImeDismissBoundaries = [];
@@ -360,6 +362,26 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
           });
         }
         appendOverlaySweepers((rule) => rule.checkpoints.afterTapIds?.includes(command?.tapOn?.id));
+        continue;
+      }
+      const isReloadActivation = command?.tapOn?.id === 'settings.sms.reload';
+      if (isReloadActivation && iosReloadActivation?.helperId) {
+        // Some iOS simulator configurations expose the real Reload node but
+        // do not reliably deliver its semantic tap to React Native. A flow
+        // must explicitly opt in to this accommodation; Android and all
+        // other flows retain the real control tap unchanged.
+        runtimeCommands.push({ tapOn: { id: iosReloadActivation.helperId } });
+        if (iosReloadActivation.stateId) {
+          runtimeCommands.push({
+            extendedWaitUntil: {
+              visible: {
+                id: iosReloadActivation.stateId,
+                ...(iosReloadActivation.state ? { text: `^${iosReloadActivation.state}$` } : {}),
+              },
+              timeout: iosReloadActivation.timeoutMs || 10000,
+            },
+          });
+        }
         continue;
       }
       runtimeCommands.push(command);

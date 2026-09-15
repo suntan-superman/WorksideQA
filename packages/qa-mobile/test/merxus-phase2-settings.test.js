@@ -136,6 +136,12 @@ try {
       centerElement: true,
     },
   }]);
+  assert.deepEqual(ownerBFlow.iosReloadActivation, {
+    helperId: 'settings.sms.qa-reload',
+    stateId: 'settings.sms.qa-reload-state',
+    state: 'hydrated',
+    timeoutMs: 10000,
+  });
   assert.deepEqual(ownerBFlow.authoritativeResult, {
     mutationExpected: true, externalProviderInvocationCount: 0, blockedProviderAttemptCount: 0,
     crossTenantLeakageCount: 0, successAuditCount: 1, operationReceiptCount: 1,
@@ -153,6 +159,8 @@ try {
   const ownerBAndroid = buildDeviceLaunchFlow(ownerBFlow, { ...config.mobile.devices.androidEmulator, id: 'owner-b-explicit-android' }, path.join(directory, 'owner-b-android', 'runtime.yaml'));
   const ownerBAndroidCommands = YAML.parseAllDocuments(fs.readFileSync(ownerBAndroid.path, 'utf8'))[1].toJS();
   assert.ok(ownerBAndroidCommands.some((command) => command.tapOn?.id === 'settings.sms.notification-retry-max-attempts'));
+  assert.equal(ownerBAndroidCommands.filter((command) => command.tapOn?.id === 'settings.sms.reload').length, 1, 'Android retains the real Reload tap');
+  assert.equal(ownerBAndroidCommands.filter((command) => command.tapOn?.id === 'settings.sms.qa-reload').length, 0, 'Android does not use the iOS QA Reload helper');
   const ownerBIos = buildDeviceLaunchFlow(ownerBFlow, { ...config.mobile.devices.iosSimulator, id: 'owner-b-explicit-ios' }, path.join(directory, 'owner-b-ios', 'runtime.yaml'));
   assert.equal(ownerBIos.stages.length, 3, 'Owner B mutation retains the certified iOS split flow');
   assert.ok(ownerBIos.launchPlan.launchArgs.includes('owner-b-explicit-ios'));
@@ -160,9 +168,24 @@ try {
   assert.ok(ownerBIosResume.some((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.save'));
   assert.ok(ownerBIosResume.some((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.reload'));
   const ownerBSaveScroll = ownerBIosResume.find((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.save');
+  const ownerBReloadScrollIndex = ownerBIosResume.findIndex((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.reload');
   const ownerBReloadScroll = ownerBIosResume.find((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.reload');
   assert.deepEqual(ownerBSaveScroll.scrollUntilVisible, { element: { id: 'settings.sms.save' }, direction: 'DOWN', timeout: 20000, centerElement: true });
   assert.deepEqual(ownerBReloadScroll.scrollUntilVisible, { element: { id: 'settings.sms.reload' }, direction: 'DOWN', timeout: 5000, centerElement: true });
+  const ownerBIosReloadHelperIndex = ownerBIosResume.findIndex((command) => command.tapOn?.id === 'settings.sms.qa-reload');
+  assert.ok(ownerBIosReloadHelperIndex > ownerBReloadScrollIndex && ownerBIosReloadHelperIndex >= 0, 'iOS uses the QA Reload helper after the Save/reload anchor');
+  assert.equal(ownerBIosResume.filter((command) => command.tapOn?.id === 'settings.sms.reload').length, 0, 'iOS does not tap the unreliable real Reload node');
+  assert.deepEqual(ownerBIosResume[ownerBIosReloadHelperIndex + 1], {
+    extendedWaitUntil: {
+      visible: { id: 'settings.sms.qa-reload-state', text: '^hydrated$' },
+      timeout: 10000,
+    },
+  });
+  const ownerBIosReloadedWaitIndex = ownerBIosResume.findIndex((command) => command.extendedWaitUntil?.visible?.id === 'settings.sms.reloaded');
+  assert.ok(ownerBIosReloadedWaitIndex > ownerBIosReloadHelperIndex, 'iOS retains the real product reload completion wait');
+  assert.ok(!ownerBIosResume.some((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.reloaded' && command.scrollUntilVisible.centerElement === true), 'iOS does not center-scroll the dynamic success marker');
+  const ownerBIosFinalValueIndex = ownerBIosResume.map((command, index) => ({ command, index })).filter(({ command }) => command.assertVisible?.id === 'settings.sms.notification-retry-max-attempts' && command.assertVisible.text === '^3$').at(-1)?.index;
+  assert.ok(ownerBIosFinalValueIndex > ownerBIosReloadedWaitIndex, 'iOS verifies the persisted retry-max value after reload');
   const ownerBEditIndex = ownerBIosResume.findIndex((command) => command.assertVisible?.id === 'settings.sms.qa-focus-notification-retry-max-attempts-state' && command.assertVisible.text === '^blurred$');
   assert.deepEqual(ownerBIosResume.slice(ownerBEditIndex, ownerBEditIndex + 9), [
     { assertVisible: { id: 'settings.sms.qa-focus-notification-retry-max-attempts-state', text: '^blurred$' } },

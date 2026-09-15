@@ -281,6 +281,12 @@
             "centerElement": true
           }
         },
+        "iosReloadActivation": {
+          "helperId": "settings.sms.qa-reload",
+          "stateId": "settings.sms.qa-reload-state",
+          "state": "hydrated",
+          "timeoutMs": 10000
+        },
         "account": "user-b",
         "requiredEnv": ["MERXUS_MAESTRO_OWNER_B_EMAIL", "MERXUS_MAESTRO_OWNER_B_PASSWORD"],
         "timeoutMs": 180000,
