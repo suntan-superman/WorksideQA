@@ -225,6 +225,7 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
   const androidImeDismissRules = selectedDevice.platform === 'android'
     ? flow.androidImeDismissAfterEdit || [] : [];
   const androidImeDismissBoundaries = [];
+  let iosFocusPrelude = null;
   const buildOverlaySweeper = (rule) => ({
     repeat: {
       times: rule.attempts,
@@ -269,6 +270,14 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
             id: iosPostReloadValueOracle.oracleId,
           },
         });
+        continue;
+      }
+    }
+    if (iosFocusPrelude) {
+      const preludeFieldId = iosFocusPrelude.rule.fieldId;
+      if (command?.extendedWaitUntil?.visible?.id === preludeFieldId) continue;
+      if (command?.assertVisible?.id === preludeFieldId) {
+        iosFocusPrelude.expectedText = command.assertVisible.text;
         continue;
       }
     }
@@ -325,16 +334,32 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
       const focusEraseCommand = commands[commandIndex + 1];
       const focusInputCommand = commands[commandIndex + 2];
       if (focusRule && focusEraseCommand && typeof focusEraseCommand === 'object' && Object.hasOwn(focusEraseCommand, 'eraseText') && focusInputCommand && typeof focusInputCommand === 'object' && Object.hasOwn(focusInputCommand, 'inputText')) {
-        runtimeCommands.push(
-          { assertVisible: { id: focusRule.markerId, text: '^blurred$' } },
-          { tapOn: { id: focusRule.helperId } },
-          { extendedWaitUntil: {
-            visible: { id: focusRule.markerId, text: '^focused$' },
-            timeout: focusRule.focusTimeoutMs || 5000,
-          } },
-          { pressKey: 'backspace' },
-          focusInputCommand,
-        );
+        const focusCommands = [{ assertVisible: { id: focusRule.markerId, text: '^blurred$' } }];
+        if (iosFocusPrelude?.rule.fieldId === focusRule.fieldId) {
+          focusCommands.push(
+            { tapOn: { id: focusRule.helperId } },
+            { extendedWaitUntil: {
+              visible: { id: focusRule.markerId, text: '^focused$' },
+              timeout: focusRule.focusTimeoutMs || 5000,
+            } },
+            { extendedWaitUntil: {
+              visible: { id: focusRule.fieldId },
+              timeout: focusRule.initialValueTimeoutMs || 5000,
+            } },
+            { assertVisible: { id: focusRule.fieldId, text: iosFocusPrelude.expectedText || '^2$' } },
+          );
+          iosFocusPrelude = null;
+        } else {
+          focusCommands.push(
+            { tapOn: { id: focusRule.helperId } },
+            { extendedWaitUntil: {
+              visible: { id: focusRule.markerId, text: '^focused$' },
+              timeout: focusRule.focusTimeoutMs || 5000,
+            } },
+          );
+        }
+        focusCommands.push({ pressKey: 'backspace' }, focusInputCommand);
+        runtimeCommands.push(...focusCommands);
         commandIndex += 2;
         continue;
       }
@@ -431,6 +456,11 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
         continue;
       }
       const scrollTargetId = command?.scrollUntilVisible?.element?.id;
+      const focusRevealRule = iosTextInputFocusRules.find((rule) => rule.revealFieldAfterFocus && rule.fieldId === scrollTargetId);
+      if (focusRevealRule) {
+        iosFocusPrelude = { rule: focusRevealRule, expectedText: null };
+        continue;
+      }
       if (scrollTargetId && iosNonCenteredScrollTargets.has(scrollTargetId)) {
         const nonCenteredScroll = { ...command.scrollUntilVisible };
         delete nonCenteredScroll.centerElement;

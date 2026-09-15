@@ -266,7 +266,9 @@
             "fieldId": "settings.sms.notification-retry-max-attempts",
             "helperId": "settings.sms.qa-focus-notification-retry-max-attempts",
             "markerId": "settings.sms.qa-focus-notification-retry-max-attempts-state",
-            "focusTimeoutMs": 5000
+            "focusTimeoutMs": 5000,
+            "initialValueTimeoutMs": 5000,
+            "revealFieldAfterFocus": true
           }
         ],
         "iosReloadAnchor": {

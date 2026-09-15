@@ -125,6 +125,8 @@ try {
     helperId: 'settings.sms.qa-focus-notification-retry-max-attempts',
     markerId: 'settings.sms.qa-focus-notification-retry-max-attempts-state',
     focusTimeoutMs: 5000,
+    initialValueTimeoutMs: 5000,
+    revealFieldAfterFocus: true,
   }]);
   assert.deepEqual(ownerBFlow.iosKeyboardDismissAfterEdit, [{
     fieldId: 'settings.sms.notification-retry-max-attempts',
@@ -210,10 +212,13 @@ try {
   assert.equal(ownerBIosResume.slice(ownerBIosHydratedWaitIndex + 1).filter((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.notification-retry-max-attempts').length, 0, 'iOS uses the persisted-value oracle without re-anchoring the omitted TextInput');
   assert.deepEqual(ownerBIosResume.filter((command) => command.assertVisible?.id === 'settings.sms.qa-notification-retry-max-attempts-value' && command.assertVisible.text === '^3$'), [{ assertVisible: { id: 'settings.sms.qa-notification-retry-max-attempts-value', text: '^3$' } }]);
   const ownerBEditIndex = ownerBIosResume.findIndex((command) => command.assertVisible?.id === 'settings.sms.qa-focus-notification-retry-max-attempts-state' && command.assertVisible.text === '^blurred$');
-  assert.deepEqual(ownerBIosResume.slice(ownerBEditIndex, ownerBEditIndex + 9), [
+  assert.equal(ownerBIosResume.slice(0, ownerBEditIndex).some((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.notification-retry-max-attempts'), false, 'iOS reveals retry-max through the existing focus helper instead of pre-scrolling to the intermittent TextInput');
+  assert.deepEqual(ownerBIosResume.slice(ownerBEditIndex, ownerBEditIndex + 11), [
     { assertVisible: { id: 'settings.sms.qa-focus-notification-retry-max-attempts-state', text: '^blurred$' } },
     { tapOn: { id: 'settings.sms.qa-focus-notification-retry-max-attempts' } },
     { extendedWaitUntil: { visible: { id: 'settings.sms.qa-focus-notification-retry-max-attempts-state', text: '^focused$' }, timeout: 5000 } },
+    { extendedWaitUntil: { visible: { id: 'settings.sms.notification-retry-max-attempts' }, timeout: 5000 } },
+    { assertVisible: { id: 'settings.sms.notification-retry-max-attempts', text: '^2$' } },
     { pressKey: 'backspace' },
     { inputText: '3' },
     { extendedWaitUntil: { visible: { id: 'settings.sms.qa-dismiss-keyboard' }, timeout: 5000 } },
