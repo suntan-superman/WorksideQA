@@ -257,7 +257,7 @@
               "targetId": "settings.sms.notification-retry-max-attempts",
               "direction": "UP",
               "timeoutMs": 10000,
-              "centerElement": true
+              "centerElement": false
             }
           }
         ],
@@ -292,6 +292,7 @@
           "timeoutMs": 10000,
           "centerElement": false
         },
+        "iosNonCenteredScrollTargets": ["settings.sms.notification-retry-max-attempts"],
         "account": "user-b",
         "requiredEnv": ["MERXUS_MAESTRO_OWNER_B_EMAIL", "MERXUS_MAESTRO_OWNER_B_PASSWORD"],
         "timeoutMs": 180000,

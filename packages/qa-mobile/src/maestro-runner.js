@@ -215,6 +215,8 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
     ? flow.iosReloadActivation || null : null;
   const iosPostReloadReanchor = selectedDevice.platform === 'ios'
     ? flow.iosPostReloadReanchor || null : null;
+  const iosNonCenteredScrollTargets = selectedDevice.platform === 'ios'
+    ? new Set(flow.iosNonCenteredScrollTargets || []) : new Set();
   let reloadCompletionObserved = false;
   const androidImeDismissRules = selectedDevice.platform === 'android'
     ? flow.androidImeDismissAfterEdit || [] : [];
@@ -281,13 +283,14 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
         // iOS can reposition the outer form substantially when the fixed
         // keyboard-dismiss control is tapped. Re-expose the edited field
         // before asserting its value; this is semantic and bounded.
+        const reanchorScroll = {
+          element: { id: dismissRule.reanchorAfterDismiss.targetId },
+          direction: dismissRule.reanchorAfterDismiss.direction || 'UP',
+          ...(dismissRule.reanchorAfterDismiss.timeoutMs ? { timeout: dismissRule.reanchorAfterDismiss.timeoutMs } : {}),
+          ...(dismissRule.reanchorAfterDismiss.centerElement === false ? {} : { centerElement: true }),
+        };
         runtimeCommands.push({
-          scrollUntilVisible: {
-            element: { id: dismissRule.reanchorAfterDismiss.targetId },
-            direction: dismissRule.reanchorAfterDismiss.direction || 'UP',
-            ...(dismissRule.reanchorAfterDismiss.timeoutMs ? { timeout: dismissRule.reanchorAfterDismiss.timeoutMs } : {}),
-            ...(dismissRule.reanchorAfterDismiss.centerElement === false ? { centerElement: false } : { centerElement: true }),
-          },
+          scrollUntilVisible: reanchorScroll,
         });
       }
       runtimeCommands.push(command);
@@ -402,6 +405,13 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
             ...(iosPostReloadReanchor.centerElement === true ? { centerElement: true } : {}),
           },
         });
+        continue;
+      }
+      const scrollTargetId = command?.scrollUntilVisible?.element?.id;
+      if (scrollTargetId && iosNonCenteredScrollTargets.has(scrollTargetId)) {
+        const nonCenteredScroll = { ...command.scrollUntilVisible };
+        delete nonCenteredScroll.centerElement;
+        runtimeCommands.push({ scrollUntilVisible: nonCenteredScroll });
         continue;
       }
       runtimeCommands.push(command);

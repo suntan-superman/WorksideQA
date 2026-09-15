@@ -36,7 +36,7 @@ const save = 'settings.sms.save';
 const scrollIndex = commands.findIndex((command) => command.scrollUntilVisible?.element?.id === field);
 assert.ok(scrollIndex >= 0);
 assert.deepEqual(commands.slice(scrollIndex, scrollIndex + 8), [
-  { scrollUntilVisible: { element: { id: field }, direction: 'DOWN', centerElement: true } },
+  { scrollUntilVisible: { element: { id: field }, direction: 'DOWN' } },
   { assertVisible: { id: field, text: '^2$' } },
   { assertVisible: { id: state, text: '^idle$' } },
   { tapOn: { id: helper } },

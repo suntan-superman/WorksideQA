@@ -133,7 +133,7 @@ try {
       targetId: 'settings.sms.notification-retry-max-attempts',
       direction: 'UP',
       timeoutMs: 10000,
-      centerElement: true,
+      centerElement: false,
     },
   }]);
   assert.deepEqual(ownerBFlow.iosReloadActivation, {
@@ -147,6 +147,7 @@ try {
     timeoutMs: 10000,
     centerElement: false,
   });
+  assert.deepEqual(ownerBFlow.iosNonCenteredScrollTargets, ['settings.sms.notification-retry-max-attempts']);
   assert.deepEqual(ownerBFlow.authoritativeResult, {
     mutationExpected: true, externalProviderInvocationCount: 0, blockedProviderAttemptCount: 0,
     crossTenantLeakageCount: 0, successAuditCount: 1, operationReceiptCount: 1,
@@ -193,6 +194,7 @@ try {
   assert.ok(ownerBIosFinalValueIndex > ownerBIosReloadedWaitIndex, 'iOS verifies the persisted retry-max value after reload');
   const ownerBIosFinalReanchor = ownerBIosResume.slice(ownerBIosReloadedWaitIndex + 1).find((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.notification-retry-max-attempts');
   assert.deepEqual(ownerBIosFinalReanchor.scrollUntilVisible, { element: { id: 'settings.sms.notification-retry-max-attempts' }, direction: 'UP', timeout: 10000 }, 'iOS post-Reload re-anchor remains bounded without destructive centering');
+  assert.equal(ownerBIosResume.filter((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.notification-retry-max-attempts' && command.scrollUntilVisible.centerElement === true).length, 0, 'iOS retry-max traversals never destructively center');
   const ownerBEditIndex = ownerBIosResume.findIndex((command) => command.assertVisible?.id === 'settings.sms.qa-focus-notification-retry-max-attempts-state' && command.assertVisible.text === '^blurred$');
   assert.deepEqual(ownerBIosResume.slice(ownerBEditIndex, ownerBEditIndex + 9), [
     { assertVisible: { id: 'settings.sms.qa-focus-notification-retry-max-attempts-state', text: '^blurred$' } },
@@ -202,13 +204,14 @@ try {
     { inputText: '3' },
     { extendedWaitUntil: { visible: { id: 'settings.sms.qa-dismiss-keyboard' }, timeout: 5000 } },
     { tapOn: { id: 'settings.sms.qa-dismiss-keyboard' } },
-    { scrollUntilVisible: { element: { id: 'settings.sms.notification-retry-max-attempts' }, direction: 'UP', timeout: 10000, centerElement: true } },
+    { scrollUntilVisible: { element: { id: 'settings.sms.notification-retry-max-attempts' }, direction: 'UP', timeout: 10000 } },
     { assertVisible: { id: 'settings.sms.notification-retry-max-attempts', text: '^3$' } },
   ]);
   assert.equal(ownerBIosResume.some((command) => command.tapOn?.id === 'settings.sms.notification-retry-max-attempts'), false, 'iOS uses the QA focus helper, not a direct TextInput tap');
   assert.equal(ownerBIosResume.some((command) => command.doubleTapOn?.id === 'settings.sms.notification-retry-max-attempts'), false, 'iOS does not double tap the real TextInput');
   assert.equal(ownerBIosResume.some((command) => command.assertVisible?.id === 'settings.sms.notification-retry-max-attempts' && command.assertVisible.focused === true), false, 'iOS uses the React focus marker');
   const ownerBAndroidEditIndex = ownerBAndroidCommands.findIndex((command) => command.tapOn?.id === 'settings.sms.notification-retry-max-attempts');
+  assert.ok(ownerBAndroidCommands.some((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.notification-retry-max-attempts' && command.scrollUntilVisible.centerElement === true), 'Android retains centered retry-max traversal');
   assert.deepEqual(ownerBAndroidCommands.slice(ownerBAndroidEditIndex, ownerBAndroidEditIndex + 5), [
     { tapOn: { id: 'settings.sms.notification-retry-max-attempts' } },
     { eraseText: 100 },
