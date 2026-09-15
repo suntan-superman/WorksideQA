@@ -120,6 +120,12 @@ try {
   assert.equal(ownerBFlow.backendVerification, 'phase2-settings-owner-b-isolation');
   assert.deepEqual(ownerBFlow.requiredEnv, ['MERXUS_MAESTRO_OWNER_B_EMAIL', 'MERXUS_MAESTRO_OWNER_B_PASSWORD']);
   assert.equal(ownerBFlow.timeoutMs, 180000);
+  assert.deepEqual(ownerBFlow.iosTextInputFocus, [{
+    fieldId: 'settings.sms.notification-retry-max-attempts',
+    helperId: 'settings.sms.qa-focus-notification-retry-max-attempts',
+    markerId: 'settings.sms.qa-focus-notification-retry-max-attempts-state',
+    focusTimeoutMs: 5000,
+  }]);
   assert.deepEqual(ownerBFlow.iosKeyboardDismissAfterEdit, [{
     fieldId: 'settings.sms.notification-retry-max-attempts',
     targetId: 'settings.sms.qa-dismiss-keyboard',
@@ -157,16 +163,29 @@ try {
   const ownerBReloadScroll = ownerBIosResume.find((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.reload');
   assert.deepEqual(ownerBSaveScroll.scrollUntilVisible, { element: { id: 'settings.sms.save' }, direction: 'DOWN', timeout: 20000, centerElement: true });
   assert.deepEqual(ownerBReloadScroll.scrollUntilVisible, { element: { id: 'settings.sms.reload' }, direction: 'DOWN', timeout: 5000, centerElement: true });
-  const ownerBEditIndex = ownerBIosResume.findIndex((command) => command.tapOn?.id === 'settings.sms.notification-retry-max-attempts');
-  assert.deepEqual(ownerBIosResume.slice(ownerBEditIndex, ownerBEditIndex + 7), [
-    { tapOn: { id: 'settings.sms.notification-retry-max-attempts' } },
-    { eraseText: 100 },
+  const ownerBEditIndex = ownerBIosResume.findIndex((command) => command.assertVisible?.id === 'settings.sms.qa-focus-notification-retry-max-attempts-state' && command.assertVisible.text === '^blurred$');
+  assert.deepEqual(ownerBIosResume.slice(ownerBEditIndex, ownerBEditIndex + 9), [
+    { assertVisible: { id: 'settings.sms.qa-focus-notification-retry-max-attempts-state', text: '^blurred$' } },
+    { tapOn: { id: 'settings.sms.qa-focus-notification-retry-max-attempts' } },
+    { extendedWaitUntil: { visible: { id: 'settings.sms.qa-focus-notification-retry-max-attempts-state', text: '^focused$' }, timeout: 5000 } },
+    { pressKey: 'backspace' },
     { inputText: '3' },
     { extendedWaitUntil: { visible: { id: 'settings.sms.qa-dismiss-keyboard' }, timeout: 5000 } },
     { tapOn: { id: 'settings.sms.qa-dismiss-keyboard' } },
     { scrollUntilVisible: { element: { id: 'settings.sms.notification-retry-max-attempts' }, direction: 'UP', timeout: 10000, centerElement: true } },
     { assertVisible: { id: 'settings.sms.notification-retry-max-attempts', text: '^3$' } },
   ]);
+  assert.equal(ownerBIosResume.some((command) => command.tapOn?.id === 'settings.sms.notification-retry-max-attempts'), false, 'iOS uses the QA focus helper, not a direct TextInput tap');
+  assert.equal(ownerBIosResume.some((command) => command.doubleTapOn?.id === 'settings.sms.notification-retry-max-attempts'), false, 'iOS does not double tap the real TextInput');
+  assert.equal(ownerBIosResume.some((command) => command.assertVisible?.id === 'settings.sms.notification-retry-max-attempts' && command.assertVisible.focused === true), false, 'iOS uses the React focus marker');
+  const ownerBAndroidEditIndex = ownerBAndroidCommands.findIndex((command) => command.tapOn?.id === 'settings.sms.notification-retry-max-attempts');
+  assert.deepEqual(ownerBAndroidCommands.slice(ownerBAndroidEditIndex, ownerBAndroidEditIndex + 5), [
+    { tapOn: { id: 'settings.sms.notification-retry-max-attempts' } },
+    { eraseText: 100 },
+    { inputText: '3' },
+    { assertVisible: { id: 'settings.sms.notification-retry-max-attempts', text: '^3$' } },
+    'hideKeyboard',
+  ], 'Android retains the certified direct TextInput edit path');
   const ios = buildDeviceLaunchFlow(flow, { ...config.mobile.devices.iosSimulator, id: 'explicit-udid', descriptorName: 'iosSimulator' }, path.join(directory, 'runtime.yaml'));
   assert.equal(ios.stages.length, 3);
   assert.ok(ios.launchPlan.launchArgs.includes('explicit-udid'));

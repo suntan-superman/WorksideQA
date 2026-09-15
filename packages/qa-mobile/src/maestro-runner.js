@@ -207,6 +207,8 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
   // defaults intact so already-certified flows remain byte-for-byte stable.
   const keyboardDismissRules = selectedDevice.platform === 'ios' && selectedDevice.kind === 'simulator'
     ? (flow.iosKeyboardDismissAfterEdit || selectedDevice.keyboardDismissAfterEdit || []) : [];
+  const iosTextInputFocusRules = selectedDevice.platform === 'ios' && selectedDevice.kind === 'simulator'
+    ? (flow.iosTextInputFocus || []) : [];
   const iosReloadAnchor = selectedDevice.platform === 'ios'
     ? flow.iosReloadAnchor || null : null;
   const androidImeDismissRules = selectedDevice.platform === 'android'
@@ -286,6 +288,23 @@ function buildDeviceLaunchFlow(flow, selectedDevice, destinationPath) {
     }
     if (!command || typeof command !== "object" || !("launchApp" in command)) {
       appendOverlaySweepers((rule) => rule.checkpoints.beforeAssertIds?.includes(command?.assertVisible?.id));
+      const focusRule = iosTextInputFocusRules.find((rule) => command?.tapOn?.id === rule.fieldId);
+      const focusEraseCommand = commands[commandIndex + 1];
+      const focusInputCommand = commands[commandIndex + 2];
+      if (focusRule && focusEraseCommand && typeof focusEraseCommand === 'object' && Object.hasOwn(focusEraseCommand, 'eraseText') && focusInputCommand && typeof focusInputCommand === 'object' && Object.hasOwn(focusInputCommand, 'inputText')) {
+        runtimeCommands.push(
+          { assertVisible: { id: focusRule.markerId, text: '^blurred$' } },
+          { tapOn: { id: focusRule.helperId } },
+          { extendedWaitUntil: {
+            visible: { id: focusRule.markerId, text: '^focused$' },
+            timeout: focusRule.focusTimeoutMs || 5000,
+          } },
+          { pressKey: 'backspace' },
+          focusInputCommand,
+        );
+        commandIndex += 2;
+        continue;
+      }
       const field = deterministicTextFields.find((candidate) => command?.tapOn?.id === candidate.id);
       const eraseCommand = commands[commandIndex + 1];
       const inputCommand = commands[commandIndex + 2];

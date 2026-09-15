@@ -261,6 +261,14 @@
             }
           }
         ],
+        "iosTextInputFocus": [
+          {
+            "fieldId": "settings.sms.notification-retry-max-attempts",
+            "helperId": "settings.sms.qa-focus-notification-retry-max-attempts",
+            "markerId": "settings.sms.qa-focus-notification-retry-max-attempts-state",
+            "focusTimeoutMs": 5000
+          }
+        ],
         "iosReloadAnchor": {
           "targetId": "settings.sms.save",
           "direction": "DOWN",
