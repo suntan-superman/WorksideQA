@@ -332,6 +332,15 @@
         "timeoutMs": 120000
       },
       {
+        "name": "diagnostic-ios-sms-reload-qahelper",
+        "path": "products/merxus/workflows/diagnostic-ios-sms-reload-qahelper.yaml",
+        "fixtureScenario": "phase2-settings-owner-b-isolation",
+        "account": "user-b",
+        "requiredEnv": ["MERXUS_MAESTRO_OWNER_B_EMAIL", "MERXUS_MAESTRO_OWNER_B_PASSWORD"],
+        "mutationExpected": false,
+        "timeoutMs": 120000
+      },
+      {
         "name": "27-tenant-settings-staff-mutation-denial-a",
         "path": "products/merxus/workflows/27-tenant-settings-staff-mutation-denial-a.yaml",
         "fixtureScenario": "phase2-settings-staff-mutation-denial-a",
@@ -555,6 +564,7 @@
         "diagnostic-ios-text-input-focus": ["diagnostic-ios-text-input-focus"],
         "diagnostic-ios-text-input-focus-doubletap": ["diagnostic-ios-text-input-focus-doubletap"],
         "diagnostic-ios-text-input-focus-qahelper": ["diagnostic-ios-text-input-focus-qahelper"],
+        "diagnostic-ios-sms-reload-qahelper": ["diagnostic-ios-sms-reload-qahelper"],
         "phase1": ["00-launch-environment", "01-login-owner-a", "02-tenant-isolation", "03-logout"]
       }
     }
