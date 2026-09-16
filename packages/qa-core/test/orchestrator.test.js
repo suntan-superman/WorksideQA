@@ -84,6 +84,8 @@ test('SageSet manifest declares the product-owned Android QA build contract', ()
     workingDirectoryEnvKey: 'SAGESET_MOBILE_REPO',
     appId: 'com.workside.sageset',
   });
+  assert.equal(manifest.mobile.devices.iosSimulator.platform, 'ios');
+  assert.equal(manifest.mobile.devices.iosSimulator.idEnvKey, 'SAGESET_IOS_SIMULATOR_ID');
 });
 
 test('SageSet mobile readiness distinguishes installed launcher from rendered application', () => {
@@ -106,6 +108,19 @@ test('SageSet Metro runtime validation requires the explicit Maestro contract', 
   });
   assert.throws(() => validateSageSetMetroManifest({ ...manifest, extra: { expoClient: { ...manifest.extra.expoClient, extra: { ...manifest.extra.expoClient.extra, maestro: { ...manifest.extra.expoClient.extra.maestro, firebaseProjectId: 'production' } } } } }), /Firebase project production/);
   assert.throws(() => validateSageSetMetroManifest({ ...manifest, extra: { expoClient: { ...manifest.extra.expoClient, extra: { ...manifest.extra.expoClient.extra, appEnvironment: 'production' } } } }), /appEnvironment production/);
+});
+
+test('SageSet Metro runtime validation uses the iOS bundle identifier on macOS', () => {
+  const manifest = {
+    launchAsset: { url: 'http://127.0.0.1:8081/index.bundle' },
+    extra: { expoClient: {
+      ios: { bundleIdentifier: 'com.workside.sageset' },
+      extra: { appEnvironment: 'maestro', maestro: { enabled: true, firebaseProjectId: 'sageset-maestro-local', emulatorHost: '10.0.2.2', externalNotificationsAllowed: false } },
+    } },
+  };
+  assert.deepEqual(validateSageSetMetroManifest(manifest, 'com.workside.sageset', 'ios'), {
+    appId: 'com.workside.sageset', environment: 'maestro', firebaseProjectId: 'sageset-maestro-local', emulatorHost: '10.0.2.2', externalNotificationsAllowed: false,
+  });
 });
 
 test('only invalid SageSet Metro runtime results trigger verified-service restart', () => {

@@ -28,7 +28,7 @@ const QA_CONFIG_KEYS = Object.freeze([
   'FIREBASE_PROJECT_ID', 'GCLOUD_PROJECT', 'FIREBASE_AUTH_EMULATOR_HOST',
   'FIRESTORE_EMULATOR_HOST', 'FIREBASE_STORAGE_EMULATOR_HOST',
   // SageSet's manifest-declared identity/device contract.
-  'SAGESET_MOBILE_REPO', 'SAGESET_WEB_REPO',
+  'SAGESET_MOBILE_REPO', 'SAGESET_IOS_MOBILE_REPO', 'SAGESET_WEB_REPO',
   'SAGESET_MAESTRO_USER_A_EMAIL', 'SAGESET_MAESTRO_USER_A_PASSWORD',
   'SAGESET_MAESTRO_USER_B_EMAIL', 'SAGESET_MAESTRO_USER_B_PASSWORD',
   'SAGESET_MAESTRO_QA_EMAIL_ALLOWLIST', 'SAGESET_MAESTRO_ENVIRONMENT',
@@ -56,6 +56,16 @@ function parsePowerShellConfig(filePath) {
     entries[match[1]] = match[3].replace(/``/g, '`').replace(/`(["'])/g, '$1');
   }
   return entries;
+}
+
+function compatibleConfiguredPath(value, platform = process.platform) {
+  const candidate = String(value || '').trim();
+  if (!candidate) return '';
+  const windowsAbsolute = /^(?:[A-Za-z]:[\\/]|\\\\)/.test(candidate);
+  const posixAbsolute = /^\//.test(candidate);
+  if (platform === 'win32' && posixAbsolute) return '';
+  if (platform !== 'win32' && windowsAbsolute) return '';
+  return candidate;
 }
 
 function loadLocalQaConfig(options = {}) {
@@ -96,5 +106,6 @@ module.exports = {
   QA_CONFIG_KEYS,
   DEFAULT_LOCAL_CONFIG_PATH,
   parsePowerShellConfig,
+  compatibleConfiguredPath,
   loadLocalQaConfig,
 };

@@ -141,6 +141,40 @@ test('macOS Merxus contract uses the configured iOS simulator instead of requiri
   assert.equal(checks.find((check) => check.id === 'config.MERXUS_IOS_SIMULATOR_ID').status, 'passed');
 });
 
+test('macOS SageSet contract requires iOS simulator and not Android settings', () => {
+  const localConfig = {
+    SAGESET_MOBILE_REPO: '/Users/stanley/Desktop/Development/sagesetmobile',
+    SAGESET_MAESTRO_USER_A_EMAIL: 'a@example.test',
+    SAGESET_MAESTRO_USER_A_PASSWORD: 'safe',
+    SAGESET_MAESTRO_USER_B_EMAIL: 'b@example.test',
+    SAGESET_MAESTRO_USER_B_PASSWORD: 'safe',
+    SAGESET_MAESTRO_QA_EMAIL_ALLOWLIST: 'a@example.test,b@example.test',
+    SAGESET_MAESTRO_ENVIRONMENT: 'emulator',
+    SAGESET_MAESTRO_FIREBASE_PROJECT_ID: 'sageset-maestro-local',
+    SAGESET_MAESTRO_ALLOW_EXTERNAL_NOTIFICATIONS: 'false',
+    SAGESET_IOS_SIMULATOR_ID: 'SIMULATOR-UDID',
+  };
+  const checks = checkLocalContract(localConfig, localConfig, 'sageset', { platform: 'darwin' });
+  assert.equal(checks.some((check) => check.id === 'config.SAGESET_ANDROID_EMULATOR_ID'), false);
+  assert.equal(checks.some((check) => check.id === 'config.SAGESET_MAESTRO_ANDROID_APP_ID'), false);
+  assert.equal(checks.find((check) => check.id === 'config.SAGESET_IOS_SIMULATOR_ID').status, 'passed');
+});
+
+test('macOS SageSet path validation derives the product root from standalone Mobile', () => {
+  const fs = require('node:fs');
+  const os = require('node:os');
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'worksideqa-sageset-ios-'));
+  const mobile = path.join(root, 'sagesetmobile');
+  fs.mkdirSync(mobile, { recursive: true });
+  try {
+    const checks = checkPaths({ SAGESET_MOBILE_REPO: mobile }, 'sageset', { platform: 'darwin' });
+    assert.equal(checks.find((check) => check.id === 'path.sageset').status, 'passed');
+    assert.equal(checks.find((check) => check.id === 'path.sageset.mobile').status, 'passed');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test('macOS Merxus path checks allow a standalone Mobile checkout with local Firebase config', () => {
   const fs = require('node:fs');
   const os = require('node:os');

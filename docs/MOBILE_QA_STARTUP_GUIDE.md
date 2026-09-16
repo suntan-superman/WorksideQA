@@ -50,6 +50,12 @@ required. These values belong only in the ignored `.maestro.local.ps1`; do not
 commit user-specific `/Users/...` paths. The iOS path validates `xcrun` and the
 configured simulator and does not require Android `adb`.
 
+For macOS SageSet/iOS, set the ignored `SAGESET_IOS_MOBILE_REPO` to the local
+SageSet Mobile checkout. This platform-specific value takes precedence over
+`SAGESET_MOBILE_REPO`; a Windows `C:\\...` value is ignored on macOS rather than
+being resolved as a relative POSIX path. Set `SAGESET_IOS_SIMULATOR_ID` for the
+configured simulator. Android SageSet IDs and `adb` are Windows-only checks.
+
 ## After reboot
 
 1. Start Firebase, backend, Metro, and the configured device only through the launcher.
@@ -66,7 +72,7 @@ Healthy WorksideQA-owned services are reused. `qa:start` starts only missing ser
 | Windows / Merxus | Firebase Auth/Firestore/Storage, QA backend, canonical Maestro Metro | Android AVD selected by `MERXUS_ANDROID_AVD_NAME` (or the single installed AVD), serial from `MERXUS_ANDROID_EMULATOR_ID`, `com.merxus.mobile.qa` |
 | Windows / SageSet | Firebase Auth/Firestore/Storage/Functions emulators, SageSet Maestro Metro (8081) | Android AVD selected by `SAGESET_ANDROID_AVD_NAME` (or the single installed AVD), serial from required `SAGESET_ANDROID_EMULATOR_ID`, QA app `com.workside.sageset`, actual `screen.auth.login` or `screen.today.ready` required |
 | macOS / Merxus | Same Firebase/backend/Metro contracts through `qa:start` (from the configured local checkouts) | Configured iOS simulator; `xcrun` required, Android `adb` not required |
-| macOS / SageSet | SageSet Firebase emulator contract and product services | Configured SageSet simulator/device |
+| macOS / SageSet | SageSet Firebase emulator contract and product services | Configured SageSet iOS simulator (`SAGESET_IOS_SIMULATOR_ID`); Android/ADB is not required |
 
 ## Ports
 

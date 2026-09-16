@@ -29,15 +29,34 @@ test('launcher resolves repository paths relative to WorksideQA on supported pla
 
 test('launcher inventory honors machine-local Merxus checkout paths on macOS', () => {
   const config = loadEnvironmentConfig();
-  const paths = resolveProductPaths(config.products.merxus, 'C:\\Users\\qa\\WorksideQA', 'darwin', {
-    MERXUS_ROOT_REPO: 'C:/Users/stanley/Desktop/Development/merxusmobile',
-    MERXUS_MOBILE_REPO: 'C:/Users/stanley/Desktop/Development/merxusmobile',
-    MERXUS_BACKEND_REPO: 'C:/Users/stanley/Desktop/Development/merxus-backend',
-    MERXUS_WEB_REPO: 'C:/Users/stanley/Desktop/Development/merxusmobile',
+  const paths = resolveProductPaths(config.products.merxus, '/Users/qa/WorksideQA', 'darwin', {
+    MERXUS_ROOT_REPO: '/Users/stanley/Desktop/Development/merxusmobile',
+    MERXUS_MOBILE_REPO: '/Users/stanley/Desktop/Development/merxusmobile',
+    MERXUS_BACKEND_REPO: '/Users/stanley/Desktop/Development/merxus-backend',
+    MERXUS_WEB_REPO: '/Users/stanley/Desktop/Development/merxusmobile',
   });
-  assert.equal(paths.mobile, 'C:\\Users\\stanley\\Desktop\\Development\\merxusmobile');
-  assert.equal(paths.backend, 'C:\\Users\\stanley\\Desktop\\Development\\merxus-backend');
-  assert.equal(paths.web, 'C:\\Users\\stanley\\Desktop\\Development\\merxusmobile');
+  assert.equal(paths.mobile, '/Users/stanley/Desktop/Development/merxusmobile');
+  assert.equal(paths.backend, '/Users/stanley/Desktop/Development/merxus-backend');
+  assert.equal(paths.web, '/Users/stanley/Desktop/Development/merxusmobile');
+});
+
+test('macOS SageSet ignores an incompatible Windows Mobile path and uses the iOS override', () => {
+  const config = loadEnvironmentConfig();
+  const paths = resolveProductPaths(config.products.sageset, 'C:\\Users\\qa\\WorksideQA', 'darwin', {
+    SAGESET_MOBILE_REPO: 'C:\\Users\\sjroy\\Source\\SageSet\\mobile',
+    SAGESET_IOS_MOBILE_REPO: '/Users/stanley/Desktop/Development/sagesetmobile',
+  });
+  assert.equal(paths.mobile, '/Users/stanley/Desktop/Development/sagesetmobile');
+  assert.equal(paths.root, '/Users/stanley/Desktop/Development');
+  assert.doesNotMatch(paths.mobile, /C:\\Users\\sjroy/);
+});
+
+test('macOS SageSet falls back to its POSIX product layout when no iOS override is set', () => {
+  const config = loadEnvironmentConfig();
+  const paths = resolveProductPaths(config.products.sageset, '/Users/stanley/worksideQA', 'darwin', {
+    SAGESET_MOBILE_REPO: 'C:\\Users\\sjroy\\Source\\SageSet\\mobile',
+  });
+  assert.equal(paths.mobile, '/Users/stanley/SageSet/mobile');
 });
 
 test('Both mode refuses the shared emulator ports instead of colliding', () => {

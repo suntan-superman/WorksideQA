@@ -15,7 +15,7 @@ const { spawnCommandSync } = require('../../qa-utils/src');
 const { fromRoot, fileExists } = require('../../qa-utils/src');
 const { loadProductManifest, validateManifest } = require('../../qa-config/src');
 const { resolveTool, resolveTools, toolVersion, canonicalizeToolEnvironment } = require('./tool-resolver');
-const { DEFAULT_LOCAL_CONFIG_PATH, parsePowerShellConfig } = require('./local-config');
+const { DEFAULT_LOCAL_CONFIG_PATH, parsePowerShellConfig, compatibleConfiguredPath } = require('./local-config');
 const { waitForRenderedRuntime, DEFAULT_TIMEOUT_MS } = require('./rendered-runtime');
 const { configuredDevice } = require('./android-emulator');
 const { validateSageSetMetroManifest } = require('./product-runtime');
@@ -76,7 +76,10 @@ function mergedEnvironment(localConfig) {
   env.MERXUS_MOBILE_REPO = env.MERXUS_MOBILE_REPO || path.join(DEFAULTS.merxusRoot, 'mobile');
   env.MERXUS_BACKEND_REPO = env.MERXUS_BACKEND_REPO || path.join(DEFAULTS.merxusRoot, 'merxus-ai-backend');
   env.MERXUS_WEB_REPO = env.MERXUS_WEB_REPO || path.join(DEFAULTS.merxusRoot, 'web');
-  env.SAGESET_MOBILE_REPO = env.SAGESET_MOBILE_REPO || path.join(DEFAULTS.sagesetRoot, 'mobile');
+  const sageSetMobile = process.platform === 'darwin'
+    ? (compatibleConfiguredPath(env.SAGESET_IOS_MOBILE_REPO, 'darwin') || compatibleConfiguredPath(env.SAGESET_MOBILE_REPO, 'darwin'))
+    : compatibleConfiguredPath(env.SAGESET_MOBILE_REPO, process.platform);
+  env.SAGESET_MOBILE_REPO = sageSetMobile || path.join(DEFAULTS.sagesetRoot, 'mobile');
   env.MERXUS_MOBILE_ENVIRONMENT = env.MERXUS_MOBILE_ENVIRONMENT || 'maestro';
   env.MERXUS_QA_ENVIRONMENT = env.MERXUS_QA_ENVIRONMENT || 'maestro';
   env.EXPO_PUBLIC_ENVIRONMENT = env.EXPO_PUBLIC_ENVIRONMENT || 'maestro';
@@ -149,8 +152,9 @@ function checkLocalContract(env, localConfig, product = 'all', options = {}) {
       ['SAGESET_MAESTRO_USER_B_EMAIL', 'SageSet User B email'],
       ['SAGESET_MAESTRO_USER_B_PASSWORD', 'SageSet User B password'],
       ['SAGESET_MAESTRO_QA_EMAIL_ALLOWLIST', 'SageSet QA email allowlist'],
-      ['SAGESET_ANDROID_EMULATOR_ID', 'SageSet Android emulator ID'],
-      ['SAGESET_MAESTRO_ANDROID_APP_ID', 'SageSet Maestro Android application ID'],
+      ...(platform === 'darwin'
+        ? [['SAGESET_IOS_SIMULATOR_ID', 'SageSet iOS simulator ID']]
+        : [['SAGESET_ANDROID_EMULATOR_ID', 'SageSet Android emulator ID'], ['SAGESET_MAESTRO_ANDROID_APP_ID', 'SageSet Maestro Android application ID']]),
     ];
     for (const [key, label] of required) {
       checks.push(String(env[key] || '').trim()
@@ -214,14 +218,19 @@ function checkPaths(env, product = 'all', options = {}) {
   const mobile = env.MERXUS_MOBILE_REPO || path.join(root, 'mobile');
   const backend = env.MERXUS_BACKEND_REPO || path.join(root, 'merxus-ai-backend');
   const web = env.MERXUS_WEB_REPO || path.join(root, 'web');
+  // SageSet may be a standalone Mobile checkout on macOS. In that layout
+  // there is no shared ../SageSet repository to validate; the configured
+  // Mobile checkout is authoritative and its parent is the product root.
+  const sageSetMobile = env.SAGESET_MOBILE_REPO || path.join(DEFAULTS.sagesetRoot, 'mobile');
+  const sageSetRoot = platform === 'darwin' ? path.dirname(sageSetMobile) : DEFAULTS.sagesetRoot;
   const paths = [
     ['path.worksideqa', WORKSIDEQA_ROOT],
     ['path.merxus', root],
     ['path.merxus.mobile', mobile],
     ['path.merxus.backend', backend],
     ['path.merxus.web', web],
-    ['path.sageset', DEFAULTS.sagesetRoot],
-    ['path.sageset.mobile', env.SAGESET_MOBILE_REPO],
+    ['path.sageset', sageSetRoot],
+    ['path.sageset.mobile', sageSetMobile],
   ].filter(([id]) => product === 'all' || (product === 'merxus' ? !id.includes('sageset') : id.includes('sageset')));
   return paths.map(([id, value]) => {
     if (fs.existsSync(value)) return result('passed', id, 'Path exists.', { path: value });
@@ -385,17 +394,19 @@ async function checkMobileRuntime(env, options) {
     const checks = [];
     const manifest = validateManifest(loadProductManifest('sageset'));
     const metro = manifest.mobile?.metro;
+    const platform = options.platform || process.platform;
+    const targetPlatform = platform === 'darwin' ? 'ios' : 'android';
     const metroUrl = String(metro?.url || 'http://127.0.0.1:8081').replace(/\/$/, '');
     const served = options.offline
       ? { skipped: true }
-      : await probeUrl(`${metroUrl}/`, { timeoutMs: 5000, headers: { accept: 'application/expo+json', 'expo-platform': 'android' } });
+      : await probeUrl(`${metroUrl}/`, { timeoutMs: 5000, headers: { accept: 'application/expo+json', 'expo-platform': targetPlatform } });
     let servedManifest = null;
     try { servedManifest = JSON.parse(served.body || '{}'); } catch { /* reported below */ }
     const expoClient = servedManifest?.extra?.expoClient || {};
     let runtimeContract = null;
     let runtimeContractError = null;
-    try { runtimeContract = validateSageSetMetroManifest(servedManifest, manifest.mobile.appId); } catch (error) { runtimeContractError = error.message; }
-    const appId = runtimeContract?.appId || String(expoClient?.android?.package || '').trim();
+    try { runtimeContract = validateSageSetMetroManifest(servedManifest, manifest.mobile.appId, targetPlatform); } catch (error) { runtimeContractError = error.message; }
+    const appId = runtimeContract?.appId || String((targetPlatform === 'ios' ? expoClient?.ios?.bundleIdentifier : expoClient?.android?.package) || '').trim();
     const runtimeProject = runtimeContract?.firebaseProjectId || '';
     const servedOk = options.offline || (served.status === 200 && Boolean(servedManifest?.launchAsset?.url) && !runtimeContractError);
     checks.push(options.offline
@@ -409,6 +420,10 @@ async function checkMobileRuntime(env, options) {
     }
     if (!servedOk) {
       checks.push(result('failed', 'mobile.runtime-rendered', 'SageSet rendered app check was not attempted because Metro runtime is not ready.'));
+      return checks;
+    }
+    if (targetPlatform === 'ios') {
+      checks.push(result('skipped', 'mobile.runtime-rendered', 'SageSet iOS rendered app check is owned by the Mac Maestro certification path; Android observer is not used.'));
       return checks;
     }
     const device = manifest.mobile?.devices?.androidEmulator;
@@ -511,7 +526,8 @@ async function checkDevices(env, options) {
   if (options.offline) return [result('skipped', 'device.android', 'Device probes skipped (--offline).')];
   const platform = options.platform || process.platform;
   if (platform === 'darwin') {
-    const simulatorId = String(env.MERXUS_IOS_SIMULATOR_ID || '').trim();
+    const simulatorKey = options.product === 'sageset' ? 'SAGESET_IOS_SIMULATOR_ID' : 'MERXUS_IOS_SIMULATOR_ID';
+    const simulatorId = String(env[simulatorKey] || '').trim();
     if (!simulatorId) return [result('failed', 'device.ios', 'Configured iOS simulator identity is missing.')];
     const xcrun = resolveTool('xcrun', env).path;
     if (!xcrun) return [result('failed', 'device.ios', 'xcrun is unavailable; cannot validate the configured iOS simulator.')];

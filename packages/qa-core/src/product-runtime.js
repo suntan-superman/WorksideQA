@@ -1,8 +1,9 @@
-function validateSageSetMetroManifest(manifest, expectedAppId = 'com.workside.sageset') {
+function validateSageSetMetroManifest(manifest, expectedAppId = 'com.workside.sageset', platform = 'android') {
   const expoClient = manifest?.extra?.expoClient;
   if (!expoClient || typeof expoClient !== 'object') throw new Error('SageSet Metro manifest has no expoClient configuration.');
-  const appId = String(expoClient.android?.package || '').trim();
-  if (appId !== expectedAppId) throw new Error(`SageSet Metro served Android package ${appId || '(missing)'}; expected ${expectedAppId}.`);
+  const appId = String((platform === 'ios' ? expoClient.ios?.bundleIdentifier : expoClient.android?.package) || '').trim();
+  const platformLabel = platform === 'ios' ? 'iOS bundle identifier' : 'Android package';
+  if (appId !== expectedAppId) throw new Error(`SageSet Metro served ${platformLabel} ${appId || '(missing)'}; expected ${expectedAppId}.`);
   const extra = expoClient.extra || {};
   if (String(extra.appEnvironment || '').trim().toLowerCase() !== 'maestro') throw new Error(`SageSet Metro served appEnvironment ${extra.appEnvironment || '(missing)'}; expected maestro.`);
   const maestro = extra.maestro;

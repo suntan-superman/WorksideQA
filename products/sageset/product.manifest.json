@@ -128,6 +128,16 @@
         "launchUri": "exp+sageset://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081",
         "launchReadySelector": "screen.auth.login|screen.today.ready",
         "launchReadyTimeoutMs": 60000
+      },
+      "iosSimulator": {
+        "platform": "ios",
+        "kind": "simulator",
+        "required": true,
+        "idEnvKey": "SAGESET_IOS_SIMULATOR_ID",
+        "appId": "com.workside.sageset",
+        "launchUri": "exp+sageset://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081",
+        "launchReadySelector": "screen.auth.login|screen.today.ready",
+        "launchReadyTimeoutMs": 60000
       }
     },
     "metro": {

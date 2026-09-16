@@ -528,7 +528,7 @@ async function prewarmCanonicalMetro(env, platform = 'android', product = 'merxu
     platform,
     timeoutMs: Number(env.WORKSIDEQA_METRO_BUNDLE_PREWARM_TIMEOUT_MS || DEFAULT_PREWARM_TIMEOUT_MS),
     validateManifest: product === 'sageset'
-      ? (manifest) => validateSageSetMetroManifest(manifest)
+      ? (manifest) => validateSageSetMetroManifest(manifest, 'com.workside.sageset', platform)
       : (manifest) => verifyExpoConfig(manifest?.extra?.expoClient, mobileRoot, `prewarmed Metro ${platform} manifest`, platform),
   });
 }

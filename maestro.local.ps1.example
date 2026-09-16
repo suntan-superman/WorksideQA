@@ -32,6 +32,10 @@ $env:MERXUS_MAESTRO_ANDROID_APP_ID = "com.merxus.mobile.qa"
 
 # SageSet Maestro fixture contract (required for SageSet suites)
 $env:SAGESET_MOBILE_REPO = "C:\Users\sjroy\Source\SageSet\mobile"
+# macOS/iOS runners should set this ignored machine-local path instead of
+# inheriting the Windows value above. It must point at the local SageSet Mobile
+# checkout that contains the iOS app and Maestro Firebase configuration.
+# $env:SAGESET_IOS_MOBILE_REPO = "/Users/<user>/Desktop/Development/SageSet/mobile"
 $env:SAGESET_MAESTRO_USER_A_EMAIL = "<SET LOCALLY: canonical QA email>"
 $env:SAGESET_MAESTRO_USER_A_PASSWORD = "<SET LOCALLY: canonical QA password>"
 $env:SAGESET_MAESTRO_USER_B_EMAIL = "<SET LOCALLY: canonical QA email>"
@@ -42,3 +46,4 @@ $env:SAGESET_ANDROID_EMULATOR_ID = "emulator-5554"
 # Set the actual configured AVD name when more than one AVD is installed.
 $env:SAGESET_ANDROID_AVD_NAME = "<SET LOCALLY when multiple AVDs are installed>"
 $env:SAGESET_MAESTRO_ANDROID_APP_ID = "com.workside.sageset"
+# $env:SAGESET_IOS_SIMULATOR_ID = "<SET LOCALLY: simulator UDID>"

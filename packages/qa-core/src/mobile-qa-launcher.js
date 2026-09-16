@@ -10,7 +10,7 @@ const path = require('node:path');
 const readline = require('node:readline');
 const { spawnSync } = require('node:child_process');
 const { fromRoot } = require('../../qa-utils/src');
-const { loadLocalQaConfig } = require('./local-config');
+const { loadLocalQaConfig, compatibleConfiguredPath } = require('./local-config');
 const { canonicalizeToolEnvironment } = require('./tool-resolver');
 
 const CONFIG_PATH = fromRoot('configs', 'mobile-qa-environments.json');
@@ -49,11 +49,25 @@ function resolveProductPaths(productConfig, root = fromRoot(), platform = proces
     web: environment.MERXUS_WEB_REPO,
   } : {
     root: environment.SAGESET_ROOT_REPO,
-    mobile: environment.SAGESET_MOBILE_REPO,
+    mobile: platform === 'darwin'
+      ? (environment.SAGESET_IOS_MOBILE_REPO || environment.SAGESET_MOBILE_REPO)
+      : environment.SAGESET_MOBILE_REPO,
     backend: environment.SAGESET_BACKEND_REPO,
     web: environment.SAGESET_WEB_REPO,
   };
-  return Object.fromEntries(Object.entries(paths).map(([key, value]) => [key, overrides[key] ? path.resolve(overrides[key]) : path.resolve(root, value)]));
+  const resolvePath = platform === 'win32' ? path.win32.resolve : path.posix.resolve;
+  const resolved = Object.fromEntries(Object.entries(paths).map(([key, value]) => {
+    const override = compatibleConfiguredPath(overrides[key], platform);
+    return [key, override ? resolvePath(override) : resolvePath(root, value)];
+  }));
+  // A macOS SageSet checkout may be a standalone Mobile repository. Keep the
+  // inventory's product root aligned with that authoritative checkout instead
+  // of displaying the Windows-style ../SageSet fallback.
+  if (!isMerxus && platform === 'darwin' && !compatibleConfiguredPath(overrides.root, platform)) {
+    const mobileOverride = compatibleConfiguredPath(overrides.mobile, platform);
+    if (mobileOverride) resolved.root = path.posix.dirname(resolved.mobile);
+  }
+  return resolved;
 }
 
 function commandFor(command, platform = process.platform) {
