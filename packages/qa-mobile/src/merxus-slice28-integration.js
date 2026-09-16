@@ -99,11 +99,15 @@ async function runAuthenticatedSmsIntegration({ validated, flow, generation, run
       cwd: backendPlan.cwd, env: backendPlan.env, logStream, secretValues,
       timeoutMs: validated.maestro.timeoutMs, stage: 'backend', captureOutput: true,
     });
-    const authoritativeResult = backendOutcome.stdout ? safeJsonOutput(backendOutcome.stdout) : null;
-    if (backendOutcome.code !== 0 || backendOutcome.timedOut || backendOutcome.cancelled || authoritativeResult?.ok !== true || authoritativeResult.generation !== generation) {
+    let authoritativeResult = null;
+    let verifierParseError = null;
+    try { authoritativeResult = backendOutcome.stdout ? safeJsonOutput(backendOutcome.stdout) : null; }
+    catch (error) { verifierParseError = error; }
+    if (backendOutcome.code !== 0 || backendOutcome.timedOut || backendOutcome.cancelled || verifierParseError || authoritativeResult?.ok !== true || authoritativeResult.generation !== generation) {
       return {
         status: 'failed',
         failureStage: 'backend',
+        ...(verifierParseError ? { reason: verifierParseError.message } : {}),
         execution: { results: [{ status: 'failed', stages: { fixture: { status: 'passed' }, ui: { status: 'passed', mode: 'authenticated-integration' }, backend: { status: 'failed', verification: backendPlan.verificationName }, ...(authoritativeResult ? { authoritativeResult } : {}) } }] },
         artifacts: directory,
       };
