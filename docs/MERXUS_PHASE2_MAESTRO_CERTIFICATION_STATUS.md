@@ -1,7 +1,8 @@
 # Merxus Maestro Phase 2 certification status
 
-Updated 2026-09-14 from the current WorksideQA artifacts and validation runs.
-Generation/export results are not treated as live platform certification.
+Updated 2026-09-16 from the authoritative Mac certification result and current
+WorksideQA validation runs. Generation/export results are not treated as live
+platform certification.
 
 | Slice | Scenario | Android | iOS | Backend | Status | Blocker | Next action |
 |------:|----------|---------|-----|---------|--------|---------|-------------|
@@ -10,6 +11,31 @@ Generation/export results are not treated as live platform certification.
 | 23 | SMS notification retry delay | PASS | NOT RUN | PASS | BLOCKED | iOS requires the Mac simulator | Run the iOS slice on the configured simulator |
 | 24 | Daily digest enabled round-trip | PASS | NOT RUN | PASS | BLOCKED | iOS requires the Mac simulator | Run the iOS slice on the configured simulator |
 | 25 | Unsaved retry-delay reload (non-mutation) | PASS | NOT RUN | PASS | BLOCKED | iOS requires the Mac simulator | Run Slice 25 first on the configured simulator |
+| 28 | Owner B / Tenant B retry-max persistence | NOT RUN | PASS | PASS | CERTIFIED | None | Frozen; no further Maestro scope |
+
+Slice 28 iOS used the approved hybrid evidence model:
+
+- Component A: Maestro proved the iOS SMS settings surface was reachable and
+  exposed the authoritative retry-max oracle (`2`).
+- Component B: authenticated Owner B integration used the production SMS
+  settings GET/PATCH contract and authoritative readback (`2` → `3`).
+- Mobile tests proved TextInput/draft/handler wiring and QA helper delegation.
+- The backend verifier proved persistence, Tenant A isolation, revision,
+  audit, receipt, correlation, and provider-zero invariants.
+
+All six contracts passed: iOS surface, persistence integration, backend
+verification, tenant isolation, revision/audit/receipt, and provider-zero.
+
+Certification date: 2026-09-16 (iOS, PASS).
+
+Authoritative Mac artifact:
+
+`/Users/stanleyroy/Desktop/Development/worksideQA/reports/mobile/merxus/maestro/slice28-composite/2026-09-16T00-52-37-135Z`
+
+Relevant implementation baseline: WorksideQA `4288516` and Mobile `83c5e86`.
+
+Slice 28 is frozen. Do not restore the former iOS monolithic Save/Reload UI
+flow or direct iOS TextInput typing.
 
 ## Evidence
 
