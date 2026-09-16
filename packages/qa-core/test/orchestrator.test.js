@@ -192,6 +192,37 @@ test('Metro handoff matching rejects a different product checkout or unrelated N
   assert.equal(serviceHandoffMatches(record, { Name: 'node.exe', CommandLine: 'node unrelated-server.js --port 8081' }), false);
 });
 
+test('POSIX service handoff matches a verified Firebase child by command and cwd', () => {
+  const record = { service: 'firebase', cwd: '/Users/qa/SageSet/mobile', executable: '/Users/qa/.volta/bin/firebase', args: ['emulators:start'], ports: [9099], processTree: [{ pid: 100, executable: 'node', commandLine: 'node firebase emulators:start', startedAt: 'root' }] };
+  const info = { pid: 200, Name: 'node', CommandLine: 'node /Users/qa/.volta/bin/firebase emulators:start --project sageset-maestro-local', cwd: '/Users/qa/SageSet/mobile' };
+  assert.equal(serviceHandoffMatches(record, info, 'darwin'), true);
+});
+
+test('POSIX service handoff rejects a foreign listener despite sharing a port', () => {
+  const record = { service: 'firebase', cwd: '/Users/qa/SageSet/mobile', executable: '/Users/qa/.volta/bin/firebase', args: ['emulators:start'], ports: [9099], processTree: [{ pid: 100, executable: 'node', commandLine: 'node firebase emulators:start', startedAt: 'root' }] };
+  const info = { pid: 200, Name: 'node', CommandLine: 'node unrelated-server.js --port 9099', cwd: '/Users/other' };
+  assert.equal(serviceHandoffMatches(record, info, 'darwin'), false);
+});
+
+test('POSIX backend and Expo handoffs require the recorded checkout identity', () => {
+  const backend = { service: 'backend', cwd: '/Users/qa/Merxus/backend', executable: '/usr/local/bin/npm', args: ['run', 'qa:maestro:serve'], ports: [8787] };
+  assert.equal(serviceHandoffMatches(backend, { Name: 'node', CommandLine: 'node server.js qa:maestro:serve', cwd: '/Users/qa/Merxus/backend' }, 'darwin'), true);
+  const metro = { service: 'metro', cwd: '/Users/qa/SageSet/mobile', executable: '/usr/local/bin/npm', args: ['exec', 'expo', 'start'], ports: [8081] };
+  assert.equal(serviceHandoffMatches(metro, { Name: 'node', CommandLine: 'node /Users/qa/SageSet/mobile/node_modules/expo/bin/cli start --dev-client', cwd: '/Users/qa/SageSet/mobile' }, 'darwin'), true);
+});
+
+test('POSIX reconciliation recovers a handed-off child after the launcher identity changes', () => {
+  const record = { pid: 100, rootPid: 100, service: 'firebase', executable: '/Users/qa/.volta/bin/firebase', args: ['emulators:start'], cwd: '/Users/qa/SageSet/mobile', ports: [9099], processTree: [{ pid: 100, executable: 'npm', commandLine: 'npm exec firebase emulators:start', startedAt: 'root' }] };
+  const infos = new Map([
+    [100, { pid: 100, Name: 'node', CommandLine: 'node /Users/qa/.volta/bin/firebase emulators:start', CreationDate: 'root' }],
+    [200, { pid: 200, Name: 'node', CommandLine: 'node /Users/qa/.volta/bin/firebase emulators:start --project sageset-maestro-local', CreationDate: 'child', cwd: '/Users/qa/SageSet/mobile' }],
+  ]);
+  const result = reconcileRecord(record, () => 200, (pid) => infos.get(pid), (pid) => infos.has(pid), () => [100], 'darwin');
+  assert.equal(result.state, 'RECOVERED');
+  assert.equal(result.owned, true);
+  assert.deepEqual(record.processTreePids, [200]);
+});
+
 test('reconciles a dead wrapper when a recorded descendant still owns the port', () => {
   const record = {
     pid: 100, rootPid: 100, service: 'firebase', executable: 'firebase.cmd', args: ['emulators:start'], ports: [9099],

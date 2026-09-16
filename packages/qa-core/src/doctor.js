@@ -523,8 +523,8 @@ async function checkMobileRuntime(env, options) {
 }
 
 async function checkDevices(env, options) {
-  if (options.offline) return [result('skipped', 'device.android', 'Device probes skipped (--offline).')];
   const platform = options.platform || process.platform;
+  if (options.offline) return [result('skipped', platform === 'darwin' ? 'device.ios' : 'device.android', 'Device probes skipped (--offline).')];
   if (platform === 'darwin') {
     const simulatorKey = options.product === 'sageset' ? 'SAGESET_IOS_SIMULATOR_ID' : 'MERXUS_IOS_SIMULATOR_ID';
     const simulatorId = String(env[simulatorKey] || '').trim();

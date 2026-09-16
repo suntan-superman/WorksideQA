@@ -161,7 +161,29 @@ function pidAlive(pid) {
 
 function processInfo(pid) {
   if (!pidAlive(pid)) return null;
-  if (process.platform !== 'win32') return { pid: Number(pid) };
+  if (process.platform !== 'win32') {
+    // POSIX launchers commonly hand a listener from npm/shell to a child
+    // process. Capture the same identity fields we use on Windows so a
+    // changed PID can be reconciled without trusting the port alone.
+    const outcome = spawnCommandSync('ps', ['-ww', '-o', 'pid=,ppid=,pgid=,lstart=,comm=,args=', '-p', String(Number(pid))], { encoding: 'utf8', timeout: 5000, stdio: ['ignore', 'pipe', 'ignore'] });
+    if (outcome.error || outcome.status !== 0) return null;
+    const line = String(outcome.stdout || '').trim();
+    const match = line.match(/^(\d+)\s+(\d+)\s+(\d+)\s+(.{24})\s+(\S+)\s*(.*)$/);
+    if (!match) return null;
+    let cwd = null;
+    const cwdOutcome = spawnCommandSync('lsof', ['-a', '-p', String(Number(pid)), '-d', 'cwd', '-Fn'], { encoding: 'utf8', timeout: 5000, stdio: ['ignore', 'pipe', 'ignore'] });
+    const cwdMatch = String(cwdOutcome.stdout || '').match(/\nn([^\r\n]+)/);
+    if (cwdMatch) cwd = cwdMatch[1];
+    return {
+      pid: Number(match[1]),
+      parentPid: Number(match[2]) || null,
+      groupPid: Number(match[3]) || null,
+      startedAt: match[4].trim() || null,
+      executable: match[5],
+      commandLine: match[6] || match[5],
+      cwd,
+    };
+  }
   const outcome = spawnCommandSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', `Get-CimInstance Win32_Process -Filter "ProcessId=${Number(pid)}" | Select-Object ProcessId,ParentProcessId,Name,CommandLine,CreationDate | ConvertTo-Json -Compress`], { encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
   if (outcome.error || outcome.status !== 0) return { pid: Number(pid) };
   try {
@@ -185,7 +207,26 @@ function processInfoWithRetry(pid, infoResolver = processInfo, attempts = PROCES
 }
 
 function processTreePids(rootPid) {
-  if (process.platform !== 'win32') return [Number(rootPid)];
+  if (process.platform !== 'win32') {
+    const outcome = spawnCommandSync('ps', ['-axo', 'pid=,ppid='], { encoding: 'utf8', timeout: 5000, stdio: ['ignore', 'pipe', 'ignore'] });
+    if (outcome.error || outcome.status !== 0) return [Number(rootPid)];
+    const rows = String(outcome.stdout || '').split(/\r?\n/).map((line) => {
+      const match = line.trim().match(/^(\d+)\s+(\d+)$/);
+      return match ? { pid: Number(match[1]), parent: Number(match[2]) } : null;
+    }).filter(Boolean);
+    const descendants = new Set([Number(rootPid)]);
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (const row of rows) {
+        if (descendants.has(row.parent) && !descendants.has(row.pid)) {
+          descendants.add(row.pid);
+          changed = true;
+        }
+      }
+    }
+    return [...descendants];
+  }
   const outcome = spawnCommandSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', 'Get-CimInstance Win32_Process | Select-Object ProcessId,ParentProcessId | ConvertTo-Json -Compress'], { encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
   if (outcome.error || outcome.status !== 0) return [Number(rootPid)];
   let rows;
@@ -214,13 +255,18 @@ function processTreeMetadata(rootPid, infoResolver = processInfo, treeResolver =
 
 function normalizeProcessInfo(pid, info) {
   const safeInfo = info && typeof info === 'object' && !Array.isArray(info) ? info : {};
-  return {
+  const normalized = {
     pid: Number(pid),
     parentPid: Number(safeInfo.ParentProcessId || safeInfo.parentProcessId || 0) || null,
     executable: String(safeInfo.Name || safeInfo.name || safeInfo.executable || ''),
     commandLine: String(safeInfo.CommandLine || safeInfo.commandLine || safeInfo.commandline || ''),
     startedAt: safeInfo.CreationDate || safeInfo.creationDate || safeInfo.startedAt || null,
   };
+  const groupPid = Number(safeInfo.GroupProcessId || safeInfo.groupPid || safeInfo.pgid || 0);
+  if (groupPid) normalized.groupPid = groupPid;
+  const cwd = safeInfo.Cwd || safeInfo.cwd || safeInfo.workingDirectory;
+  if (cwd) normalized.cwd = String(cwd);
+  return normalized;
 }
 
 function normalizedCommand(value) {
@@ -247,7 +293,7 @@ function concretePid(value) {
   return Number.isInteger(pid) && pid > 0 ? pid : null;
 }
 
-function reconcileRecord(record, ownerResolver = portOwner, infoResolver = processInfo, aliveResolver = pidAlive, treeResolver = processTreePids) {
+function reconcileRecord(record, ownerResolver = portOwner, infoResolver = processInfo, aliveResolver = pidAlive, treeResolver = processTreePids, platform = process.platform) {
   if (!record) return { state: 'NOT RUNNING', owned: false, recovered: false, portOwners: [] };
   let storedTree = Array.isArray(record.processTree) ? record.processTree :
     (Array.isArray(record.processTreePids) ? record.processTreePids.map((pid) => ({ pid })) : []);
@@ -259,7 +305,7 @@ function reconcileRecord(record, ownerResolver = portOwner, infoResolver = proce
   // cannot bootstrap ownership merely by sharing a port.
   const rootPid = Number(record.rootPid || record.pid);
   const rootInfo = aliveResolver(rootPid) ? processInfoWithRetry(rootPid, infoResolver) : null;
-  const rootVerified = aliveResolver(rootPid) && commandMatches(record, rootInfo);
+  const rootVerified = aliveResolver(rootPid) && commandMatches(record, rootInfo, platform);
   if (!storedTree.length && rootVerified) {
     const discovered = processTreeMetadata(rootPid, infoResolver, treeResolver);
     if (discovered.length) {
@@ -285,9 +331,11 @@ function reconcileRecord(record, ownerResolver = portOwner, infoResolver = proce
   // and the live owner is an Expo start process in the same checkout.  This
   // deliberately does not adopt arbitrary Node listeners on 8081.
   const rootMismatch = currentTree.some((item) => item.mismatch && Number(item.expected?.pid) === rootPid);
-  const handoff = record.service === 'metro' && !rootMismatch && (rootVerified || currentTree.some((item) => !item.mismatch))
+  const handoff = (record.service === 'metro' || platform !== 'win32')
+    && (platform !== 'win32' || !rootMismatch)
+    && (rootVerified || currentTree.some((item) => !item.mismatch))
     ? portOwners.map((item) => ({ ...item, info: item.pid ? processInfoWithRetry(item.pid, infoResolver) : null }))
-      .find((item) => item.pid && !known.has(Number(item.pid)) && serviceHandoffMatches(record, item.info))
+      .find((item) => item.pid && !known.has(Number(item.pid)) && serviceHandoffMatches(record, item.info, platform))
     : null;
   if (handoff) {
     const live = normalizeProcessInfo(handoff.pid, handoff.info);
@@ -295,8 +343,9 @@ function reconcileRecord(record, ownerResolver = portOwner, infoResolver = proce
     const nextTree = [...retained, live];
     record.processTree = nextTree.map((item) => ({
       pid: Number(item.pid), parentPid: Number(item.parentPid || item.ParentProcessId || 0) || null,
+      groupPid: Number(item.groupPid || item.GroupProcessId || item.pgid || 0) || null,
       executable: String(item.executable || item.Name || ''), commandLine: String(item.commandLine || item.CommandLine || ''),
-      startedAt: item.startedAt || item.CreationDate || null,
+      startedAt: item.startedAt || item.CreationDate || null, cwd: item.cwd || item.Cwd || null,
     }));
     record.processTreePids = record.processTree.map((item) => item.pid);
     record.processStartTimes = Object.fromEntries(record.processTree.map((item) => [String(item.pid), item.startedAt]));
@@ -321,7 +370,7 @@ function reconcileRecord(record, ownerResolver = portOwner, infoResolver = proce
     };
   }
   const rootAlive = aliveResolver(rootPid);
-  const rootOwned = rootAlive && commandMatches(record, rootInfo || processInfoWithRetry(rootPid, infoResolver));
+  const rootOwned = rootAlive && commandMatches(record, rootInfo || processInfoWithRetry(rootPid, infoResolver), platform);
   const descendantPort = portOwners.some((item) => item.pid && Number(item.pid) !== Number(record.pid) && known.has(Number(item.pid)));
   if (!rootAlive && !currentTree.some((item) => !item.mismatch) && !portOwners.some((item) => item.pid)) {
     return {
@@ -334,8 +383,9 @@ function reconcileRecord(record, ownerResolver = portOwner, infoResolver = proce
     if (reconstructed) {
       record.processTree = currentTree.filter((item) => !item.mismatch).map((item) => ({
         pid: Number(item.pid), parentPid: Number(item.ParentProcessId || item.parentPid || 0) || null,
+        groupPid: Number(item.groupPid || item.GroupProcessId || item.pgid || 0) || null,
         executable: String(item.Name || item.executable || ''), commandLine: String(item.CommandLine || item.commandLine || ''),
-        startedAt: item.CreationDate || item.startedAt || null,
+        startedAt: item.CreationDate || item.startedAt || null, cwd: item.cwd || item.Cwd || null,
       }));
       record.processTreePids = record.processTree.map((item) => item.pid);
       record.processStartTimes = Object.fromEntries(record.processTree.map((item) => [String(item.pid), item.startedAt]));
@@ -349,8 +399,9 @@ function reconcileRecord(record, ownerResolver = portOwner, infoResolver = proce
     record.startupGeneration = record.startupGeneration || `${record.startedAt || 'legacy'}-${record.runtimeHash || 'unknown'}`;
     record.processTree = currentTree.filter((item) => !item.mismatch).map((item) => ({
       pid: Number(item.pid), parentPid: Number(item.ParentProcessId || item.parentPid || 0) || null,
+      groupPid: Number(item.groupPid || item.GroupProcessId || item.pgid || 0) || null,
       executable: String(item.Name || item.executable || ''), commandLine: String(item.CommandLine || item.commandLine || ''),
-      startedAt: item.CreationDate || item.creationDate || item.startedAt || null,
+      startedAt: item.CreationDate || item.creationDate || item.startedAt || null, cwd: item.cwd || item.Cwd || null,
     }));
     record.processTreePids = record.processTree.map((item) => item.pid);
     record.reconciledAt = new Date().toISOString();
@@ -359,20 +410,41 @@ function reconcileRecord(record, ownerResolver = portOwner, infoResolver = proce
   return { state: 'NOT RUNNING', owned: false, recovered: false, portOwners, currentTree };
 }
 
-function commandMatches(record, info) {
+function commandMatches(record, info, platform = process.platform) {
   if (!info || !record) return false;
-  if (process.platform !== 'win32') return true;
-  const command = String(info.CommandLine || info.commandLine || '').toLowerCase();
+  const command = normalizedCommand(info.CommandLine || info.commandLine);
+  if (platform !== 'win32') {
+    const executable = normalizedCommand(info.Name || info.name || info.executable);
+    const expectedExecutable = normalizedCommand(path.basename(String(record.executable || '')));
+    const executableMatches = !expectedExecutable || executable.includes(expectedExecutable) || command.includes(expectedExecutable);
+    const serviceMatches = record.service === 'firebase'
+      ? command.includes('firebase') || command.includes('emulators:start')
+      : record.service === 'backend'
+        ? command.includes('qa:maestro:serve') || command.includes('backend')
+        : record.service === 'metro'
+          ? command.includes('expo') && command.includes('start')
+          : false;
+    const expectedArgs = (record.args || []).map((arg) => normalizedCommand(arg)).filter((arg) => arg.length > 2 && !['--', '-'].includes(arg));
+    const argumentMatches = expectedArgs.filter((arg) => !['emulators:start', 'start'].includes(arg)).every((arg) => command.includes(arg));
+    return executableMatches && serviceMatches && (argumentMatches || expectedArgs.length === 0);
+  }
   const expected = [record.executable, ...(record.args || [])].join(' ').toLowerCase();
   return command.includes(String(record.service || '').toLowerCase()) || command.includes(path.basename(String(record.executable || '')).toLowerCase()) || expected.split(/\s+/).filter((token) => token.length > 3).some((token) => command.includes(token));
 }
 
-function serviceHandoffMatches(record, info) {
-  if (!record || record.service !== 'metro' || !info) return false;
+function serviceHandoffMatches(record, info, platform = process.platform) {
+  if (!record || !info) return false;
   const command = normalizedCommand(info.CommandLine || info.commandLine);
   const executable = normalizedCommand(info.Name || info.name || info.executable);
   const expectedRoot = normalizedCommand(record.cwd).replace(/\\/g, '/');
   const commandRoot = command.replace(/\\/g, '/');
+  const infoCwd = normalizedCommand(info.cwd || info.Cwd).replace(/\\/g, '/');
+  if (record.service !== 'metro') {
+    if (platform === 'win32' || !expectedRoot || (!commandRoot.includes(expectedRoot) && !infoCwd.includes(expectedRoot))) return false;
+    if (record.service === 'firebase') return command.includes('firebase') || command.includes('emulators:start');
+    if (record.service === 'backend') return command.includes('qa:maestro:serve') || command.includes('backend');
+    return false;
+  }
   // A handed-off Expo process must still be a Node/Expo start command rooted
   // in this product's mobile checkout. A generic Node listener on 8081 does
   // not satisfy these identity checks.
@@ -380,7 +452,7 @@ function serviceHandoffMatches(record, info) {
     && /(?:^|\s)(?:node(?:\.exe)?|npm(?:\.cmd)?|cmd(?:\.exe)?)\b/.test(executable)
     && command.includes('expo')
     && command.includes('start')
-    && (!expectedRoot || commandRoot.includes(expectedRoot));
+    && (!expectedRoot || commandRoot.includes(expectedRoot) || (platform !== 'win32' && infoCwd.includes(expectedRoot)));
 }
 
 function portOwner(port) {
@@ -1120,6 +1192,22 @@ function statusRows(product, env) {
     }
   }
   for (const deviceProduct of (product ? [product] : ['merxus', 'sageset'])) {
+    if (process.platform === 'darwin') {
+      const simulatorKey = deviceProduct === 'sageset' ? 'SAGESET_IOS_SIMULATOR_ID' : 'MERXUS_IOS_SIMULATOR_ID';
+      const simulatorId = String(env[simulatorKey] || '').trim();
+      const xcrun = resolveCommand('xcrun', env);
+      const listed = simulatorId && xcrun
+        ? spawnCommandSync(xcrun, ['simctl', 'list', 'devices', 'available'], { encoding: 'utf8', timeout: 10000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] })
+        : null;
+      const booted = simulatorId && xcrun
+        ? spawnCommandSync(xcrun, ['simctl', 'list', 'devices', 'booted'], { encoding: 'utf8', timeout: 10000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] })
+        : null;
+      const available = Boolean(listed && listed.status === 0 && String(listed.stdout || '').includes(simulatorId));
+      const isBooted = Boolean(booted && booted.status === 0 && String(booted.stdout || '').includes(simulatorId));
+      const appId = deviceProduct === 'sageset' ? 'com.workside.sageset' : 'com.merxus.mobile.qa';
+      rows.push({ product: deviceProduct, service: 'ios-simulator', role: 'qa-device', running: isBooted, state: isBooted ? 'RUNNING' : available ? 'NOT RUNNING' : 'NOT AVAILABLE', pid: null, startTime: null, expectedPorts: [], actualPortOwners: [], runtimeMode: 'maestro', maestroState, simulatorState: simulatorId ? (isBooted ? 'booted' : available ? 'available' : 'offline') : 'unconfigured', simulatorId: simulatorId || null, appId, owner: 'WorksideQA' });
+      continue;
+    }
     const device = deviceProduct === 'sageset' ? env.SAGESET_ANDROID_EMULATOR_ID : env.MERXUS_ANDROID_EMULATOR_ID;
     // SageSet's Android device is part of its readiness contract. Keep a
     // visible NOT RUNNING row even when local configuration is missing so
@@ -1154,10 +1242,11 @@ function printStatus(rows) {
     const state = row.state === 'CONFLICT' ? 'CONFLICT' : row.state === 'STALE' ? 'STALE STATE' : row.state === 'RECOVERED' ? 'RECOVERED' : row.running ? 'RUNNING' : 'NOT RUNNING';
     const ports = row.expectedPorts.length ? row.expectedPorts.join(',') : '-';
     const owners = row.actualPortOwners.length ? row.actualPortOwners.map((item) => `${item.port}:${item.pid || '-'}`).join(',') : '-';
-    process.stdout.write(`${state.padEnd(12)} ${row.product.padEnd(8)} ${row.service.padEnd(16)} PID=${row.pid || '-'} start=${row.startTime || '-'} expected=${ports} owner=${owners} mode=${row.runtimeMode} maestro=${row.maestroState || '-'}${row.reason ? ` reason=${row.reason}` : ''}${row.emulatorState ? ` emulator=${row.emulatorState}` : ''}${row.appId ? ` appId=${row.appId}` : ''}${row.appInstalled != null ? ` app=${row.appInstalled ? 'installed' : 'missing'}` : ''}${row.appRuntimeState ? ` appState=${row.appRuntimeState}` : ''}\n`);
+    process.stdout.write(`${state.padEnd(12)} ${row.product.padEnd(8)} ${row.service.padEnd(16)} PID=${row.pid || '-'} start=${row.startTime || '-'} expected=${ports} owner=${owners} mode=${row.runtimeMode} maestro=${row.maestroState || '-'}${row.reason ? ` reason=${row.reason}` : ''}${row.emulatorState ? ` emulator=${row.emulatorState}` : ''}${row.simulatorState ? ` simulator=${row.simulatorState}` : ''}${row.simulatorId ? ` simulatorId=${row.simulatorId}` : ''}${row.appId ? ` appId=${row.appId}` : ''}${row.appInstalled != null ? ` app=${row.appInstalled ? 'installed' : 'missing'}` : ''}${row.appRuntimeState ? ` appState=${row.appRuntimeState}` : ''}\n`);
   }
-  const ready = rows.filter((row) => row.service !== 'android-device').every((row) => row.running)
-    && rows.filter((row) => row.service === 'android-device').every((row) => row.running && row.appInstalled !== false && (row.product !== 'sageset' || row.appRuntimeState === 'actual-sageset-application'));
+  const ready = rows.filter((row) => !['android-device', 'ios-simulator'].includes(row.service)).every((row) => row.running)
+    && rows.filter((row) => row.service === 'android-device').every((row) => row.running && row.appInstalled !== false && (row.product !== 'sageset' || row.appRuntimeState === 'actual-sageset-application'))
+    && rows.filter((row) => row.service === 'ios-simulator').every((row) => row.running);
   process.stdout.write(`\n${ready ? 'READY' : 'NOT READY'}\n`);
 }
 

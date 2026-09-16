@@ -160,6 +160,12 @@ test('macOS SageSet contract requires iOS simulator and not Android settings', (
   assert.equal(checks.find((check) => check.id === 'config.SAGESET_IOS_SIMULATOR_ID').status, 'passed');
 });
 
+test('macOS offline device checks are iOS-scoped and do not report Android readiness', async () => {
+  const checks = await checkDevices({}, { platform: 'darwin', offline: true, product: 'merxus' });
+  assert.deepEqual(checks.map((check) => check.id), ['device.ios']);
+  assert.equal(checks[0].status, 'skipped');
+});
+
 test('macOS SageSet path validation derives the product root from standalone Mobile', () => {
   const fs = require('node:fs');
   const os = require('node:os');
