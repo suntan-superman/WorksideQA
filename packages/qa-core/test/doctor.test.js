@@ -160,3 +160,21 @@ test('macOS Merxus path checks allow a standalone Mobile checkout with local Fir
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+test('macOS Merxus path validation passes with no web checkout', () => {
+  const fs = require('node:fs');
+  const os = require('node:os');
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'worksideqa-macos-no-web-'));
+  const mobile = path.join(root, 'merxusmobile');
+  const backend = path.join(root, 'backend');
+  fs.mkdirSync(mobile, { recursive: true });
+  fs.mkdirSync(backend, { recursive: true });
+  try {
+    const checks = checkPaths({ MERXUS_ROOT_REPO: path.join(root, 'missing-parent'), MERXUS_MOBILE_REPO: mobile, MERXUS_BACKEND_REPO: backend, MERXUS_WEB_REPO: path.join(root, 'missing-web') }, 'merxus', { platform: 'darwin' });
+    assert.equal(checks.find((check) => check.id === 'path.merxus.web').status, 'skipped');
+    assert.match(checks.find((check) => check.id === 'path.merxus.web').message, /not required for the macOS iOS QA workflow/);
+    assert.equal(checks.some((check) => check.status === 'failed'), false);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});

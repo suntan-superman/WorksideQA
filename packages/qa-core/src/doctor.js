@@ -214,7 +214,6 @@ function checkPaths(env, product = 'all', options = {}) {
   const mobile = env.MERXUS_MOBILE_REPO || path.join(root, 'mobile');
   const backend = env.MERXUS_BACKEND_REPO || path.join(root, 'merxus-ai-backend');
   const web = env.MERXUS_WEB_REPO || path.join(root, 'web');
-  const mobileHasFirebase = fs.existsSync(path.join(mobile, 'firebase.json'));
   const paths = [
     ['path.worksideqa', WORKSIDEQA_ROOT],
     ['path.merxus', root],
@@ -232,8 +231,8 @@ function checkPaths(env, product = 'all', options = {}) {
     if (platform === 'darwin' && id === 'path.merxus' && fs.existsSync(mobile)) {
       return result('skipped', id, 'Shared Merxus parent checkout is not required on macOS; Mobile path is authoritative.', { path: value });
     }
-    if (platform === 'darwin' && id === 'path.merxus.web' && mobileHasFirebase) {
-      return result('skipped', id, 'Merxus web checkout is not required; Mobile contains the local Firebase project.', { path: value });
+    if (platform === 'darwin' && id === 'path.merxus.web') {
+      return result('skipped', id, 'Merxus web checkout is not required for the macOS iOS QA workflow.', { path: value });
     }
     return result('failed', id, `Path does not exist: ${value}`, { path: value });
   });
