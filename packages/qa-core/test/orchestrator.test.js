@@ -1,6 +1,7 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { parseArgs, serviceDefinitions, commandMatches, serviceHandoffMatches, canonicalMerxusMetroEnvironment, waitForServiceReady, assertPortsAvailable, fixtureCommands, spawnService, reconcileRecord, terminateRecord, stopProduct, processTreeMetadata, normalizeProcessInfo, processInfoWithRetry, ensureAndroidQaApplication, classifySageSetAppRuntime } = require('../src/orchestrator');
+const { parseArgs, serviceDefinitions, commandMatches, serviceHandoffMatches, canonicalMerxusMetroEnvironment, waitForServiceReady, assertPortsAvailable, fixtureCommands, spawnService, reconcileRecord, terminateRecord, stopProduct, processTreeMetadata, normalizeProcessInfo, processInfoWithRetry, ensureAndroidQaApplication, classifySageSetAppRuntime, shouldRestartStaleMetro } = require('../src/orchestrator');
+const { validateSageSetMetroManifest } = require('../src/product-runtime');
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -77,6 +78,27 @@ test('SageSet mobile readiness distinguishes installed launcher from rendered ap
   assert.equal(classifySageSetAppRuntime('sageset', true, 'device', '<node text="Start a local development server"/>'), 'development-client-launcher-displayed');
   assert.equal(classifySageSetAppRuntime('sageset', true, 'device', '<node resource-id="com.workside.sageset:id/screen.auth.welcome"/>'), 'actual-sageset-application');
   assert.equal(classifySageSetAppRuntime('sageset', true, 'device', '<node resource-id="com.workside.sageset:id/screen.auth.login"/>'), 'actual-sageset-application');
+});
+
+test('SageSet Metro runtime validation requires the explicit Maestro contract', () => {
+  const manifest = {
+    launchAsset: { url: 'http://127.0.0.1:8081/index.bundle' },
+    extra: { expoClient: {
+      android: { package: 'com.workside.sageset' },
+      extra: { appEnvironment: 'maestro', maestro: { enabled: true, firebaseProjectId: 'sageset-maestro-local', emulatorHost: '10.0.2.2', externalNotificationsAllowed: false } },
+    } },
+  };
+  assert.deepEqual(validateSageSetMetroManifest(manifest), {
+    appId: 'com.workside.sageset', environment: 'maestro', firebaseProjectId: 'sageset-maestro-local', emulatorHost: '10.0.2.2', externalNotificationsAllowed: false,
+  });
+  assert.throws(() => validateSageSetMetroManifest({ ...manifest, extra: { expoClient: { ...manifest.extra.expoClient, extra: { ...manifest.extra.expoClient.extra, maestro: { ...manifest.extra.expoClient.extra.maestro, firebaseProjectId: 'production' } } } } }), /Firebase project production/);
+  assert.throws(() => validateSageSetMetroManifest({ ...manifest, extra: { expoClient: { ...manifest.extra.expoClient, extra: { ...manifest.extra.expoClient.extra, appEnvironment: 'production' } } } }), /appEnvironment production/);
+});
+
+test('only invalid SageSet Metro runtime results trigger verified-service restart', () => {
+  assert.equal(shouldRestartStaleMetro('METRO_BUNDLE_RESPONSE_INVALID'), true);
+  assert.equal(shouldRestartStaleMetro('METRO_BUNDLE_PREWARM_FAILED'), true);
+  assert.equal(shouldRestartStaleMetro('METRO_BUNDLE_PREWARM_TIMEOUT'), false);
 });
 
 test('SageSet Android QA app is reused when already installed', () => {

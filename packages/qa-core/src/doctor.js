@@ -18,6 +18,7 @@ const { resolveTool, resolveTools, toolVersion } = require('./tool-resolver');
 const { DEFAULT_LOCAL_CONFIG_PATH, parsePowerShellConfig } = require('./local-config');
 const { waitForRenderedRuntime, DEFAULT_TIMEOUT_MS } = require('./rendered-runtime');
 const { configuredDevice } = require('./android-emulator');
+const { validateSageSetMetroManifest } = require('./product-runtime');
 
 const WORKSIDEQA_ROOT = fromRoot();
 const DEFAULTS = {
@@ -351,14 +352,17 @@ async function checkMobileRuntime(env, options) {
     let servedManifest = null;
     try { servedManifest = JSON.parse(served.body || '{}'); } catch { /* reported below */ }
     const expoClient = servedManifest?.extra?.expoClient || {};
-    const appId = String(expoClient?.android?.package || '').trim();
-    const runtimeProject = String(expoClient?.extra?.firebaseProjectId || expoClient?.extra?.runtime?.firebaseProjectId || '').trim();
-    const servedOk = options.offline || (served.status === 200 && Boolean(servedManifest?.launchAsset?.url) && (!appId || appId === manifest.mobile.appId) && (!runtimeProject || runtimeProject === manifest.mobile.environment.firebaseProjectId));
+    let runtimeContract = null;
+    let runtimeContractError = null;
+    try { runtimeContract = validateSageSetMetroManifest(servedManifest, manifest.mobile.appId); } catch (error) { runtimeContractError = error.message; }
+    const appId = runtimeContract?.appId || String(expoClient?.android?.package || '').trim();
+    const runtimeProject = runtimeContract?.firebaseProjectId || '';
+    const servedOk = options.offline || (served.status === 200 && Boolean(servedManifest?.launchAsset?.url) && !runtimeContractError);
     checks.push(options.offline
       ? result('skipped', 'mobile.runtime-served', 'SageSet Metro served check skipped (--offline).')
       : servedOk
         ? result('passed', 'mobile.runtime-served', `SageSet Maestro Metro is serving on ${metroUrl}.`, { metroUrl, appId: appId || manifest.mobile.appId, firebaseProjectId: runtimeProject || manifest.mobile.environment.firebaseProjectId })
-        : result('failed', 'mobile.runtime-served', `SageSet Maestro Metro is absent, stale, or serving an invalid runtime on ${metroUrl}.`, { metroUrl, httpStatus: served.status || null }));
+        : result('failed', 'mobile.runtime-served', `SageSet Maestro Metro is absent, stale, or serving an invalid runtime on ${metroUrl}.`, { metroUrl, httpStatus: served.status || null, mismatch: runtimeContractError || null }));
     if (options.offline) {
       checks.push(result('skipped', 'mobile.runtime-rendered', 'SageSet rendered app check skipped (--offline).'));
       return checks;

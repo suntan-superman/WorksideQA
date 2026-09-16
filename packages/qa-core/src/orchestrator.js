@@ -10,6 +10,7 @@ const { parsePowerShellConfig, mergedEnvironment, runDoctor, DEFAULTS, resolveCo
 const { resolveTools, withToolPaths } = require('./tool-resolver');
 const { prewarmMetroBundle, DEFAULT_PREWARM_TIMEOUT_MS } = require('./metro-bundle');
 const { ensureAndroidEmulator } = require('./android-emulator');
+const { validateSageSetMetroManifest } = require('./product-runtime');
 
 const STATE_DIRECTORY = fromRoot('.worksideqa');
 const STATE_PATH = path.join(STATE_DIRECTORY, 'runtime-state.json');
@@ -524,16 +525,13 @@ async function prewarmCanonicalMetro(env, platform = 'android', product = 'merxu
     platform,
     timeoutMs: Number(env.WORKSIDEQA_METRO_BUNDLE_PREWARM_TIMEOUT_MS || DEFAULT_PREWARM_TIMEOUT_MS),
     validateManifest: product === 'sageset'
-      ? (manifest) => {
-        const config = manifest?.extra?.expoClient || {};
-        const appId = config?.android?.package || config?.extra?.androidPackage;
-        const runtime = config?.extra?.runtime || {};
-        if (appId && appId !== 'com.workside.sageset') throw new Error(`SageSet Metro served unexpected Android package ${appId}.`);
-        if (runtime.firebaseProjectId && runtime.firebaseProjectId !== 'sageset-maestro-local') throw new Error('SageSet Metro served a non-Maestro Firebase project.');
-        return { appId: appId || 'com.workside.sageset', environment: 'maestro', firebaseProjectId: 'sageset-maestro-local' };
-      }
+      ? (manifest) => validateSageSetMetroManifest(manifest)
       : (manifest) => verifyExpoConfig(manifest?.extra?.expoClient, mobileRoot, `prewarmed Metro ${platform} manifest`, platform),
   });
+}
+
+function shouldRestartStaleMetro(reason) {
+  return ['METRO_BUNDLE_RESPONSE_INVALID', 'METRO_BUNDLE_PREWARM_FAILED'].includes(String(reason || ''));
 }
 
 function metroServedRuntimeReady(env, product = 'merxus') {
@@ -978,15 +976,40 @@ async function startProduct(product) {
     if (previous && ownership.owned && (await waitForPorts(definition.ports, 1000))) {
       if (definition.service === 'metro') {
         const prewarm = await awaitMetroPrewarm();
-        if (!prewarm.ready) throw new Error(`Cannot use ${product}/metro: ${prewarm.reason || 'Metro bundle prewarm failed'}. ${prewarm.detail || ''}`.trim());
-        previous.bundlePrewarm = prewarm.bundlePrewarm;
-        previous.metroProcessReadyAt = previous.metroProcessReadyAt || metroProcessReadyAt || new Date().toISOString();
-        saveState(state);
-        process.stdout.write(`PREWARMED ${product}/metro bundle (${prewarm.bundlePrewarm.bundlePrewarmElapsedMs}ms)\n`);
+        if (!prewarm.ready) {
+          const restartable = shouldRestartStaleMetro(prewarm.reason);
+          if (restartable && ownership.owned) {
+            process.stdout.write(`STALE ${product}/metro runtime: ${prewarm.detail || prewarm.reason}; restarting verified service tree\n`);
+            const previousStop = await terminateRecord(previous, { ownership });
+            if (!previousStop.stopped) {
+              const remaining = previousStop.remainingPids?.length ? ` remaining PIDs=${previousStop.remainingPids.join(',')}` : '';
+              throw new Error(`Cannot restart stale ${product}/metro: verified cleanup incomplete (${previousStop.reason || 'unknown'}).${remaining}`);
+            }
+            const staleIndex = records.findIndex((item) => item.service === definition.service);
+            if (staleIndex >= 0) records.splice(staleIndex, 1);
+            saveState(state);
+            previous = null;
+          } else {
+            throw new Error(`Cannot use ${product}/metro: ${prewarm.reason || 'Metro bundle prewarm failed'}. ${prewarm.detail || ''}`.trim());
+          }
+        }
+        if (!previous) {
+          // Continue through the normal spawn/readiness path below after the
+          // verified stale runtime tree has been removed.
+        } else {
+          previous.bundlePrewarm = prewarm.bundlePrewarm;
+          previous.metroProcessReadyAt = previous.metroProcessReadyAt || metroProcessReadyAt || new Date().toISOString();
+          saveState(state);
+          process.stdout.write(`PREWARMED ${product}/metro bundle (${prewarm.bundlePrewarm.bundlePrewarmElapsedMs}ms)\n`);
+          if (ownership.recovered) saveState(state);
+          process.stdout.write(`READY ${product}/${definition.service} PID=${previous.pid} (already owned)\n`);
+          continue;
+        }
+      } else {
+        if (ownership.recovered) saveState(state);
+        process.stdout.write(`READY ${product}/${definition.service} PID=${previous.pid} (already owned)\n`);
+        continue;
       }
-      if (ownership.recovered) saveState(state);
-      process.stdout.write(`READY ${product}/${definition.service} PID=${previous.pid} (already owned)\n`);
-      continue;
     }
     if (previous && (pidAlive(previous.rootPid || previous.pid) || ownership.owned)) {
       const previousStop = await terminateRecord(previous, { ownership });
@@ -1245,6 +1268,7 @@ module.exports = {
   maestroActivity,
   waitForServiceReady,
   prewarmCanonicalMetro,
+  shouldRestartStaleMetro,
   assertPortsAvailable,
   fixtureCommands,
   spawnService,
