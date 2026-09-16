@@ -14,7 +14,7 @@ const net = require('node:net');
 const { spawnCommandSync } = require('../../qa-utils/src');
 const { fromRoot, fileExists } = require('../../qa-utils/src');
 const { loadProductManifest, validateManifest } = require('../../qa-config/src');
-const { resolveTool, resolveTools } = require('./tool-resolver');
+const { resolveTool, resolveTools, toolVersion } = require('./tool-resolver');
 const { DEFAULT_LOCAL_CONFIG_PATH, parsePowerShellConfig } = require('./local-config');
 const { waitForRenderedRuntime, DEFAULT_TIMEOUT_MS } = require('./rendered-runtime');
 const { configuredDevice } = require('./android-emulator');
@@ -245,14 +245,29 @@ function checkManifests(product = 'all') {
   return checks;
 }
 
-function checkTools(env) {
+function checkTools(env, options = {}) {
   const checks = [];
   const tools = resolveTools(env);
+  const versions = {};
   for (const name of ['node', 'npm', 'firebase', 'adb', 'maestro', 'java']) {
     const resolved = tools[name];
+    versions[name] = resolved.path ? toolVersion(resolved.path, env) : null;
     checks.push(resolved.path
-      ? result('passed', `tool.${name}`, `${resolved.path} (${commandVersion(resolved.path, env) || name})`, { command: resolved.path, source: resolved.source })
+      ? result('passed', `tool.${name}`, `${resolved.path} (${versions[name] || name})`, { command: resolved.path, source: resolved.source, version: versions[name] })
       : result('failed', `tool.${name}`, resolved.error || `${name} is unavailable.`));
+  }
+  if (process.platform === 'win32' && !options.offline) {
+    const firebaseOverride = String(env.WORKSIDEQA_FIREBASE_BIN || '').trim();
+    checks.push(firebaseOverride && tools.firebase?.source === 'local-config'
+      ? result('passed', 'tool.firebase-contract', `Firebase resolution is pinned to ${tools.firebase.path}.`, { command: tools.firebase.path, version: versions.firebase })
+      : result('failed', 'tool.firebase-contract', 'WORKSIDEQA_FIREBASE_BIN must pin the canonical Windows Firebase executable in .maestro.local.ps1; ambiguous PATH resolution is not allowed.'));
+  }
+  const firebaseMajor = Number((String(versions.firebase || '').match(/(\d+)\./) || [])[1] || 0);
+  const javaMajor = Number((String(versions.java || '').match(/(?:version\s*["']?)?(\d+)(?:\.|["'])/) || [])[1] || 0);
+  if (!options.offline && firebaseMajor >= 15) {
+    checks.push(javaMajor >= 21
+      ? result('passed', 'tool.firebase-java-compat', `Firebase CLI ${versions.firebase || 'unknown'} is paired with Java ${versions.java || 'unknown'}.`, { firebaseVersion: versions.firebase, javaVersion: versions.java })
+      : result('failed', 'tool.firebase-java-compat', `Firebase CLI ${versions.firebase || 'unknown'} requires Java 21+; resolved Java is ${versions.java || 'unavailable'}. Set WORKSIDEQA_JAVA_BIN/JAVA_HOME to a JDK 21 installation.`));
   }
   return checks;
 }
@@ -473,7 +488,7 @@ async function runDoctor(options = {}) {
     ...checkLocalContract(env, localConfig, options.product),
     ...checkPaths(env, options.product),
     ...checkManifests(options.product),
-    ...checkTools(env),
+    ...checkTools(env, options),
   ];
   checks.push(...await checkMobileRuntime(env, options));
   checks.push(...await checkServices(env, options));
@@ -525,5 +540,6 @@ module.exports = {
   resolveCommand,
   probePort,
   checkDevices,
+  checkTools,
   runDoctor,
 };

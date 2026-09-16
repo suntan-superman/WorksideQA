@@ -29,6 +29,30 @@ function commandRuns(command, env) {
   return !outcome.error && outcome.status === 0;
 }
 
+function toolVersion(command, env = process.env) {
+  if (!command) return null;
+  const outcome = spawnCommandSync(command, ['--version'], {
+    env: withToolPaths(env, [{ path: command }, { path: process.execPath }]),
+    encoding: 'utf8', timeout: 10000, windowsHide: true,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  if (outcome.error || outcome.status !== 0) return null;
+  const lines = `${String(outcome.stdout || '')}\n${String(outcome.stderr || '')}`
+    .split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  return [...lines].reverse().find((line) => /\d+\.\d+\.\d+/.test(line)) || lines[0] || null;
+}
+
+function versionTuple(value) {
+  const match = String(value || '').match(/(\d+)\.(\d+)\.(\d+)/);
+  return match ? match.slice(1).map(Number) : null;
+}
+
+function compareVersions(left, right) {
+  const a = versionTuple(left) || [0, 0, 0];
+  const b = versionTuple(right) || [0, 0, 0];
+  return (a[0] - b[0]) || (a[1] - b[1]) || (a[2] - b[2]);
+}
+
 function withToolPaths(env = process.env, tools = []) {
   const current = String(env.PATH || env.Path || env.path || '');
   const additions = [process.execPath, ...tools.map((tool) => tool?.path)]
@@ -75,10 +99,16 @@ function pathLookup(command, env) {
     }
     // Evaluate every where.exe result, not just the first hit. A stale shim
     // earlier on PATH must not hide a valid NVM/Yarn installation later on.
-    for (const candidate of [...new Set([...whereCandidates, ...existingPathCandidates(command, env)])]) {
-      if (commandRuns(candidate, env)) return candidate;
+    const runnable = [...new Set([...whereCandidates, ...existingPathCandidates(command, env)])]
+      .filter((candidate) => commandRuns(candidate, env));
+    if (command.toLowerCase() === 'firebase' && runnable.length > 1) {
+      // Multiple global Firebase shims are common on Windows (for example
+      // Yarn plus an NVM installation). Resolve the same supported binary on
+      // every launch by choosing the highest installed CLI version. An
+      // explicit WORKSIDEQA_FIREBASE_BIN override still wins before PATH.
+      return runnable.sort((left, right) => compareVersions(toolVersion(right, env), toolVersion(left, env)))[0];
     }
-    return null;
+    return runnable[0] || null;
   }
   const where = spawnCommandSync('sh', ['-lc', `command -v -- "$1"`, 'worksideqa', command], {
     env, encoding: 'utf8', timeout: 5000, windowsHide: true,
@@ -141,6 +171,8 @@ module.exports = {
   withToolPaths,
   resolveTool,
   resolveTools,
+  toolVersion,
+  compareVersions,
   windowsCommandNames,
   existingPathCandidates,
 };

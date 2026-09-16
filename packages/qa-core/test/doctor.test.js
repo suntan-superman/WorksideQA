@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { parseArgs, parsePowerShellConfig, mergedEnvironment, checkDevices, runDoctor } = require('../src/doctor');
+const { parseArgs, parsePowerShellConfig, mergedEnvironment, checkDevices, checkTools, runDoctor } = require('../src/doctor');
 const { DEFAULT_LOCAL_CONFIG_PATH } = require('../src/local-config');
 
 function localConfigWithoutSageSet() {
@@ -93,4 +93,29 @@ test('SageSet mobile readiness requires both online device and QA app', async ()
       : { status: 0, stdout: 'package:/data/app/com.workside.sageset/base.apk\n' },
   });
   assert.deepEqual(ready.map((check) => check.status), ['passed', 'passed']);
+});
+
+test('doctor rejects Firebase CLI 15 when resolved Java is below 21', () => {
+  if (process.platform !== 'win32') return;
+  const fs = require('node:fs');
+  const os = require('node:os');
+  const path = require('node:path');
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'worksideqa-toolchain-'));
+  const firebase = path.join(root, 'firebase.cmd');
+  const java = path.join(root, 'java.cmd');
+  fs.writeFileSync(firebase, '@echo off\r\necho 15.23.0\r\n', 'utf8');
+  fs.writeFileSync(java, '@echo off\r\necho openjdk version "17.0.15"\r\n', 'utf8');
+  try {
+    const checks = checkTools({
+      ...process.env,
+      PATH: '', Path: '',
+      WORKSIDEQA_FIREBASE_BIN: firebase,
+      WORKSIDEQA_JAVA_BIN: java,
+    }, { offline: false });
+    const compatibility = checks.find((check) => check.id === 'tool.firebase-java-compat');
+    assert.equal(compatibility.status, 'failed');
+    assert.match(compatibility.message, /Java 21/i);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
 });

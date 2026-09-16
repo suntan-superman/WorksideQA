@@ -14,6 +14,23 @@ Double-click `Start-Mobile-QA.bat`, then choose:
 
 For an explicit command, run `powershell -ExecutionPolicy Bypass -File .\start-mobile-qa.ps1 -Product merxus` from WorksideQA. The ignored `.maestro.local.ps1` is loaded by the canonical Node config loader; passwords are never printed.
 
+## Windows toolchain prerequisites
+
+WorksideQA resolves Firebase and Java centrally and requires an explicit local
+Firebase pin so a reboot cannot switch between Yarn/NVM installations. Set
+`WORKSIDEQA_FIREBASE_BIN` in the ignored `.maestro.local.ps1` (the example uses
+`%NVM_SYMLINK%\firebase.cmd`) and set `WORKSIDEQA_JAVA_BIN`/`JAVA_HOME` to a
+JDK 21 LTS installation. Doctor reports the resolved executable and version and
+fails before startup when a Firebase CLI that requires Java 21 is paired with
+Java 17 or older. Do not downgrade Firebase to work around an old JDK; install
+JDK 21 and update only the ignored local configuration.
+
+If JDK 21 is not installed, install it explicitly (then reopen PowerShell):
+
+```powershell
+winget install --id EclipseAdoptium.Temurin.21.JDK -e
+```
+
 ## Quick start — Mac
 
 ```bash

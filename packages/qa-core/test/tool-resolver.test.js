@@ -68,6 +68,23 @@ test('Windows resolver evaluates later where.exe hits when an earlier shim is br
   fs.rmSync(root, { recursive: true, force: true });
 });
 
+test('Windows Firebase resolution is deterministic across multiple installed versions', () => {
+  if (process.platform !== 'win32') return;
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'worksideqa-firebase-versions-'));
+  const oldDir = path.join(root, 'old');
+  const newDir = path.join(root, 'new');
+  fs.mkdirSync(oldDir); fs.mkdirSync(newDir);
+  fs.writeFileSync(path.join(oldDir, 'firebase.cmd'), '@echo off\r\necho 14.19.1\r\n', 'utf8');
+  fs.writeFileSync(path.join(newDir, 'firebase.cmd'), '@echo off\r\necho 15.23.0\r\n', 'utf8');
+  try {
+    const env = { ...process.env, PATH: `${oldDir}${path.delimiter}${newDir}`, Path: '', USERPROFILE: root, LOCALAPPDATA: root, APPDATA: root };
+    const result = resolveTool('firebase', env);
+    assert.equal(path.normalize(result.path), path.normalize(path.join(newDir, 'firebase.cmd')));
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test('resolver does not retain a negative result after the environment changes', () => {
   const missing = resolveTool('firebase', { PATH: '', Path: '', USERPROFILE: path.join(os.tmpdir(), 'worksideqa-no-firebase') });
   assert.equal(missing.path, null);

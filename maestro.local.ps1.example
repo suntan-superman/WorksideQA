@@ -2,6 +2,12 @@
 # C:\Users\sjroy\Source\WorksideQA\.maestro.local.ps1
 # DO NOT COMMIT THE REAL .maestro.local.ps1
 
+# Windows toolchain pins (required for deterministic launcher behavior). These
+# values are machine-local paths, not credentials; use environment expansion so
+# the file remains portable between supported installations.
+$env:WORKSIDEQA_FIREBASE_BIN = "%NVM_SYMLINK%\firebase.cmd"
+$env:WORKSIDEQA_JAVA_BIN = "<SET LOCALLY: JDK 21 bin\java.exe>"
+
 $env:MERXUS_BACKEND_REPO = "C:\Users\sjroy\Source\Merxus\merxus-ai-backend"
 $env:MERXUS_MAESTRO_OWNER_A_EMAIL = "owner-a@merxus-maestro.test"
 $env:MERXUS_MAESTRO_OWNER_A_PASSWORD = "<SET LOCALLY: canonical QA password>"
