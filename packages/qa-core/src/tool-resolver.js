@@ -81,6 +81,20 @@ function existingPathCandidates(command, env) {
   return [...new Set(candidates)];
 }
 
+// POSIX shells can return a stale shim (for example a Volta-managed path)
+// from `command -v` even after its target has been removed. Enumerate PATH
+// entries ourselves so a child process receives a real executable path rather
+// than trusting that first shell result.
+function posixPathCandidates(command, env) {
+  const pathValue = String(env.PATH || env.Path || env.path || '');
+  const candidates = [];
+  for (const directory of pathValue.split(path.delimiter).map((value) => value.trim()).filter(Boolean)) {
+    const candidate = path.resolve(expandPath(path.join(directory, command), env));
+    if (fs.existsSync(candidate)) candidates.push(candidate);
+  }
+  return [...new Set(candidates)];
+}
+
 function pathLookup(command, env) {
   if (process.platform === 'win32') {
     // Prefer executable shims over extensionless Unix companion files that
@@ -128,12 +142,16 @@ function pathLookup(command, env) {
     }
     return runnable[0] || null;
   }
+  const pathCandidates = posixPathCandidates(command, env);
+  const pathRunnable = pathCandidates.filter((candidate) => commandRuns(candidate, env));
+  if (pathRunnable.length) return pathRunnable[0];
   const where = spawnCommandSync('sh', ['-lc', `command -v -- "$1"`, 'worksideqa', command], {
     env, encoding: 'utf8', timeout: 5000, windowsHide: true,
     stdio: ['ignore', 'pipe', 'ignore'],
   });
   const first = String(where.stdout || '').trim().split(/\r?\n/).find(Boolean);
-  return first && commandRuns(first, env) ? first : (commandRuns(command, env) ? command : null);
+  if (first && fs.existsSync(first) && commandRuns(first, env)) return first;
+  return commandRuns(command, env) ? command : null;
 }
 
 function fallbackCandidates(name, env) {
@@ -226,4 +244,5 @@ module.exports = {
   compareVersions,
   windowsCommandNames,
   existingPathCandidates,
+  posixPathCandidates,
 };

@@ -3,7 +3,7 @@ const test = require('node:test');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { expandPath, resolveTool, canonicalizeToolEnvironment } = require('../src/tool-resolver');
+const { expandPath, resolveTool, canonicalizeToolEnvironment, posixPathCandidates } = require('../src/tool-resolver');
 
 test('tool resolver expands environment-based local overrides', () => {
   const env = { USERPROFILE: 'C:\\Users\\qa', WORKSIDEQA_FIREBASE_BIN: '%USERPROFILE%\\tools\\firebase.cmd' };
@@ -106,6 +106,20 @@ test('root-relative Firebase template is normalized before child-process handoff
     });
     assert.equal(path.normalize(normalized.WORKSIDEQA_FIREBASE_BIN), path.normalize(firebase));
     assert.ok(path.isAbsolute(normalized.WORKSIDEQA_FIREBASE_BIN));
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('POSIX PATH resolution ignores stale entries and finds a later executable', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'worksideqa-posix-path-'));
+  const staleDir = path.join(root, 'stale');
+  const validDir = path.join(root, 'valid');
+  fs.mkdirSync(staleDir); fs.mkdirSync(validDir);
+  fs.writeFileSync(path.join(validDir, 'firebase'), '#!/bin/sh\nprintf 15.30.0\n', 'utf8');
+  try {
+    const candidates = posixPathCandidates('firebase', { PATH: `${staleDir}${path.delimiter}${validDir}` });
+    assert.deepEqual(candidates, [path.resolve(validDir, 'firebase')]);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
