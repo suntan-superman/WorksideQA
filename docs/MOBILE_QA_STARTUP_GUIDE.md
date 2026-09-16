@@ -73,9 +73,10 @@ This starts nothing, resets no fixtures, and reports PASS/FAIL for tools, paths,
 * **Simulator/emulator not booted:** `qa:start` automatically starts the configured Windows AVD and waits for ADB/boot completion. Set `MERXUS_ANDROID_AVD_NAME` or `SAGESET_ANDROID_AVD_NAME` in the ignored `.maestro.local.ps1` when multiple AVDs are installed. No arbitrary device is selected. If boot times out, inspect the reported AVD log, SDK/emulator path, serial, and ADB state.
 * **Incompatible Android device:** an unexpected device is never killed or adopted. Remove the conflict manually, or correct the configured serial/AVD values, then rerun the launcher.
 * **App not installed:** SageSet requires the QA build `com.workside.sageset` on
-  the configured emulator. WorksideQA fails closed when it is absent and never
-  substitutes the production `com.sageset.fitness` package; install/build the
-  SageSet Maestro app using the SageSet Mobile QA workflow, then rerun Doctor.
+  the configured emulator. `qa:start -- --product sageset` invokes the
+  product-owned `npm run android:maestro` build/install contract when it is
+  absent, then verifies the exact package. WorksideQA never substitutes the
+  production `com.sageset.fitness` package.
 * **Backend unavailable:** check the product backend path and health output.
 * **Maestro/Java unavailable:** run Doctor; its central resolver reports the exact missing tool and supported fallback.
 

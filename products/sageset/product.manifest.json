@@ -127,6 +127,13 @@
         "appId": "com.workside.sageset"
       }
     },
+    "applicationBuild": {
+      "platform": "android",
+      "command": "npm",
+      "args": ["run", "android:maestro"],
+      "workingDirectoryEnvKey": "SAGESET_MOBILE_REPO",
+      "appId": "com.workside.sageset"
+    },
     "fixtures": {
       "owner": "sageset",
       "command": "npm",

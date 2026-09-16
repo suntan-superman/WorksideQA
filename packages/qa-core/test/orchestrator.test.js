@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { parseArgs, serviceDefinitions, commandMatches, canonicalMerxusMetroEnvironment, waitForServiceReady, assertPortsAvailable, fixtureCommands, spawnService, reconcileRecord, terminateRecord, stopProduct, processTreeMetadata, normalizeProcessInfo, processInfoWithRetry } = require('../src/orchestrator');
+const { parseArgs, serviceDefinitions, commandMatches, canonicalMerxusMetroEnvironment, waitForServiceReady, assertPortsAvailable, fixtureCommands, spawnService, reconcileRecord, terminateRecord, stopProduct, processTreeMetadata, normalizeProcessInfo, processInfoWithRetry, ensureAndroidQaApplication } = require('../src/orchestrator');
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -57,6 +57,49 @@ test('SageSet startup definition uses emulator-only services and functions readi
   assert.deepEqual(definitions[0].ports, [9099, 8080, 9199, 5001]);
   assert.deepEqual(definitions[0].args.slice(0, 5), ['emulators:start', '--project', 'sageset-maestro-local', '--config', 'firebase.json']);
   assert.ok(definitions[0].args.some((arg) => String(arg).includes('functions')));
+});
+
+test('SageSet manifest declares the product-owned Android QA build contract', () => {
+  const manifest = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'products', 'sageset', 'product.manifest.json'), 'utf8'));
+  assert.deepEqual(manifest.mobile.applicationBuild, {
+    platform: 'android',
+    command: 'npm',
+    args: ['run', 'android:maestro'],
+    workingDirectoryEnvKey: 'SAGESET_MOBILE_REPO',
+    appId: 'com.workside.sageset',
+  });
+});
+
+test('SageSet Android QA app is reused when already installed', () => {
+  const calls = [];
+  const result = ensureAndroidQaApplication('sageset', {
+    SAGESET_ANDROID_EMULATOR_ID: 'emulator-5554',
+    SAGESET_MAESTRO_ANDROID_APP_ID: 'com.workside.sageset',
+  }, {
+    platform: 'win32', adbPath: 'adb.exe', npmPath: 'npm.cmd',
+    execute: (command, args) => { calls.push({ command, args }); return { status: 0, stdout: 'package:/data/app/com.workside.sageset/base.apk' }; },
+  });
+  assert.equal(result.reused, true);
+  assert.equal(calls.length, 1);
+});
+
+test('SageSet Android QA app build runs only when the exact QA package is missing', () => {
+  const calls = [];
+  const result = ensureAndroidQaApplication('sageset', {
+    SAGESET_ANDROID_EMULATOR_ID: 'emulator-5554',
+    SAGESET_MAESTRO_ANDROID_APP_ID: 'com.workside.sageset',
+    SAGESET_MOBILE_REPO: 'C:\\SageSet\\mobile',
+  }, {
+    platform: 'win32', adbPath: 'adb.exe', npmPath: 'npm.cmd', buildStdio: 'ignore',
+    execute: (command, args) => {
+      calls.push({ command, args });
+      return calls.length === 1 ? { status: 1, stdout: '' } : { status: 0, stdout: 'package:/data/app/com.workside.sageset/base.apk' };
+    },
+  });
+  assert.equal(result.built, true);
+  assert.equal(calls[1].command, 'npm.cmd');
+  assert.deepEqual(calls[1].args, ['run', 'android:maestro']);
+  assert.ok(calls[2].args.includes('path'));
 });
 
 test('ownership matching rejects unrelated recorded PIDs on Windows semantics', () => {

@@ -496,6 +496,75 @@ function runFixtureCommand(product, env, args) {
   });
 }
 
+function readProductManifest(product) {
+  const manifestPath = fromRoot('products', product, 'product.manifest.json');
+  try {
+    return JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  } catch (error) {
+    throw new Error(`Cannot read ${product} product manifest at ${manifestPath}: ${error.message}`);
+  }
+}
+
+/**
+ * Ensure a product's required Android QA application is installed. The build
+ * command belongs to the product repository; WorksideQA only orchestrates it
+ * and verifies the exact QA application ID afterwards. This is intentionally
+ * a no-op outside Windows, where the existing iOS/macOS workflows own app
+ * installation separately.
+ */
+function ensureAndroidQaApplication(product, env, options = {}) {
+  if (product !== 'sageset' || (options.platform || process.platform) !== 'win32') {
+    return { ready: true, skipped: true, reason: 'not a Windows SageSet Android run' };
+  }
+  const deviceId = String(env.SAGESET_ANDROID_EMULATOR_ID || '').trim();
+  if (!deviceId) return { ready: false, skipped: true, reason: 'SageSet Android emulator is not configured' };
+  const adb = options.adbPath || resolveCommand('adb', env) || 'adb.exe';
+  const execute = options.execute || spawnCommandSync;
+  const appId = String(env.SAGESET_MAESTRO_ANDROID_APP_ID || 'com.workside.sageset').trim();
+  const checkInstalled = () => execute(adb, ['-s', deviceId, 'shell', 'pm', 'path', appId], {
+    env, encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'],
+  });
+  const initial = checkInstalled();
+  if (!initial.error && initial.status === 0 && String(initial.stdout || '').includes('package:')) {
+    process.stdout.write(`SageSet QA app: REUSE (${appId})\n`);
+    return { ready: true, reused: true, appId, deviceId };
+  }
+
+  const manifest = readProductManifest(product);
+  const build = manifest.mobile?.applicationBuild;
+  if (!build || build.platform !== 'android' || !Array.isArray(build.args)) {
+    throw new Error(`SageSet QA application ${appId} is not installed and no Android QA build contract is present in the product manifest.`);
+  }
+  if (String(build.appId || '').trim() !== appId) {
+    throw new Error(`SageSet QA build contract app ID ${build.appId || '(missing)'} does not match configured ${appId}.`);
+  }
+  const mobileRoot = path.resolve(env[build.workingDirectoryEnvKey] || env.SAGESET_MOBILE_REPO || path.join(DEFAULTS.sagesetRoot, 'mobile'));
+  const command = String(build.command || '').trim();
+  const executable = command === 'npm'
+    ? (options.npmPath || resolveCommand('npm', env) || (process.platform === 'win32' ? 'npm.cmd' : 'npm'))
+    : command;
+  if (!executable) throw new Error(`SageSet QA application build command is unavailable (${command || 'missing command'}).`);
+  process.stdout.write(`SageSet QA app: NOT INSTALLED (${appId})\n`);
+  process.stdout.write(`Building SageSet Android QA app with ${executable} ${build.args.join(' ')}...\n`);
+  const buildResult = execute(executable, build.args.map(String), {
+    cwd: mobileRoot,
+    env: { ...env, EXPO_PUBLIC_APP_ENV: 'maestro' },
+    encoding: 'utf8',
+    timeout: Number(options.buildTimeoutMs || 15 * 60 * 1000),
+    windowsHide: false,
+    stdio: options.buildStdio || 'inherit',
+  });
+  if (buildResult?.error || buildResult?.status !== 0) {
+    throw new Error(`SageSet Android QA build failed (exit ${buildResult?.status == null ? '(none)' : buildResult.status}). Run ${command || 'the product build command'} in ${mobileRoot} and inspect the build output.`);
+  }
+  const installed = checkInstalled();
+  if (installed.error || installed.status !== 0 || !String(installed.stdout || '').includes('package:')) {
+    throw new Error(`SageSet Android QA build completed but ${appId} is still not installed on ${deviceId}. The production app ID was not substituted.`);
+  }
+  process.stdout.write(`SageSet QA app: READY (${appId})\n`);
+  return { ready: true, built: true, appId, deviceId, mobileRoot };
+}
+
 function fixtureFailure(product, stage, generation, outcome) {
   const output = `${String(outcome?.stdout || '')}\n${String(outcome?.stderr || '')}`.trim();
   const lines = output.split(/\r?\n/).filter(Boolean).slice(-8).join('\n');
@@ -892,6 +961,7 @@ async function startProduct(product) {
   // It is a no-op on macOS/Linux so iOS and other platform flows retain their
   // existing startup behavior.
   const android = await ensureAndroidEmulator({ product, env, adbPath: tools.adb.path });
+  await ensureAndroidQaApplication(product, env, { adbPath: tools.adb.path, npmPath: tools.npm.path });
   if (product === 'merxus' && !android.skipped) {
     const device = String(env.MERXUS_ANDROID_EMULATOR_ID || '').trim();
     const adb = tools.adb.path;
@@ -1088,4 +1158,5 @@ module.exports = {
   terminateRecord,
   verifiedProcessTreePids,
   ensureAndroidEmulator,
+  ensureAndroidQaApplication,
 };
