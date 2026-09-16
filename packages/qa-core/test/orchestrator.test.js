@@ -99,6 +99,16 @@ test('stale runtime state with no live tree and free ports is reconciled', () =>
   assert.equal(result.stale, true);
 });
 
+test('normalizes an unknown port-owner value and reconciles reboot-stale state', () => {
+  const record = {
+    pid: 100, rootPid: 100, service: 'firebase', executable: 'firebase.cmd', args: ['emulators:start'], ports: [9099],
+    processTree: [{ pid: 100, executable: 'firebase.cmd', commandLine: 'firebase.cmd emulators:start', startedAt: 'old' }],
+  };
+  const result = reconcileRecord(record, () => 'unknown', () => null, () => false);
+  assert.equal(result.state, 'STALE');
+  assert.deepEqual(result.portOwners, [{ port: 9099, pid: null }]);
+});
+
 test('reconciles a reused recorded PID as stale when all expected ports are free', () => {
   const record = {
     pid: 100, rootPid: 100, service: 'firebase', executable: 'firebase.cmd', args: ['emulators:start'], ports: [9099, 8080, 9199],

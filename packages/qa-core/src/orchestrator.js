@@ -186,10 +186,20 @@ function processIdentityMatches(expected, actual) {
   if (!expected || !actual || Number(expected.pid) !== Number(actual.pid)) return false;
   // CreationDate protects against accepting a recycled PID.  A missing value
   // is tolerated only for legacy records created before metadata was stored.
+  // For modern records, an uninspectable live PID is not safe to adopt: it may
+  // have been reused by an unrelated process.
+  if (expected.startedAt && !actual.startedAt) return false;
   if (expected.startedAt && actual.startedAt && String(expected.startedAt) !== String(actual.startedAt)) return false;
+  if (expected.executable && !actual.executable) return false;
   if (expected.executable && actual.executable && normalizedCommand(expected.executable) !== normalizedCommand(actual.executable)) return false;
+  if (expected.commandLine && !actual.commandLine) return false;
   if (expected.commandLine && actual.commandLine && normalizedCommand(expected.commandLine) !== normalizedCommand(actual.commandLine)) return false;
   return true;
+}
+
+function concretePid(value) {
+  const pid = Number(value);
+  return Number.isInteger(pid) && pid > 0 ? pid : null;
 }
 
 function reconcileRecord(record, ownerResolver = portOwner, infoResolver = processInfo, aliveResolver = pidAlive) {
@@ -203,7 +213,9 @@ function reconcileRecord(record, ownerResolver = portOwner, infoResolver = proce
     return processIdentityMatches(expected, actual) ? { ...expected, ...actual, pid } : { mismatch: true, expected, actual };
   }).filter(Boolean);
   const mismatched = currentTree.find((item) => item.mismatch);
-  const portOwners = (record.ports || record.port ? (record.ports || [record.port]) : []).map((port) => ({ port, pid: ownerResolver(port) }));
+  // Normalize malformed resolver values so stale metadata can never turn an
+  // informational value such as "unknown" into a phantom live collision.
+  const portOwners = (record.ports || record.port ? (record.ports || [record.port]) : []).map((port) => ({ port, pid: concretePid(ownerResolver(port)) }));
   const known = new Map(currentTree.filter((item) => !item.mismatch).map((item) => [Number(item.pid), item]));
   const foreign = portOwners.find((item) => item.pid && !known.has(Number(item.pid)) && Number(item.pid) !== Number(record.pid));
   // Persisted records can outlive their processes (for example after a
