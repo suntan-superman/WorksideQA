@@ -392,14 +392,16 @@ async function checkMobileRuntime(env, options) {
           launchUri, expectedActivity: 'com.sageset.fitness.MainActivity', metroPort: Number(metro?.port || 8081),
           flowPath: path.join(WORKSIDEQA_ROOT, 'packages', 'qa-core', 'src', 'rendered-runtime-flows', 'sageset-root.yaml'),
           readySelectors: ['screen.auth.login', 'screen.today.ready'], product: 'sageset', env,
+          observerRunId: options.observerRunId,
           timeoutMs: Number(env.WORKSIDEQA_RENDERED_RUNTIME_TIMEOUT_MS || DEFAULT_TIMEOUT_MS),
           artifactDirectory: path.join(WORKSIDEQA_ROOT, '.worksideqa', 'rendered-runtime', `sageset-${new Date().toISOString().replace(/[:.]/g, '-')}`),
         })
         : { ok: false, reason: 'CONFIGURATION_MISSING', elapsedMs: 0 };
     } catch (error) { rendered = { ok: false, reason: 'PROBE_ERROR', error: error.message, elapsedMs: 0 }; }
+    const observerOwner = rendered.observerLock?.owner?.pid ? `; observerOwnerPid=${rendered.observerLock.owner.pid}` : '';
     checks.push(rendered.ok
       ? result('passed', 'mobile.runtime-rendered', `SageSet application rendered ${rendered.readySelector} (PID ${rendered.appPid || 'unknown'}) in ${rendered.elapsedMs}ms.`, rendered)
-      : result('failed', 'mobile.runtime-rendered', `SageSet QA APK is not rendered (${rendered.reason || 'unknown'}); launcher screen alone is insufficient.`, rendered));
+      : result('failed', 'mobile.runtime-rendered', `SageSet QA APK is not rendered (${rendered.reason || 'unknown'}); launcher screen alone is insufficient.${observerOwner}`, rendered));
     return checks;
   }
   const tool = path.join(WORKSIDEQA_ROOT, 'packages', 'qa-mobile', 'src', 'merxus-mobile-runtime.js');
@@ -443,6 +445,7 @@ async function checkMobileRuntime(env, options) {
         ? await waitForRenderedRuntime({
           adb, maestro, deviceId, appId: device.appId || manifest.mobile.appId,
           launchUri: device.launchUri,
+          observerRunId: options.observerRunId,
           env,
           timeoutMs: Number(env.WORKSIDEQA_RENDERED_RUNTIME_TIMEOUT_MS || DEFAULT_TIMEOUT_MS),
           artifactDirectory: path.join(WORKSIDEQA_ROOT, '.worksideqa', 'rendered-runtime', new Date().toISOString().replace(/[:.]/g, '-')),
@@ -459,9 +462,10 @@ async function checkMobileRuntime(env, options) {
       .split(/\r?\n/)
       .find((line) => /(?:m?ResumedActivity|topResumedActivity|mFocusedApp|topDisplayFocusedRootTask)/i.test(line))
       || 'unknown';
+    const observerOwner = rendered.observerLock?.owner?.pid ? `; observerOwnerPid=${rendered.observerLock.owner.pid}` : '';
     checks.push(rendered.ok
       ? result('passed', 'mobile.runtime-rendered', `QA app rendered ${rendered.readySelector} (PID ${rendered.appPid || 'unknown'}) in ${rendered.elapsedMs}ms; launch=${rendered.launchStartedAt}, qaRoot=${rendered.qaRootReadyAt}, appReady=${rendered.appReadyAt}.`, rendered)
-      : result('failed', 'mobile.runtime-rendered', `QA app did not reach rendered readiness (${rendered.reason || 'unknown'}); qaRootSeen=${rendered.qaRootSeen ?? 'unknown'}; lastKnownSelector=${rendered.lastKnownSelector || 'unknown'}; foregroundActivity=${foregroundSummary}; appPid=${rendered.appPid || 'unknown'}; intermediate=${rendered.intermediateStateKind || 'unknown'}; elapsed=${rendered.elapsedMs}ms${launchSummary}${rendered.diagnosticArtifacts?.hierarchyPath ? `; hierarchy=${rendered.diagnosticArtifacts.hierarchyPath}` : ''}.`, rendered));
+      : result('failed', 'mobile.runtime-rendered', `QA app did not reach rendered readiness (${rendered.reason || 'unknown'}); qaRootSeen=${rendered.qaRootSeen ?? 'unknown'}; lastKnownSelector=${rendered.lastKnownSelector || 'unknown'}; foregroundActivity=${foregroundSummary}; appPid=${rendered.appPid || 'unknown'}; intermediate=${rendered.intermediateStateKind || 'unknown'}; elapsed=${rendered.elapsedMs}ms${launchSummary}${rendered.diagnosticArtifacts?.hierarchyPath ? `; hierarchy=${rendered.diagnosticArtifacts.hierarchyPath}` : ''}${observerOwner}.`, rendered));
   }
   return checks;
 }

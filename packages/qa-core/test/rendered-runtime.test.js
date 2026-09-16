@@ -516,3 +516,78 @@ test('failed observer with lingering instrumentation is classified as an observe
   assert.equal(fs.existsSync(lockPath), false);
   fs.rmSync(directory, { recursive: true, force: true });
 });
+
+test('same launcher observer calls serialize and reuse the completed result', async () => {
+  let flowStarted = 0;
+  let releaseFlow;
+  const flowGate = new Promise((resolve) => { releaseFlow = resolve; });
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'worksideqa-same-run-'));
+  const options = readinessOptions({
+    observerRunId: 'same-launcher-run',
+    observerLockPath: path.join(directory, 'observer.lock'),
+    runFlowImplementation: async () => {
+      flowStarted += 1;
+      await flowGate;
+      return { ok: true, code: 0, signal: null, output: '' };
+    },
+    readHierarchy: () => '<node resource-id="qa-environment-root"/><node resource-id="screen.auth.login"/>',
+  });
+  const first = waitForRenderedRuntime(options);
+  // Let the first invocation acquire the lock and enter its observer before
+  // starting the second invocation.
+  await new Promise((resolve) => setImmediate(resolve));
+  const second = waitForRenderedRuntime(options);
+  releaseFlow();
+  const [firstResult, secondResult] = await Promise.all([first, second]);
+  assert.equal(firstResult.ok, true);
+  assert.equal(secondResult.ok, true);
+  assert.equal(secondResult.reused, true);
+  assert.equal(flowStarted, 1);
+  const completedReuse = await waitForRenderedRuntime(options);
+  assert.equal(completedReuse.ok, true);
+  assert.equal(completedReuse.reused, true);
+  assert.equal(flowStarted, 1);
+  fs.rmSync(directory, { recursive: true, force: true });
+});
+
+test('transient pre-existing instrumentation is reconciled within a bounded window', async () => {
+  let snapshots = 0;
+  const report = await waitForRenderedRuntime(readinessOptions({
+    observerReconcileMs: 25,
+    observerProcessSnapshot: () => {
+      snapshots += 1;
+      return snapshots === 1
+        ? { hostProcesses: [], deviceProcesses: ['dev.mobile.maestro.test'], activeDriverProcesses: ['dev.mobile.maestro.test'] }
+        : { hostProcesses: [], deviceProcesses: [], activeDriverProcesses: [] };
+    },
+    readHierarchy: () => '<node resource-id="qa-environment-root"/><node resource-id="screen.auth.login"/>',
+  }));
+  assert.equal(report.ok, true);
+  assert.ok(snapshots >= 2);
+});
+
+test('same-run reuse still requires the app process and foreground marker', async () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'worksideqa-reuse-validity-'));
+  let appAlive = true;
+  let flowStarted = 0;
+  const reportOptions = readinessOptions({
+    observerRunId: 'reuse-validity-run',
+    observerLockPath: path.join(directory, 'observer.lock'),
+    runFlowImplementation: async () => {
+      flowStarted += 1;
+      return { ok: true, code: 0, signal: null, output: '' };
+    },
+    readHierarchy: () => '<node resource-id="qa-environment-root"/><node resource-id="screen.auth.login"/>',
+    readState: () => appAlive
+      ? { appPid: 4321, appForeground: true, launcherForeground: false, activityText: 'com.merxus.mobile.qa' }
+      : { appPid: null, appForeground: false, launcherForeground: false, activityText: '' },
+  });
+  const first = await waitForRenderedRuntime(reportOptions);
+  assert.equal(first.ok, true);
+  appAlive = false;
+  const second = await waitForRenderedRuntime(reportOptions);
+  assert.equal(second.ok, false);
+  assert.notEqual(second.reused, true);
+  assert.equal(flowStarted, 2);
+  fs.rmSync(directory, { recursive: true, force: true });
+});

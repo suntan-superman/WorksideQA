@@ -11,6 +11,9 @@ const ROOT = path.resolve(__dirname, '..', '..', '..');
 const FLOW_DIRECTORY = path.join(ROOT, 'packages', 'qa-core', 'src', 'rendered-runtime-flows');
 const DEFAULT_TIMEOUT_MS = 60_000;
 const DEFAULT_POLL_MS = 250;
+// Same-launcher observers share an in-process coordination map. Independent
+// CLI processes remain protected by the filesystem mutex.
+const activeObserverRuns = new Map();
 
 function readAppState(adb, deviceId, appId, execute = spawnCommandSync, env = process.env) {
   const pid = execute(adb, ['-s', deviceId, 'shell', 'pidof', appId], { env, encoding: 'utf8', timeout: 3000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
@@ -379,7 +382,7 @@ async function confirmLauncherForeground(readState, adb, deviceId, appId, execut
   return { confirmed: Boolean(second.launcherForeground), observations };
 }
 
-async function waitForRenderedRuntime(options = {}) {
+async function waitForRenderedRuntimeOnce(options = {}) {
   const {
     adb, maestro, deviceId, appId, launchUri,
     execute = spawnCommandSync, spawn = spawnCommand, terminate = terminateProcessTree, runFlowImplementation = runFlow,
@@ -416,26 +419,55 @@ async function waitForRenderedRuntime(options = {}) {
   if (!launch.ok) return { ...appReadinessFailure(launch.code || 'ADB_LAUNCH_FAILED', null, startedAt, timeoutMs, { probeEndMs: now(), launchDiagnostics: { preparation: launchPreparation, launch } }), error: launch.error || null };
   const observerStartedAt = now();
   const beforeObserver = readState(adb, deviceId, appId, execute, env);
-  const observerBudget = Math.max(0, deadline - now());
+  let observerBudget = Math.max(0, deadline - now());
   if (!observerBudget) return { ...appReadinessFailure('QA_ROOT_NOT_READY', beforeObserver, startedAt, timeoutMs, { probeEndMs: now(), observerFailureAt: new Date(now()).toISOString(), observerAttempts: [] }) };
-  const observerProcessesBefore = options.observerProcessSnapshot
-    ? options.observerProcessSnapshot('before')
-    : captureObserverProcesses(adb, deviceId, execute, env);
-  if (observerProcessesBefore?.activeDriverProcesses?.length) {
-    return { ...appReadinessFailure('OBSERVER_BUSY', beforeObserver, startedAt, timeoutMs, { probeEndMs: now(), observerProcessesBefore }) , error: 'A Maestro/UiAutomation process is already active.' };
-  }
   const lockPath = options.observerLockPath || path.join(ROOT, '.worksideqa', 'maestro-observer.lock');
   let observerLock;
   try {
     observerLock = options.acquireObserverLock
-      ? options.acquireObserverLock(lockPath, { product: options.product || appId, deviceId, appId, flow: path.basename(rootFlow) })
-      : acquireObserverLock(lockPath, { product: options.product || appId, deviceId, appId, flow: path.basename(rootFlow) });
+      ? options.acquireObserverLock(lockPath, { product: options.product || appId, deviceId, appId, flow: path.basename(rootFlow), observerRunId: options.observerRunId || null })
+      : acquireObserverLock(lockPath, { product: options.product || appId, deviceId, appId, flow: path.basename(rootFlow), observerRunId: options.observerRunId || null });
   } catch (error) {
     return { ...appReadinessFailure('OBSERVER_BUSY', beforeObserver, startedAt, timeoutMs, { probeEndMs: now(), observerLock: { path: lockPath, error: error.message } }), error: error.message };
   }
   if (!observerLock?.ok) {
     const error = observerLock.error || new Error('Maestro observer lock is busy.');
     return { ...appReadinessFailure('OBSERVER_BUSY', beforeObserver, startedAt, timeoutMs, { probeEndMs: now(), observerLock: { path: observerLock.path || lockPath, owner: observerLock.owner || null, error: error.message } }), error: error.message };
+  }
+  // Inspect device instrumentation only after ownership is established. A
+  // just-finished Maestro session can briefly outlive its host process; allow
+  // a small bounded reconciliation window, then fail closed if it remains.
+  let observerProcessesBefore = options.observerProcessSnapshot
+    ? options.observerProcessSnapshot('before')
+    : captureObserverProcesses(adb, deviceId, execute, env);
+  if (observerProcessesBefore?.activeDriverProcesses?.length) {
+    const reconcileMs = Math.max(0, Number(options.observerReconcileMs ?? 2000));
+    const reconcileDeadline = Math.min(deadline, now() + reconcileMs);
+    while (observerProcessesBefore?.activeDriverProcesses?.length && now() < reconcileDeadline) {
+      const remaining = reconcileDeadline - now();
+      if (remaining <= 0) break;
+      await sleep(Math.min(pollMs, remaining));
+      observerProcessesBefore = options.observerProcessSnapshot
+        ? options.observerProcessSnapshot('before-reconcile')
+        : captureObserverProcesses(adb, deviceId, execute, env);
+    }
+    if (observerProcessesBefore?.activeDriverProcesses?.length) {
+      observerLock.release();
+      return {
+        ...appReadinessFailure('OBSERVER_BUSY', beforeObserver, startedAt, timeoutMs, {
+          probeEndMs: now(), observerProcessesBefore,
+          observerReconciliation: { attempted: true, boundedMs: reconcileMs, cleared: false },
+        }),
+        error: 'A Maestro/UiAutomation process is already active.',
+      };
+    }
+  }
+  // Recompute the child budget after any bounded reconciliation so the one
+  // absolute readiness deadline remains authoritative.
+  observerBudget = Math.max(0, deadline - now());
+  if (!observerBudget) {
+    observerLock.release();
+    return { ...appReadinessFailure('QA_ROOT_NOT_READY', beforeObserver, startedAt, timeoutMs, { probeEndMs: now(), observerFailureAt: new Date(now()).toISOString(), observerAttempts: [] }) };
   }
   let root;
   try {
@@ -651,6 +683,44 @@ async function waitForRenderedRuntime(options = {}) {
   }
   failed.diagnosticArtifacts = captureFailureArtifacts({ artifactDirectory, adb, deviceId, execute, env, hierarchy: lastHierarchy, state });
   return failed;
+}
+
+/**
+ * Reuse an active rendered-runtime observation within one launcher execution.
+ * A caller opts in with observerRunId; independent Node processes continue to
+ * use the cross-process observer mutex and never adopt one another's result.
+ */
+async function waitForRenderedRuntime(options = {}) {
+  const runId = options.observerRunId;
+  if (!runId) return waitForRenderedRuntimeOnce(options);
+  const key = `${runId}|${options.product || options.appId || ''}|${options.deviceId || ''}|${options.appId || ''}`;
+  const active = activeObserverRuns.get(key);
+  if (active) {
+    const result = await active.promise;
+    if (result?.ok && options.validateObserverReuse !== false) {
+      const env = options.env || process.env;
+      const stateReader = options.readState || readAppState;
+      let state;
+      try { state = stateReader(options.adb, options.deviceId, options.appId, options.execute || spawnCommandSync, env); } catch { state = null; }
+      // A cached marker is valid only while the same app process remains
+      // foreground. If the app was replaced or backgrounded, discard the
+      // cache and create a fresh observer rather than weakening readiness.
+      if (!state?.appPid || (result.appPid && Number(state.appPid) !== Number(result.appPid)) || !state.appForeground || state.launcherForeground) {
+        if (activeObserverRuns.get(key)?.promise === active.promise) activeObserverRuns.delete(key);
+        return waitForRenderedRuntime(options);
+      }
+    }
+    return { ...result, reused: true };
+  }
+  const promise = waitForRenderedRuntimeOnce(options);
+  activeObserverRuns.set(key, { promise });
+  // Keep only a successful completed promise for the lifetime of the explicit
+  // run id. A later Doctor phase in the same launcher execution can consume a
+  // proven marker without creating a second UiAutomation session. Failed
+  // observations are not cached, so a caller may retry after reconciliation.
+  const result = await promise;
+  if (!result?.ok && activeObserverRuns.get(key)?.promise === promise) activeObserverRuns.delete(key);
+  return result;
 }
 
 module.exports = { DEFAULT_TIMEOUT_MS, readAppState, readUiHierarchy, readUiHierarchyResult, hierarchySummary, captureObserverProcesses, verifyLaunchTarget, prepareApplicationLaunch, startApplication, runFlow, waitForRenderedRuntime, inferFlowReadiness };

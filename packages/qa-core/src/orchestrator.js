@@ -895,6 +895,7 @@ function assertPortsAvailable(definition, existingRecord, ownerResolver = portOw
 }
 
 async function startProduct(product) {
+  const observerRunId = `${product}-${Date.now()}-${process.pid}`;
   const local = parsePowerShellConfig(DEFAULTS.localConfig);
   const initialEnv = mergedEnvironment(local);
   const tools = resolveTools(initialEnv);
@@ -1073,7 +1074,7 @@ async function startProduct(product) {
     if (reverse.error || reverse.status !== 0) throw new Error(`ADB reverse setup failed for ${device}.`);
     process.stdout.write(`Ready ${product}/android-reverse tcp:${metroPort} -> tcp:${metroPort} (${device})\n`);
   }
-  const finalCheck = await runDoctor({ product, strict: true, environment: env, localConfig: local, tools });
+  const finalCheck = await runDoctor({ product, strict: true, environment: env, localConfig: local, tools, observerRunId });
   if (finalCheck.status === 'FAIL') {
     const failedCleanup = [];
     for (const record of started) {
