@@ -14,7 +14,7 @@ assert.deepEqual(integrationConfig({
   account: 'user-b', method: 'PATCH', readPath: '/api/sms/settings', mutationPath: '/api/sms/settings',
   field: 'notificationRetryMaxAttempts', before: 2, after: 3,
 });
-assert.throws(() => integrationConfig({ iosIntegration: { method: 'PATCH', readPath: '/api/sms/settings', mutationPath: '/api/sms/settings', field: 'dailyDigestTime', before: 2, after: 3 } }), /retry max 2 to 3/);
+assert.throws(() => integrationConfig({ iosIntegration: { account: 'user-b', method: 'PATCH', readPath: '/api/sms/settings', mutationPath: '/api/sms/settings', field: 'dailyDigestTime', before: 2, after: 3 } }), /retry max 2 to 3/);
 assert.deepEqual(safeJsonOutput('npm preamble\n{"ok":true,"generation":"g"}\n'), { ok: true, generation: 'g' });
 assert.throws(() => safeJsonOutput('no result'), /no JSON/);
 
