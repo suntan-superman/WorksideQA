@@ -11,6 +11,7 @@ const readline = require('node:readline');
 const { spawnSync } = require('node:child_process');
 const { fromRoot } = require('../../qa-utils/src');
 const { loadLocalQaConfig } = require('./local-config');
+const { canonicalizeToolEnvironment } = require('./tool-resolver');
 
 const CONFIG_PATH = fromRoot('configs', 'mobile-qa-environments.json');
 const LAUNCH_COMMAND_TIMEOUT_MS = 10 * 60 * 1000;
@@ -53,7 +54,7 @@ function runCommand(args, options = {}) {
   const executable = commandFor(command, options.platform);
   return spawnSync(commandFor(command, options.platform), commandArgs, {
     cwd: options.cwd || fromRoot(),
-    env: options.env || process.env,
+    env: canonicalizeToolEnvironment(options.env || process.env),
     encoding: 'utf8',
     stdio: options.stdio || 'inherit',
     timeout: Number(options.timeoutMs || LAUNCH_COMMAND_TIMEOUT_MS),
@@ -101,7 +102,7 @@ function runDoctor(product) {
   return runCommand(['npm', 'run', 'qa:doctor', '--', '--product', product, '--strict'], { timeoutMs: LAUNCH_COMMAND_TIMEOUT_MS });
 }
 
-function startProduct(config, product, runner = runCommand) {
+function startProduct(config, product, runner = runCommand, environment = process.env) {
   const item = config.products[product];
   printInventory(config, product);
   process.stdout.write(`\nStarting ${item.displayName}; healthy WorksideQA-owned services are reused by qa:start.\n`);
@@ -110,7 +111,10 @@ function startProduct(config, product, runner = runCommand) {
   // second Doctor here would create a second rendered-app/UiAutomation probe,
   // needlessly duplicate the cold-start wait, and can leave the launcher
   // appearing hung while the environment is already healthy.
-  const started = runner(item.startCommand, { timeoutMs: LAUNCH_COMMAND_TIMEOUT_MS });
+  const started = runner(item.startCommand, {
+    timeoutMs: LAUNCH_COMMAND_TIMEOUT_MS,
+    env: canonicalizeToolEnvironment(environment),
+  });
   if (started.error?.code === 'ETIMEDOUT' || started.signal) {
     process.stderr.write(`\n${item.displayName} startup command timed out before returning (timeout=${LAUNCH_COMMAND_TIMEOUT_MS}ms).\n`);
     return 1;

@@ -14,7 +14,7 @@ const net = require('node:net');
 const { spawnCommandSync } = require('../../qa-utils/src');
 const { fromRoot, fileExists } = require('../../qa-utils/src');
 const { loadProductManifest, validateManifest } = require('../../qa-config/src');
-const { resolveTool, resolveTools, toolVersion } = require('./tool-resolver');
+const { resolveTool, resolveTools, toolVersion, canonicalizeToolEnvironment } = require('./tool-resolver');
 const { DEFAULT_LOCAL_CONFIG_PATH, parsePowerShellConfig } = require('./local-config');
 const { waitForRenderedRuntime, DEFAULT_TIMEOUT_MS } = require('./rendered-runtime');
 const { configuredDevice } = require('./android-emulator');
@@ -83,7 +83,11 @@ function mergedEnvironment(localConfig) {
   env.SAGESET_MAESTRO_ENVIRONMENT = env.SAGESET_MAESTRO_ENVIRONMENT || 'emulator';
   env.SAGESET_MAESTRO_FIREBASE_PROJECT_ID = env.SAGESET_MAESTRO_FIREBASE_PROJECT_ID || 'sageset-maestro-local';
   env.SAGESET_MAESTRO_ALLOW_EXTERNAL_NOTIFICATIONS = env.SAGESET_MAESTRO_ALLOW_EXTERNAL_NOTIFICATIONS || 'false';
-  return env;
+  // Resolve machine-local tool templates once, before this environment is
+  // passed to qa:start or any nested Doctor process. This prevents a CMD /
+  // PowerShell placeholder from becoming a root-relative path such as
+  // `\\nodejs\\firebase.cmd` in a child process.
+  return canonicalizeToolEnvironment(env);
 }
 
 function commandVersion(command, env) {
@@ -248,7 +252,11 @@ function checkManifests(product = 'all') {
 
 function checkTools(env, options = {}) {
   const checks = [];
-  const tools = resolveTools(env);
+  // qa:start passes the exact resolver result used to launch services. Reuse
+  // it for the final Doctor in that same run so a transient Windows process
+  // lookup cannot select a different executable (or reject the already-used
+  // Firebase shim) during post-start validation.
+  const tools = options.tools || resolveTools(env);
   const versions = {};
   for (const name of ['node', 'npm', 'firebase', 'adb', 'maestro', 'java']) {
     const resolved = tools[name];

@@ -87,6 +87,24 @@ function pathLookup(command, env) {
     // Yarn/npm may place beside them. This is important when the resolved
     // path is passed directly to child_process on Windows.
     const candidates = windowsCommandNames(command);
+    // Enumerating PATH directly is deterministic and avoids repeatedly
+    // spawning where.exe when a child process has a reduced PATH. where.exe
+    // remains a fallback for installs that are discoverable only through the
+    // Windows command resolver.
+    const pathCandidates = existingPathCandidates(command, env);
+    // On Windows, extensionless Unix companion files can block while the
+    // shell tries to execute them. If a directly launchable shim exists,
+    // validate only .cmd/.bat/.exe candidates.
+    const launchableCandidates = pathCandidates.some((candidate) => /\.(cmd|bat|exe)$/i.test(candidate))
+      ? pathCandidates.filter((candidate) => /\.(cmd|bat|exe)$/i.test(candidate))
+      : pathCandidates;
+    const pathRunnable = [...new Set(launchableCandidates)].filter((candidate) => commandRuns(candidate, env));
+    if (pathRunnable.length) {
+      if (command.toLowerCase() === 'firebase' && pathRunnable.length > 1) {
+        return pathRunnable.sort((left, right) => compareVersions(toolVersion(right, env), toolVersion(left, env)))[0];
+      }
+      return pathRunnable[0];
+    }
     const whereCandidates = [];
     for (const name of candidates) {
       const where = spawnCommandSync('where.exe', [name], {
@@ -151,6 +169,17 @@ function resolveTool(name, env = process.env) {
     if ((path.isAbsolute(candidate) && fs.existsSync(candidate) && commandRuns(candidate, env)) || (!path.isAbsolute(candidate) && commandRuns(candidate, env))) {
       return { name, path: path.isAbsolute(candidate) ? path.resolve(candidate) : candidate, source: 'local-config', overrideKey };
     }
+    // A PowerShell/CMD template can arrive in a child process without the
+    // variable it references. For example, `%NVM_SYMLINK%\\nodejs\\firebase.cmd`
+    // becomes `\\nodejs\\firebase.cmd`. Recover only template/root-relative
+    // values through the normal resolver; ordinary invalid absolute overrides
+    // continue to fail closed.
+    const unresolvedTemplate = /%[A-Z][A-Z0-9_]*%|\$env:[A-Z][A-Z0-9_]*/i.test(override);
+    const rootRelative = /^[\\/](?![\\/])/.test(candidate);
+    if (unresolvedTemplate || rootRelative) {
+      const discovered = resolveTool(name, { ...env, [overrideKey]: '' });
+      if (discovered.path) return { ...discovered, source: 'local-config', overrideKey, normalizedFrom: override };
+    }
     return { name, path: null, source: 'local-config', overrideKey, error: `Override ${overrideKey} does not resolve to a runnable executable: ${candidate}` };
   }
   const pathResult = pathLookup(name, env);
@@ -165,12 +194,34 @@ function resolveTools(env = process.env) {
   return Object.fromEntries(Object.keys(TOOL_OVERRIDES).map((name) => [name, resolveTool(name, env)]));
 }
 
+/** Normalize tool overrides before handing an environment to child processes. */
+function canonicalizeToolEnvironment(env = process.env, names = ['firebase']) {
+  const normalized = { ...env };
+  for (const name of names) {
+    const key = TOOL_OVERRIDES[name];
+    if (!key) continue;
+    const raw = String(normalized[key] || '').trim();
+    if (!raw) continue;
+    const expanded = expandPath(raw, normalized);
+    const isTemplate = /%[A-Z][A-Z0-9_]*%|\$env:[A-Z][A-Z0-9_]*/i.test(raw);
+    const isRootRelative = /^[\\/](?![\\/])/.test(expanded);
+    if (!isTemplate && !isRootRelative && path.isAbsolute(expanded)) {
+      normalized[key] = path.normalize(expanded);
+      continue;
+    }
+    const resolved = resolveTool(name, normalized);
+    if (resolved.path && path.isAbsolute(resolved.path)) normalized[key] = path.normalize(resolved.path);
+  }
+  return normalized;
+}
+
 module.exports = {
   TOOL_OVERRIDES,
   expandPath,
   withToolPaths,
   resolveTool,
   resolveTools,
+  canonicalizeToolEnvironment,
   toolVersion,
   compareVersions,
   windowsCommandNames,

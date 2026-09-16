@@ -1,5 +1,6 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
+const path = require('node:path');
 const { parseArgs, parsePowerShellConfig, mergedEnvironment, checkDevices, checkTools, runDoctor } = require('../src/doctor');
 const { DEFAULT_LOCAL_CONFIG_PATH } = require('../src/local-config');
 
@@ -118,4 +119,15 @@ test('doctor rejects Firebase CLI 15 when resolved Java is below 21', () => {
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
+});
+
+test('post-start Doctor environment normalizes a missing-shell Firebase template', () => {
+  if (process.platform !== 'win32') return;
+  const env = mergedEnvironment({
+    NVM_SYMLINK: '',
+    WORKSIDEQA_FIREBASE_BIN: '%NVM_SYMLINK%\\nodejs\\firebase.cmd',
+  });
+  assert.ok(path.isAbsolute(env.WORKSIDEQA_FIREBASE_BIN));
+  assert.doesNotMatch(env.WORKSIDEQA_FIREBASE_BIN, /^[\\/]/);
+  assert.match(env.WORKSIDEQA_FIREBASE_BIN, /firebase\.cmd$/i);
 });

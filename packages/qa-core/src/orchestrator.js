@@ -899,7 +899,7 @@ async function startProduct(product) {
   const initialEnv = mergedEnvironment(local);
   const tools = resolveTools(initialEnv);
   const env = withToolPaths(initialEnv, Object.values(tools));
-  const configCheck = await runDoctor({ product, offline: true, validateToolchain: true, skipAuth: true, strict: false, environment: env, localConfig: local });
+  const configCheck = await runDoctor({ product, offline: true, validateToolchain: true, skipAuth: true, strict: false, environment: env, localConfig: local, tools });
   if (configCheck.checks.some((check) => check.status === 'failed')) {
     printReport(configCheck);
     throw new Error(`${product} configuration is not ready; no service was started.`);
@@ -1073,7 +1073,7 @@ async function startProduct(product) {
     if (reverse.error || reverse.status !== 0) throw new Error(`ADB reverse setup failed for ${device}.`);
     process.stdout.write(`Ready ${product}/android-reverse tcp:${metroPort} -> tcp:${metroPort} (${device})\n`);
   }
-  const finalCheck = await runDoctor({ product, strict: true, environment: env, localConfig: local });
+  const finalCheck = await runDoctor({ product, strict: true, environment: env, localConfig: local, tools });
   if (finalCheck.status === 'FAIL') {
     const failedCleanup = [];
     for (const record of started) {

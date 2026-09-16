@@ -1,5 +1,8 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 const { loadEnvironmentConfig, parseArgs, platformKey, resolveProductPaths, sharedPorts, selectedProducts, startProduct } = require('../src/mobile-qa-launcher');
 
 test('mobile QA launcher loads both product inventories without secrets', () => {
@@ -54,4 +57,29 @@ test('launcher reports a bounded startup timeout instead of waiting indefinitely
   const config = loadEnvironmentConfig();
   const result = startProduct(config, 'sageset', () => ({ status: null, signal: 'SIGTERM', error: { code: 'ETIMEDOUT' } }));
   assert.equal(result, 1);
+});
+
+test('launcher hands an absolute Firebase executable to qa:start', () => {
+  if (process.platform !== 'win32') return;
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'worksideqa-launcher-env-'));
+  const firebase = path.join(root, 'firebase.cmd');
+  fs.writeFileSync(firebase, '@echo off\r\necho 15.23.0\r\n', 'utf8');
+  try {
+    let childOptions;
+    const result = startProduct(loadEnvironmentConfig(), 'sageset', (_args, options) => {
+      childOptions = options;
+      return { status: 0, signal: null, error: null };
+    }, {
+      ...process.env,
+      PATH: `${root}${path.delimiter}${process.env.PATH || ''}`,
+      NVM_SYMLINK: '',
+      WORKSIDEQA_FIREBASE_BIN: '%NVM_SYMLINK%\\nodejs\\firebase.cmd',
+    });
+    assert.equal(result, 0);
+    assert.match(childOptions.env.WORKSIDEQA_FIREBASE_BIN, /[\\/]firebase\.cmd$/i);
+    assert.notEqual(childOptions.env.WORKSIDEQA_FIREBASE_BIN, '%NVM_SYMLINK%\\nodejs\\firebase.cmd');
+    assert.ok(path.isAbsolute(childOptions.env.WORKSIDEQA_FIREBASE_BIN));
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
 });

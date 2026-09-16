@@ -3,7 +3,7 @@ const test = require('node:test');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { expandPath, resolveTool } = require('../src/tool-resolver');
+const { expandPath, resolveTool, canonicalizeToolEnvironment } = require('../src/tool-resolver');
 
 test('tool resolver expands environment-based local overrides', () => {
   const env = { USERPROFILE: 'C:\\Users\\qa', WORKSIDEQA_FIREBASE_BIN: '%USERPROFILE%\\tools\\firebase.cmd' };
@@ -90,4 +90,23 @@ test('resolver does not retain a negative result after the environment changes',
   assert.equal(missing.path, null);
   const available = resolveTool('firebase', { PATH: '', Path: '', WORKSIDEQA_FIREBASE_BIN: process.env.LOCALAPPDATA + '\\Yarn\\bin\\firebase.cmd' });
   assert.equal(path.normalize(available.path), path.normalize(process.env.LOCALAPPDATA + '\\Yarn\\bin\\firebase.cmd'));
+});
+
+test('root-relative Firebase template is normalized before child-process handoff', () => {
+  if (process.platform !== 'win32') return;
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'worksideqa-firebase-handoff-'));
+  const firebase = path.join(root, 'firebase.cmd');
+  fs.writeFileSync(firebase, '@echo off\r\necho 15.23.0\r\n', 'utf8');
+  try {
+    const normalized = canonicalizeToolEnvironment({
+      PATH: root,
+      Path: '',
+      NVM_SYMLINK: '',
+      WORKSIDEQA_FIREBASE_BIN: '%NVM_SYMLINK%\\nodejs\\firebase.cmd',
+    });
+    assert.equal(path.normalize(normalized.WORKSIDEQA_FIREBASE_BIN), path.normalize(firebase));
+    assert.ok(path.isAbsolute(normalized.WORKSIDEQA_FIREBASE_BIN));
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
 });
