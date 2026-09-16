@@ -313,7 +313,7 @@ test('long-running service logging does not retain parent stdout/stderr pipes', 
     role: 'test-service',
     cwd: process.cwd(),
     executable: process.execPath,
-    args: ['-e', "process.stdout.write('service-ready\\n'); setTimeout(() => {}, 30000)"],
+    args: ['-e', "process.stdout.write('service-ready\\n'); process.stderr.write('service-error\\n'); setTimeout(() => {}, 30000)"],
     ports: [],
   }, 'test');
   try {
@@ -321,6 +321,7 @@ test('long-running service logging does not retain parent stdout/stderr pipes', 
     assert.equal(service.child.stderr, null);
     await new Promise((resolve) => setTimeout(resolve, 100));
     assert.match(fs.readFileSync(service.record.logPath, 'utf8'), /service-ready/);
+    assert.match(fs.readFileSync(service.record.logPath, 'utf8'), /service-error/);
     assert.match(service.record.logPath, new RegExp(`\\.worksideqa[\\\\/]logs[\\\\/]test[\\\\/]${serviceName}[\\\\/]`));
   } finally {
     service.child.kill();
