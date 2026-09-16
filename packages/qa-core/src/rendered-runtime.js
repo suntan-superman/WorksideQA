@@ -95,12 +95,14 @@ function verifyLaunchTarget(adb, deviceId, appId, launchUri, execute = spawnComm
     return failure;
   }
 
+  const metroPort = Number(options.metroPort || 8081);
   const reverseCheck = runHost(['reverse', '--list'], 5000);
   const reverseText = `${reverseCheck.result.stdout || ''}\n${reverseCheck.result.stderr || ''}`;
-  if (!/(?:^|\s)tcp:8081\s+tcp:8081(?:\s|$)/m.test(reverseText)) {
-    const reverseSetup = runHost(['reverse', 'tcp:8081', 'tcp:8081'], 5000);
+  const reversePattern = new RegExp(`(?:^|\\s)tcp:${metroPort}\\s+tcp:${metroPort}(?:\\s|$)`, 'm');
+  if (!reversePattern.test(reverseText)) {
+    const reverseSetup = runHost(['reverse', `tcp:${metroPort}`, `tcp:${metroPort}`], 5000);
     if (reverseSetup.result.error || reverseSetup.result.status !== 0) {
-      return commandFailure('ADB_REVERSE_SETUP_FAILED', 'ADB reverse tcp:8081 -> tcp:8081', reverseSetup.snapshot);
+      return commandFailure('ADB_REVERSE_SETUP_FAILED', `ADB reverse tcp:${metroPort} -> tcp:${metroPort}`, reverseSetup.snapshot);
     }
   }
   return {
@@ -108,7 +110,7 @@ function verifyLaunchTarget(adb, deviceId, appId, launchUri, execute = spawnComm
     expectedActivity,
     expectedComponent,
     deepLink: launchUri,
-    reverse: 'tcp:8081 -> tcp:8081',
+    reverse: `tcp:${metroPort} -> tcp:${metroPort}`,
     checks: { package: packageCheck.snapshot, activity: activityCheck.snapshot, deepLink: deepLinkCheck.snapshot, reverse: reverseCheck.snapshot },
   };
 }
@@ -387,13 +389,13 @@ async function waitForRenderedRuntime(options = {}) {
   } = options;
   if (!adb || !maestro || !deviceId || !appId || !launchUri) throw new Error('Rendered runtime probe requires adb, maestro, deviceId, appId, and launchUri.');
   const env = options.env || process.env;
-  const rootFlow = path.join(FLOW_DIRECTORY, 'qa-root.yaml');
+  const rootFlow = options.flowPath || options.rootFlow || path.join(FLOW_DIRECTORY, 'qa-root.yaml');
   if (!fs.existsSync(rootFlow)) throw new Error(`Rendered runtime flow is missing: ${rootFlow}`);
   const startedAt = now();
   const deadline = startedAt + timeoutMs;
   const launchPreparation = options.preflight === false
     ? { ok: true, skipped: true }
-    : prepareApplicationLaunch(adb, deviceId, appId, launchUri, execute, env, { now, expectedActivity: options.expectedActivity });
+    : prepareApplicationLaunch(adb, deviceId, appId, launchUri, execute, env, { now, expectedActivity: options.expectedActivity, metroPort: options.metroPort });
   if (!launchPreparation.ok) {
     return {
       ...appReadinessFailure(launchPreparation.code || 'ADB_LAUNCH_FAILED', null, startedAt, timeoutMs, {
@@ -592,9 +594,9 @@ async function waitForRenderedRuntime(options = {}) {
       lastHierarchy = hierarchy;
       lastHierarchyAt = now();
       lastSummary = hierarchySummary(hierarchy);
-      const loginReady = hierarchyHas(hierarchy, 'screen.auth.login');
-      const dashboardReady = hierarchyHas(hierarchy, 'screen.dashboard.ready');
-      if (loginReady || dashboardReady) {
+      const readySelectors = options.readySelectors || ['screen.auth.login', 'screen.dashboard.ready'];
+      const readySelector = readySelectors.find((selector) => hierarchyHas(hierarchy, selector));
+      if (readySelector) {
         const readyAt = now();
         return {
           ok: true,
@@ -610,7 +612,7 @@ async function waitForRenderedRuntime(options = {}) {
           logicalBudgetMs: timeoutMs,
           observerFailureAt: null,
           failureCode: null,
-          readySelector: loginReady ? 'screen.auth.login' : 'screen.dashboard.ready',
+          readySelector,
           readinessSource: 'maestro',
           observerAttempts: [observerAttempt],
           launchDiagnostics: { preparation: launchPreparation, launch },

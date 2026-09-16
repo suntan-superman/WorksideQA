@@ -1,0 +1,83 @@
+appId: com.workside.sageset
+---
+- runFlow:
+    when:
+      visible: "Continue"
+    commands:
+      - tapOn: "Continue"
+- runFlow:
+    when:
+      visible: "Close"
+    commands:
+      - tapOn: "Close"
+- runFlow:
+    when:
+      visible: "Wait"
+    commands:
+      - tapOn: "Wait"
+- runFlow:
+    when:
+      visible: "Connected to:"
+    commands:
+      - tapOn: "Connected to:"
+- runFlow:
+    when:
+      visible:
+        id: screen.auth.welcome
+    commands:
+      - tapOn:
+          id: auth.welcome.login
+- evalScript: ${output.worksideqaSageSetReady = false}
+- evalScript: ${output.worksideqaSageSetAttempts = 0}
+- repeat:
+    while:
+      true: ${output.worksideqaSageSetReady != true && output.worksideqaSageSetAttempts < 200}
+    commands:
+      - evalScript: ${output.worksideqaSageSetAttempts = output.worksideqaSageSetAttempts + 1}
+      - runFlow:
+          when:
+            visible: "Continue"
+          commands:
+            - tapOn: "Continue"
+      - runFlow:
+          when:
+            visible: "Close"
+          commands:
+            - tapOn: "Close"
+      - runFlow:
+          when:
+            visible: "Wait"
+          commands:
+            - tapOn: "Wait"
+      - runFlow:
+          when:
+            visible: "Connected to:"
+          commands:
+            - tapOn: "Connected to:"
+      - runFlow:
+          when:
+            visible:
+              id: screen.auth.login
+          commands:
+            - evalScript: ${output.worksideqaSageSetReady = true}
+      - runFlow:
+          when:
+            visible:
+              id: screen.today.ready
+          commands:
+            - evalScript: ${output.worksideqaSageSetReady = true}
+      - runFlow:
+          when:
+            visible:
+              id: screen.auth.welcome
+          commands:
+            - tapOn:
+                id: auth.welcome.login
+      - waitForAnimationToEnd:
+          timeout: 250
+- runFlow:
+    when:
+      true: ${output.worksideqaSageSetReady != true}
+    commands:
+      - assertVisible:
+          id: screen.auth.login

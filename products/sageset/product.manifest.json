@@ -124,7 +124,24 @@
         "required": true,
         "idEnvKey": "SAGESET_ANDROID_EMULATOR_ID",
         "avdNameEnvKey": "SAGESET_ANDROID_AVD_NAME",
-        "appId": "com.workside.sageset"
+        "appId": "com.workside.sageset",
+        "launchUri": "exp+sageset://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081",
+        "launchReadySelector": "screen.auth.login|screen.today.ready",
+        "launchReadyTimeoutMs": 60000
+      }
+    },
+    "metro": {
+      "required": true,
+      "port": 8081,
+      "url": "http://127.0.0.1:8081",
+      "workingDirectoryEnvKey": "SAGESET_MOBILE_REPO",
+      "command": "npm",
+      "args": ["exec", "--", "expo", "start", "--dev-client", "--host", "lan", "--port", "8081", "--clear"],
+      "runtimeEnvironment": {
+        "EXPO_PUBLIC_APP_ENV": "maestro",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "sageset-maestro-local",
+        "EXPO_PUBLIC_FIREBASE_EMULATOR_HOST": "10.0.2.2",
+        "EXPO_PUBLIC_ALLOW_EXTERNAL_NOTIFICATIONS": "false"
       }
     },
     "applicationBuild": {

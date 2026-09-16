@@ -49,6 +49,7 @@ Usage:
   npm run qa:restart:merxus:firebase
   npm run qa:restart:merxus:backend
   npm run qa:restart:sageset:firebase
+  npm run qa:restart:sageset:metro
 
 The orchestrator owns only processes recorded in .worksideqa/runtime-state.json.
 It never kills an unrecorded process or changes a port to avoid a conflict.
@@ -72,6 +73,18 @@ function canonicalMerxusMetroEnvironment(env) {
     EXPO_PUBLIC_FIRESTORE_EMULATOR_HOST: '127.0.0.1:8080',
     EXPO_PUBLIC_STORAGE_EMULATOR_HOST: '127.0.0.1:9199',
     EXPO_PUBLIC_ALLOW_EXTERNAL_PROVIDERS: 'false',
+    EXPO_NO_DOTENV: '1',
+  };
+}
+
+function canonicalSageSetMetroEnvironment(env) {
+  const canonical = { ...env };
+  return {
+    ...canonical,
+    EXPO_PUBLIC_APP_ENV: 'maestro',
+    EXPO_PUBLIC_FIREBASE_PROJECT_ID: 'sageset-maestro-local',
+    EXPO_PUBLIC_FIREBASE_EMULATOR_HOST: '10.0.2.2',
+    EXPO_PUBLIC_ALLOW_EXTERNAL_NOTIFICATIONS: 'false',
     EXPO_NO_DOTENV: '1',
   };
 }
@@ -106,6 +119,10 @@ function serviceDefinitions(product, env, tools = null) {
       args: ['emulators:start', '--project', 'sageset-maestro-local', '--config', 'firebase.json', '--only', 'auth,firestore,storage,functions'],
       ports: [9099, 8080, 9199, 5001],
       env: { ...env, FIREBASE_AUTH_EMULATOR_HOST: '127.0.0.1:9099', FIRESTORE_EMULATOR_HOST: '127.0.0.1:8080' },
+    }, {
+      service: 'metro', role: 'maestro-metro', cwd: root, executable: npm,
+      args: ['exec', '--', 'expo', 'start', '--dev-client', '--host', 'lan', '--port', '8081', '--clear'],
+      ports: [8081], env: canonicalSageSetMetroEnvironment(env),
     }];
   }
   const mobile = env.MERXUS_MOBILE_REPO || path.join(DEFAULTS.merxusRoot, 'mobile');
@@ -448,18 +465,33 @@ async function waitForServiceReady(service, timeoutMs = READY_TIMEOUT_MS, readin
   return exitInfo ? { ready: false, reason: 'PROCESS_EXITED', exitInfo } : { ready: false, reason: 'READINESS_TIMEOUT' };
 }
 
-async function prewarmCanonicalMetro(env, platform = 'android') {
-  const mobileRoot = env.MERXUS_MOBILE_REPO || path.join(DEFAULTS.merxusRoot, 'mobile');
+async function prewarmCanonicalMetro(env, platform = 'android', product = 'merxus') {
+  const mobileRoot = product === 'sageset'
+    ? (env.SAGESET_MOBILE_REPO || path.join(DEFAULTS.sagesetRoot, 'mobile'))
+    : (env.MERXUS_MOBILE_REPO || path.join(DEFAULTS.merxusRoot, 'mobile'));
+  const baseUrl = product === 'sageset'
+    ? (env.SAGESET_MAESTRO_METRO_URL || 'http://127.0.0.1:8081')
+    : (env.WORKSIDEQA_METRO_URL || 'http://127.0.0.1:8081');
   const { verifyExpoConfig } = require('../../qa-mobile/src/merxus-mobile-runtime');
   return prewarmMetroBundle({
-    baseUrl: env.WORKSIDEQA_METRO_URL || 'http://127.0.0.1:8081',
+    baseUrl,
     platform,
     timeoutMs: Number(env.WORKSIDEQA_METRO_BUNDLE_PREWARM_TIMEOUT_MS || DEFAULT_PREWARM_TIMEOUT_MS),
-    validateManifest: (manifest) => verifyExpoConfig(manifest?.extra?.expoClient, mobileRoot, `prewarmed Metro ${platform} manifest`, platform),
+    validateManifest: product === 'sageset'
+      ? (manifest) => {
+        const config = manifest?.extra?.expoClient || {};
+        const appId = config?.android?.package || config?.extra?.androidPackage;
+        const runtime = config?.extra?.runtime || {};
+        if (appId && appId !== 'com.workside.sageset') throw new Error(`SageSet Metro served unexpected Android package ${appId}.`);
+        if (runtime.firebaseProjectId && runtime.firebaseProjectId !== 'sageset-maestro-local') throw new Error('SageSet Metro served a non-Maestro Firebase project.');
+        return { appId: appId || 'com.workside.sageset', environment: 'maestro', firebaseProjectId: 'sageset-maestro-local' };
+      }
+      : (manifest) => verifyExpoConfig(manifest?.extra?.expoClient, mobileRoot, `prewarmed Metro ${platform} manifest`, platform),
   });
 }
 
-function metroServedRuntimeReady(env) {
+function metroServedRuntimeReady(env, product = 'merxus') {
+  if (product === 'sageset') return true;
   const tool = path.join(fromRoot(), 'packages', 'qa-mobile', 'src', 'merxus-mobile-runtime.js');
   const result = spawnCommandSync(process.execPath, [tool, '--mobile-root', env.MERXUS_MOBILE_REPO, '--served-only'], {
     cwd: fromRoot(), env, encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'],
@@ -862,8 +894,8 @@ async function startProduct(product) {
     if (metroPrewarmResult) return metroPrewarmResult.ok
       ? { ready: true, bundlePrewarm: metroPrewarmResult }
       : { ready: false, fatal: true, reason: metroPrewarmResult.reason, detail: metroPrewarmResult.error, bundlePrewarm: metroPrewarmResult };
-    if (!metroServedRuntimeReady(env)) return { ready: false };
-    metroPrewarmResult = await prewarmCanonicalMetro(env, 'android');
+    if (!metroServedRuntimeReady(env, product)) return { ready: false };
+    metroPrewarmResult = await prewarmCanonicalMetro(env, 'android', product);
     return metroPrewarmResult.ok
       ? { ready: true, bundlePrewarm: metroPrewarmResult }
       : { ready: false, fatal: true, reason: metroPrewarmResult.reason, detail: metroPrewarmResult.error, bundlePrewarm: metroPrewarmResult };
@@ -962,12 +994,13 @@ async function startProduct(product) {
   // existing startup behavior.
   const android = await ensureAndroidEmulator({ product, env, adbPath: tools.adb.path });
   await ensureAndroidQaApplication(product, env, { adbPath: tools.adb.path, npmPath: tools.npm.path });
-  if (product === 'merxus' && !android.skipped) {
-    const device = String(env.MERXUS_ANDROID_EMULATOR_ID || '').trim();
+  if (!android.skipped) {
+    const device = String((product === 'sageset' ? env.SAGESET_ANDROID_EMULATOR_ID : env.MERXUS_ANDROID_EMULATOR_ID) || '').trim();
     const adb = tools.adb.path;
-    const reverse = spawnCommandSync(adb, ['-s', device, 'reverse', 'tcp:8081', 'tcp:8081'], { encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
+    const metroPort = 8081;
+    const reverse = spawnCommandSync(adb, ['-s', device, 'reverse', `tcp:${metroPort}`, `tcp:${metroPort}`], { encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
     if (reverse.error || reverse.status !== 0) throw new Error(`ADB reverse setup failed for ${device}.`);
-    process.stdout.write(`Ready merxus/android-reverse tcp:8081 -> tcp:8081 (${device})\n`);
+    process.stdout.write(`Ready ${product}/android-reverse tcp:${metroPort} -> tcp:${metroPort} (${device})\n`);
   }
   const finalCheck = await runDoctor({ product, strict: true, environment: env, localConfig: local });
   if (finalCheck.status === 'FAIL') {
@@ -1019,9 +1052,23 @@ function statusRows(product, env) {
     const deviceState = device ? spawnCommandSync(adb, ['-s', device, 'get-state'], { encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] }) : null;
     const appId = deviceProduct === 'sageset' ? (env.SAGESET_MAESTRO_ANDROID_APP_ID || 'com.workside.sageset') : (env.MERXUS_MAESTRO_ANDROID_APP_ID || 'com.merxus.mobile.qa');
     const installed = device && deviceState?.status === 0 ? spawnCommandSync(adb, ['-s', device, 'shell', 'pm', 'path', appId], { encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] }) : null;
-    rows.push({ product: deviceProduct, service: 'android-device', role: 'qa-device', running: deviceState?.status === 0 && String(deviceState.stdout).trim() === 'device', pid: null, startTime: null, expectedPorts: [], actualPortOwners: [], runtimeMode: deviceProduct === 'merxus' ? 'maestro' : 'emulator', maestroState, emulatorState: String(deviceState?.stdout || '').trim() || 'offline', appId, appInstalled: installed?.status === 0 && String(installed.stdout).includes('package:'), owner: 'WorksideQA' });
+    const appInstalled = installed?.status === 0 && String(installed.stdout).includes('package:');
+    let appRuntimeState = classifySageSetAppRuntime(deviceProduct, appInstalled, String(deviceState?.stdout || '').trim(), '');
+    if (deviceProduct === 'sageset' && appInstalled && deviceState?.status === 0) {
+      const dump = spawnCommandSync(adb, ['-s', device, 'shell', 'uiautomator', 'dump', '/sdcard/worksideqa-status.xml'], { encoding: 'utf8', timeout: 8000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
+      const xml = dump.status === 0 ? spawnCommandSync(adb, ['-s', device, 'shell', 'cat', '/sdcard/worksideqa-status.xml'], { encoding: 'utf8', timeout: 8000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] }).stdout : '';
+      appRuntimeState = classifySageSetAppRuntime(deviceProduct, appInstalled, String(deviceState.stdout || '').trim(), String(xml || ''));
+    }
+    rows.push({ product: deviceProduct, service: 'android-device', role: 'qa-device', running: deviceState?.status === 0 && String(deviceState.stdout).trim() === 'device', pid: null, startTime: null, expectedPorts: [], actualPortOwners: [], runtimeMode: deviceProduct === 'merxus' ? 'maestro' : 'emulator', maestroState, emulatorState: String(deviceState?.stdout || '').trim() || 'offline', appId, appInstalled, appRuntimeState, owner: 'WorksideQA' });
   }
   return rows;
+}
+
+function classifySageSetAppRuntime(product, appInstalled, deviceState, hierarchyXml) {
+  if (product !== 'sageset') return appInstalled ? 'installed' : 'qa-apk-missing';
+  if (!appInstalled) return 'qa-apk-missing';
+  if (/screen\.auth\.(?:welcome|login)|screen\.today\.ready/.test(String(hierarchyXml || ''))) return 'actual-sageset-application';
+  return deviceState === 'device' ? 'development-client-launcher-displayed' : 'not-running';
 }
 
 function printStatus(rows) {
@@ -1029,9 +1076,10 @@ function printStatus(rows) {
     const state = row.state === 'CONFLICT' ? 'CONFLICT' : row.state === 'STALE' ? 'STALE STATE' : row.state === 'RECOVERED' ? 'RECOVERED' : row.running ? 'RUNNING' : 'NOT RUNNING';
     const ports = row.expectedPorts.length ? row.expectedPorts.join(',') : '-';
     const owners = row.actualPortOwners.length ? row.actualPortOwners.map((item) => `${item.port}:${item.pid || '-'}`).join(',') : '-';
-    process.stdout.write(`${state.padEnd(12)} ${row.product.padEnd(8)} ${row.service.padEnd(16)} PID=${row.pid || '-'} start=${row.startTime || '-'} expected=${ports} owner=${owners} mode=${row.runtimeMode} maestro=${row.maestroState || '-'}${row.reason ? ` reason=${row.reason}` : ''}${row.emulatorState ? ` emulator=${row.emulatorState}` : ''}${row.appId ? ` appId=${row.appId}` : ''}${row.appInstalled != null ? ` app=${row.appInstalled ? 'installed' : 'missing'}` : ''}\n`);
+    process.stdout.write(`${state.padEnd(12)} ${row.product.padEnd(8)} ${row.service.padEnd(16)} PID=${row.pid || '-'} start=${row.startTime || '-'} expected=${ports} owner=${owners} mode=${row.runtimeMode} maestro=${row.maestroState || '-'}${row.reason ? ` reason=${row.reason}` : ''}${row.emulatorState ? ` emulator=${row.emulatorState}` : ''}${row.appId ? ` appId=${row.appId}` : ''}${row.appInstalled != null ? ` app=${row.appInstalled ? 'installed' : 'missing'}` : ''}${row.appRuntimeState ? ` appState=${row.appRuntimeState}` : ''}\n`);
   }
-  const ready = rows.filter((row) => row.service !== 'android-device').every((row) => row.running) && rows.filter((row) => row.service === 'android-device').every((row) => row.running && row.appInstalled !== false);
+  const ready = rows.filter((row) => row.service !== 'android-device').every((row) => row.running)
+    && rows.filter((row) => row.service === 'android-device').every((row) => row.running && row.appInstalled !== false && (row.product !== 'sageset' || row.appRuntimeState === 'actual-sageset-application'));
   process.stdout.write(`\n${ready ? 'READY' : 'NOT READY'}\n`);
 }
 
@@ -1124,7 +1172,7 @@ async function main(argv = process.argv.slice(2)) {
   const rows = statusRows(options.product, env);
   if (options.json) process.stdout.write(`${JSON.stringify(rows, null, 2)}\n`);
   else printStatus(rows);
-  if (rows.some((row) => !row.running || (row.service === 'android-device' && row.appInstalled === false))) process.exitCode = 1;
+  if (rows.some((row) => !row.running || (row.service === 'android-device' && (row.appInstalled === false || (row.product === 'sageset' && row.appRuntimeState !== 'actual-sageset-application'))))) process.exitCode = 1;
 }
 
 if (require.main === module) main().catch((error) => { process.stderr.write(`${error.message}\n`); process.exitCode = 1; });
@@ -1153,6 +1201,7 @@ module.exports = {
   spawnService,
   portOwner,
   statusRows,
+  classifySageSetAppRuntime,
   startProduct,
   stopProduct,
   terminateRecord,

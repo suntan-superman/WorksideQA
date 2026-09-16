@@ -23,6 +23,30 @@ test('qa-root flow verifies terminal readiness in the same bounded Maestro obser
   assert.match(source, /worksideqaStableScreenAttempts < 200/);
 });
 
+test('SageSet rendered flow accepts only real login or Today markers', () => {
+  const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'rendered-runtime-flows', 'sageset-root.yaml'), 'utf8');
+  assert.match(source, /appId: com\.workside\.sageset/);
+  assert.match(source, /id: screen\.auth\.welcome/);
+  assert.match(source, /id: auth\.welcome\.login/);
+  assert.match(source, /id: screen\.auth\.login/);
+  assert.match(source, /id: screen\.today\.ready/);
+  assert.match(source, /visible: "Connected to:"/);
+  assert.match(source, /tapOn: "Connected to:"/);
+  assert.doesNotMatch(source, /tapOn: "Connect"/);
+});
+
+test('SageSet launch target uses the canonical dev-client scheme and Metro port', () => {
+  const result = verifyLaunchTarget('adb.exe', 'emulator-5554', 'com.workside.sageset', 'exp+sageset://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081', (_command, args) => {
+    if (args.includes('pm')) return { status: 0, stdout: 'package:com.workside.sageset\n' };
+    if (args.includes('dumpsys')) return { status: 0, stdout: 'com.sageset.fitness.MainActivity' };
+    if (args.includes('resolve-activity')) return { status: 0, stdout: 'com.workside.sageset/com.sageset.fitness.MainActivity\n' };
+    if (args.includes('--list')) return { status: 0, stdout: 'host-17 tcp:8081 tcp:8081\n' };
+    return { status: 0, stdout: '' };
+  }, {}, { expectedActivity: 'com.sageset.fitness.MainActivity', metroPort: 8081 });
+  assert.equal(result.ok, true);
+  assert.equal(result.reverse, 'tcp:8081 -> tcp:8081');
+});
+
 test('rendered probe launches the manifest URI with the explicit Android device', () => {
   const calls = [];
   const execute = (command, args) => {

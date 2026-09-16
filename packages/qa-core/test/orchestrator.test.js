@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { parseArgs, serviceDefinitions, commandMatches, canonicalMerxusMetroEnvironment, waitForServiceReady, assertPortsAvailable, fixtureCommands, spawnService, reconcileRecord, terminateRecord, stopProduct, processTreeMetadata, normalizeProcessInfo, processInfoWithRetry, ensureAndroidQaApplication } = require('../src/orchestrator');
+const { parseArgs, serviceDefinitions, commandMatches, canonicalMerxusMetroEnvironment, waitForServiceReady, assertPortsAvailable, fixtureCommands, spawnService, reconcileRecord, terminateRecord, stopProduct, processTreeMetadata, normalizeProcessInfo, processInfoWithRetry, ensureAndroidQaApplication, classifySageSetAppRuntime } = require('../src/orchestrator');
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -52,11 +52,13 @@ test('qa:start forces canonical Maestro Metro inputs over inherited production v
 
 test('SageSet startup definition uses emulator-only services and functions readiness', () => {
   const definitions = serviceDefinitions('sageset', { SAGESET_MOBILE_REPO: 'C:\\SageSet\\mobile' });
-  assert.deepEqual(definitions.map((item) => item.service), ['firebase']);
+  assert.deepEqual(definitions.map((item) => item.service), ['firebase', 'metro']);
   assert.equal(definitions[0].cwd, 'C:\\SageSet\\mobile');
   assert.deepEqual(definitions[0].ports, [9099, 8080, 9199, 5001]);
   assert.deepEqual(definitions[0].args.slice(0, 5), ['emulators:start', '--project', 'sageset-maestro-local', '--config', 'firebase.json']);
   assert.ok(definitions[0].args.some((arg) => String(arg).includes('functions')));
+  assert.equal(definitions[1].ports[0], 8081);
+  assert.deepEqual(definitions[1].args.slice(-3), ['--port', '8081', '--clear']);
 });
 
 test('SageSet manifest declares the product-owned Android QA build contract', () => {
@@ -68,6 +70,13 @@ test('SageSet manifest declares the product-owned Android QA build contract', ()
     workingDirectoryEnvKey: 'SAGESET_MOBILE_REPO',
     appId: 'com.workside.sageset',
   });
+});
+
+test('SageSet mobile readiness distinguishes installed launcher from rendered application', () => {
+  assert.equal(classifySageSetAppRuntime('sageset', false, 'device', ''), 'qa-apk-missing');
+  assert.equal(classifySageSetAppRuntime('sageset', true, 'device', '<node text="Start a local development server"/>'), 'development-client-launcher-displayed');
+  assert.equal(classifySageSetAppRuntime('sageset', true, 'device', '<node resource-id="com.workside.sageset:id/screen.auth.welcome"/>'), 'actual-sageset-application');
+  assert.equal(classifySageSetAppRuntime('sageset', true, 'device', '<node resource-id="com.workside.sageset:id/screen.auth.login"/>'), 'actual-sageset-application');
 });
 
 test('SageSet Android QA app is reused when already installed', () => {

@@ -47,7 +47,8 @@
         }
       },
       "services": [
-        { "name": "firebase", "ports": [9099, 8080, 9199, 5001], "role": "Firebase Auth/Firestore/Storage/Functions emulators" }
+        { "name": "firebase", "ports": [9099, 8080, 9199, 5001], "role": "Firebase Auth/Firestore/Storage/Functions emulators" },
+        { "name": "metro", "ports": [8081], "role": "SageSet Maestro Metro" }
       ],
       "device": { "required": true, "envKey": "SAGESET_ANDROID_EMULATOR_ID", "avdNameEnvKey": "SAGESET_ANDROID_AVD_NAME", "appIdEnvKey": "SAGESET_MAESTRO_ANDROID_APP_ID" },
       "runtime": { "environment": "emulator", "firebaseProjectId": "sageset-maestro-local" },

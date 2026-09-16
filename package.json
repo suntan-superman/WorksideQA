@@ -108,6 +108,7 @@
     "qa:restart:merxus:metro": "node packages/qa-core/src/orchestrator.js restart --product merxus --service metro",
     "qa:restart:merxus:backend": "node packages/qa-core/src/orchestrator.js restart --product merxus --service backend",
     "qa:restart:sageset:firebase": "node packages/qa-core/src/orchestrator.js restart --product sageset --service firebase",
+    "qa:restart:sageset:metro": "node packages/qa-core/src/orchestrator.js restart --product sageset --service metro",
     "qa:safety:gate": "node packages/qa-core/src/safety-gate.js",
     "qa:report": "node packages/qa-reporting/src/open-latest-report.js",
     "test": "node packages/qa-core/src/cli.js --product radiusiq --suite smoke --dry-run"

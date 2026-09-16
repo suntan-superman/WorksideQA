@@ -261,7 +261,7 @@ async function checkServices(env, options) {
   if (options.offline) return [result('skipped', 'services', 'Network/service probes skipped (--offline).')];
   const checks = [];
   if (options.product === 'sageset') {
-    for (const [id, label, port] of [['service.sageset-auth', 'SageSet Auth emulator', 9099], ['service.sageset-firestore', 'SageSet Firestore emulator', 8080], ['service.sageset-storage', 'SageSet Storage emulator', 9199], ['service.sageset-functions', 'SageSet Functions emulator', 5001]]) {
+    for (const [id, label, port] of [['service.sageset-auth', 'SageSet Auth emulator', 9099], ['service.sageset-firestore', 'SageSet Firestore emulator', 8080], ['service.sageset-storage', 'SageSet Storage emulator', 9199], ['service.sageset-functions', 'SageSet Functions emulator', 5001], ['service.sageset-metro', 'SageSet Maestro Metro', 8081]]) {
       checks.push((await probePort('127.0.0.1', port))
         ? result('passed', id, `${label} is listening on 127.0.0.1:${port}.`)
         : result('failed', id, `${label} is not reachable on 127.0.0.1:${port}.`));
@@ -324,7 +324,56 @@ function runAuthVerify(env, options) {
 }
 
 async function checkMobileRuntime(env, options) {
-  if (options.product === 'sageset') return [result('skipped', 'mobile.runtime', 'SageSet has no WorksideQA-owned served Metro runtime contract.')];
+  if (options.product === 'sageset') {
+    const checks = [];
+    const manifest = validateManifest(loadProductManifest('sageset'));
+    const metro = manifest.mobile?.metro;
+    const metroUrl = String(metro?.url || 'http://127.0.0.1:8081').replace(/\/$/, '');
+    const served = options.offline
+      ? { skipped: true }
+      : await probeUrl(`${metroUrl}/`, { timeoutMs: 5000, headers: { accept: 'application/expo+json', 'expo-platform': 'android' } });
+    let servedManifest = null;
+    try { servedManifest = JSON.parse(served.body || '{}'); } catch { /* reported below */ }
+    const expoClient = servedManifest?.extra?.expoClient || {};
+    const appId = String(expoClient?.android?.package || '').trim();
+    const runtimeProject = String(expoClient?.extra?.firebaseProjectId || expoClient?.extra?.runtime?.firebaseProjectId || '').trim();
+    const servedOk = options.offline || (served.status === 200 && Boolean(servedManifest?.launchAsset?.url) && (!appId || appId === manifest.mobile.appId) && (!runtimeProject || runtimeProject === manifest.mobile.environment.firebaseProjectId));
+    checks.push(options.offline
+      ? result('skipped', 'mobile.runtime-served', 'SageSet Metro served check skipped (--offline).')
+      : servedOk
+        ? result('passed', 'mobile.runtime-served', `SageSet Maestro Metro is serving on ${metroUrl}.`, { metroUrl, appId: appId || manifest.mobile.appId, firebaseProjectId: runtimeProject || manifest.mobile.environment.firebaseProjectId })
+        : result('failed', 'mobile.runtime-served', `SageSet Maestro Metro is absent, stale, or serving an invalid runtime on ${metroUrl}.`, { metroUrl, httpStatus: served.status || null }));
+    if (options.offline) {
+      checks.push(result('skipped', 'mobile.runtime-rendered', 'SageSet rendered app check skipped (--offline).'));
+      return checks;
+    }
+    if (!servedOk) {
+      checks.push(result('failed', 'mobile.runtime-rendered', 'SageSet rendered app check was not attempted because Metro runtime is not ready.'));
+      return checks;
+    }
+    const device = manifest.mobile?.devices?.androidEmulator;
+    const deviceId = String(env.SAGESET_ANDROID_EMULATOR_ID || '').trim();
+    const adb = resolveCommand('adb', env);
+    const maestro = resolveCommand('maestro', env);
+    const launchUri = device?.launchUri;
+    let rendered;
+    try {
+      rendered = device && adb && maestro && deviceId && launchUri
+        ? await waitForRenderedRuntime({
+          adb, maestro, deviceId, appId: device.appId || manifest.mobile.appId,
+          launchUri, expectedActivity: 'com.sageset.fitness.MainActivity', metroPort: Number(metro?.port || 8081),
+          flowPath: path.join(WORKSIDEQA_ROOT, 'packages', 'qa-core', 'src', 'rendered-runtime-flows', 'sageset-root.yaml'),
+          readySelectors: ['screen.auth.login', 'screen.today.ready'], product: 'sageset', env,
+          timeoutMs: Number(env.WORKSIDEQA_RENDERED_RUNTIME_TIMEOUT_MS || DEFAULT_TIMEOUT_MS),
+          artifactDirectory: path.join(WORKSIDEQA_ROOT, '.worksideqa', 'rendered-runtime', `sageset-${new Date().toISOString().replace(/[:.]/g, '-')}`),
+        })
+        : { ok: false, reason: 'CONFIGURATION_MISSING', elapsedMs: 0 };
+    } catch (error) { rendered = { ok: false, reason: 'PROBE_ERROR', error: error.message, elapsedMs: 0 }; }
+    checks.push(rendered.ok
+      ? result('passed', 'mobile.runtime-rendered', `SageSet application rendered ${rendered.readySelector} (PID ${rendered.appPid || 'unknown'}) in ${rendered.elapsedMs}ms.`, rendered)
+      : result('failed', 'mobile.runtime-rendered', `SageSet QA APK is not rendered (${rendered.reason || 'unknown'}); launcher screen alone is insufficient.`, rendered));
+    return checks;
+  }
   const tool = path.join(WORKSIDEQA_ROOT, 'packages', 'qa-mobile', 'src', 'merxus-mobile-runtime.js');
   const checks = [];
   if (!fs.existsSync(tool)) return [result('failed', 'mobile.runtime-tool', 'Canonical Mobile runtime verifier is missing.')];
