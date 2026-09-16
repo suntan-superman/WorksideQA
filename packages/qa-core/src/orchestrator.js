@@ -275,6 +275,30 @@ function reconcileRecord(record, ownerResolver = portOwner, infoResolver = proce
   const portOwners = (record.ports || record.port ? (record.ports || [record.port]) : []).map((port) => ({ port, pid: concretePid(ownerResolver(port)) }));
   const known = new Map(currentTree.filter((item) => !item.mismatch).map((item) => [Number(item.pid), item]));
   const foreign = portOwners.find((item) => item.pid && !known.has(Number(item.pid)) && Number(item.pid) !== Number(record.pid));
+  // npm/cmd can hand Metro's listening Node process to a new PID after the
+  // launcher was recorded.  A port owner outside the persisted tree is only
+  // recoverable when the original WorksideQA chain is still identity-verified
+  // and the live owner is an Expo start process in the same checkout.  This
+  // deliberately does not adopt arbitrary Node listeners on 8081.
+  const rootMismatch = currentTree.some((item) => item.mismatch && Number(item.expected?.pid) === rootPid);
+  const handoff = record.service === 'metro' && !rootMismatch && (rootVerified || currentTree.some((item) => !item.mismatch))
+    ? portOwners.map((item) => ({ ...item, info: item.pid ? processInfoWithRetry(item.pid, infoResolver) : null }))
+      .find((item) => item.pid && !known.has(Number(item.pid)) && serviceHandoffMatches(record, item.info))
+    : null;
+  if (handoff) {
+    const live = normalizeProcessInfo(handoff.pid, handoff.info);
+    const retained = currentTree.filter((item) => !item.mismatch && Number(item.pid) !== Number(handoff.pid));
+    const nextTree = [...retained, live];
+    record.processTree = nextTree.map((item) => ({
+      pid: Number(item.pid), parentPid: Number(item.parentPid || item.ParentProcessId || 0) || null,
+      executable: String(item.executable || item.Name || ''), commandLine: String(item.commandLine || item.CommandLine || ''),
+      startedAt: item.startedAt || item.CreationDate || null,
+    }));
+    record.processTreePids = record.processTree.map((item) => item.pid);
+    record.processStartTimes = Object.fromEntries(record.processTree.map((item) => [String(item.pid), item.startedAt]));
+    record.reconciledAt = new Date().toISOString();
+    return { state: 'RECOVERED', owned: true, recovered: true, handoff: true, portOwners, currentTree: nextTree, reason: 'matched verified Metro npm/Expo handoff descendant' };
+  }
   // Persisted records can outlive their processes (for example after a
   // reboot). When every expected port is free, an identity mismatch is
   // stale metadata rather than a live collision. Reconcile it without
@@ -337,6 +361,22 @@ function commandMatches(record, info) {
   const command = String(info.CommandLine || info.commandLine || '').toLowerCase();
   const expected = [record.executable, ...(record.args || [])].join(' ').toLowerCase();
   return command.includes(String(record.service || '').toLowerCase()) || command.includes(path.basename(String(record.executable || '')).toLowerCase()) || expected.split(/\s+/).filter((token) => token.length > 3).some((token) => command.includes(token));
+}
+
+function serviceHandoffMatches(record, info) {
+  if (!record || record.service !== 'metro' || !info) return false;
+  const command = normalizedCommand(info.CommandLine || info.commandLine);
+  const executable = normalizedCommand(info.Name || info.name || info.executable);
+  const expectedRoot = normalizedCommand(record.cwd).replace(/\\/g, '/');
+  const commandRoot = command.replace(/\\/g, '/');
+  // A handed-off Expo process must still be a Node/Expo start command rooted
+  // in this product's mobile checkout. A generic Node listener on 8081 does
+  // not satisfy these identity checks.
+  return Boolean(expectedRoot)
+    && /(?:^|\s)(?:node(?:\.exe)?|npm(?:\.cmd)?|cmd(?:\.exe)?)\b/.test(executable)
+    && command.includes('expo')
+    && command.includes('start')
+    && (!expectedRoot || commandRoot.includes(expectedRoot));
 }
 
 function portOwner(port) {
@@ -1200,6 +1240,7 @@ module.exports = {
   processIdentityMatches,
   reconcileRecord,
   commandMatches,
+  serviceHandoffMatches,
   processBelongsTo,
   maestroActivity,
   waitForServiceReady,

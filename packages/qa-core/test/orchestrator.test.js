@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { parseArgs, serviceDefinitions, commandMatches, canonicalMerxusMetroEnvironment, waitForServiceReady, assertPortsAvailable, fixtureCommands, spawnService, reconcileRecord, terminateRecord, stopProduct, processTreeMetadata, normalizeProcessInfo, processInfoWithRetry, ensureAndroidQaApplication, classifySageSetAppRuntime } = require('../src/orchestrator');
+const { parseArgs, serviceDefinitions, commandMatches, serviceHandoffMatches, canonicalMerxusMetroEnvironment, waitForServiceReady, assertPortsAvailable, fixtureCommands, spawnService, reconcileRecord, terminateRecord, stopProduct, processTreeMetadata, normalizeProcessInfo, processInfoWithRetry, ensureAndroidQaApplication, classifySageSetAppRuntime } = require('../src/orchestrator');
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -116,6 +116,30 @@ test('ownership matching rejects unrelated recorded PIDs on Windows semantics', 
   if (process.platform !== 'win32') return;
   assert.equal(commandMatches(record, { CommandLine: 'npm.cmd exec -- expo start --dev-client' }), true);
   assert.equal(commandMatches(record, { CommandLine: 'node unrelated-server.js' }), false);
+});
+
+test('reconciles an npm/Expo Metro handoff when the live port owner leaves the recorded tree', () => {
+  const record = {
+    pid: 3132, rootPid: 3132, service: 'metro', executable: 'npm.cmd',
+    args: ['exec', '--', 'expo', 'start', '--dev-client', '--host', 'lan', '--port', '8081'],
+    cwd: 'C:/Users/sjroy/Source/SageSet/mobile', ports: [8081],
+    processTree: [{ pid: 3132, executable: 'cmd.exe', commandLine: 'cmd.exe /c npm exec expo start --dev-client --port 8081', startedAt: 'root' }],
+  };
+  const infos = new Map([
+    [3132, { pid: 3132, Name: 'cmd.exe', CommandLine: 'cmd.exe /c npm exec expo start --dev-client --port 8081', CreationDate: 'root' }],
+    [36488, { pid: 36488, Name: 'node.exe', CommandLine: 'C:/Users/sjroy/Source/SageSet/mobile/node_modules/expo/bin/cli start --dev-client --host lan --port 8081', CreationDate: 'metro-owner' }],
+  ]);
+  const result = reconcileRecord(record, () => 36488, (pid) => infos.get(pid), (pid) => infos.has(pid));
+  assert.equal(serviceHandoffMatches(record, infos.get(36488)), true);
+  assert.equal(result.state, 'RECOVERED');
+  assert.equal(result.handoff, true);
+  assert.deepEqual(record.processTreePids, [3132, 36488]);
+});
+
+test('Metro handoff matching rejects a different product checkout or unrelated Node listener', () => {
+  const record = { service: 'metro', cwd: 'C:/Users/sjroy/Source/SageSet/mobile' };
+  assert.equal(serviceHandoffMatches(record, { Name: 'node.exe', CommandLine: 'C:/Users/sjroy/Source/Merxus/mobile/node_modules/expo/bin/cli start --port 8081' }), false);
+  assert.equal(serviceHandoffMatches(record, { Name: 'node.exe', CommandLine: 'node unrelated-server.js --port 8081' }), false);
 });
 
 test('reconciles a dead wrapper when a recorded descendant still owns the port', () => {

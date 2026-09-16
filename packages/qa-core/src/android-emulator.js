@@ -5,6 +5,9 @@ const { spawnCommandSync, fromRoot } = require('../../qa-utils/src');
 
 const DEFAULT_TIMEOUT_MS = 120000;
 const DEFAULT_POLL_MS = 1000;
+const DEFAULT_ADB_RECOVERY_TIMEOUT_MS = 15000;
+const DEFAULT_ADB_RECOVERY_POLL_MS = 500;
+const DEFAULT_ADB_RESTART_AFTER_MS = 2000;
 
 const MOBILE_QA_ENVIRONMENTS = require('../../../configs/mobile-qa-environments.json');
 const DEVICE_CONTRACTS = Object.freeze(Object.fromEntries(Object.entries(MOBILE_QA_ENVIRONMENTS.products || {}).map(([product, config]) => [product, {
@@ -63,6 +66,76 @@ function parseAdbDevices(output) {
 function listDevices(adbPath, options = {}) {
   const result = commandResult(adbPath, ['devices', '-l'], options);
   return { result, devices: result.error || result.status !== 0 ? [] : parseAdbDevices(result.stdout) };
+}
+
+function adbServerPortOwner(options = {}) {
+  if (Object.prototype.hasOwnProperty.call(options, 'adbPortOwner')) return options.adbPortOwner;
+  if ((options.platform || process.platform) !== 'win32') return null;
+  const result = commandResult('netstat.exe', ['-ano', '-p', 'tcp'], options);
+  if (result.error || result.status !== 0) return null;
+  const match = String(result.stdout || '').match(/^\s*TCP\s+\S+:5037\s+\S+\s+LISTENING\s+(\d+)\s*$/im);
+  return match ? Number(match[1]) : null;
+}
+
+function adbServerProcessInfo(pid, options = {}) {
+  if (!pid) return null;
+  if (typeof options.adbProcessInfo === 'function') return options.adbProcessInfo(pid);
+  if ((options.platform || process.platform) !== 'win32') return null;
+  const result = spawnCommandSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', `Get-CimInstance Win32_Process -Filter "ProcessId=${Number(pid)}" | Select-Object ProcessId,ParentProcessId,Name,ExecutablePath,CommandLine,CreationDate | ConvertTo-Json -Compress`], { encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
+  if (result.error || result.status !== 0) return null;
+  try {
+    const parsed = JSON.parse(String(result.stdout || '{}'));
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
+  } catch { return null; }
+}
+
+function normalizedPath(value) {
+  return path.resolve(String(value || '')).replace(/[\\/]+/g, '/').replace(/\/$/, '').toLowerCase();
+}
+
+function canonicalAdbServerOwner(pid, adbPath, options = {}) {
+  const info = adbServerProcessInfo(pid, options);
+  if (!info) return { verified: false, pid, info: null, reason: 'ADB process metadata unavailable' };
+  const expected = normalizedPath(adbPath);
+  const executable = normalizedPath(info.ExecutablePath || info.executable || '');
+  const command = normalizedPath(String(info.CommandLine || info.commandLine || '').split(/\s+/)[0]);
+  const verified = Boolean(expected && (executable === expected || command === expected));
+  return { verified, pid, info, reason: verified ? 'canonical adb executable matched' : `ADB executable mismatch (expected ${adbPath})` };
+}
+
+async function ensureAdbCommunication(adbPath, options = {}) {
+  const timeoutMs = Number(options.adbRecoveryTimeoutMs || DEFAULT_ADB_RECOVERY_TIMEOUT_MS);
+  const pollMs = Number(options.adbRecoveryPollMs || options.pollIntervalMs || DEFAULT_ADB_RECOVERY_POLL_MS);
+  const restartAfterMs = Number(options.adbRestartAfterMs ?? DEFAULT_ADB_RESTART_AFTER_MS);
+  const startedAt = Date.now();
+  const deadline = startedAt + timeoutMs;
+  let attempts = 0;
+  let restarted = false;
+  let last = null;
+  const probe = () => {
+    attempts += 1;
+    const listed = listDevices(adbPath, options);
+    last = listed;
+    if (!listed.result?.error && listed.result?.status === 0) return listed;
+    return null;
+  };
+  while (Date.now() < deadline) {
+    const listed = probe();
+    if (listed) return { ok: true, recovered: restarted, attempts, devices: listed.devices, result: listed.result };
+    if (!restarted && Date.now() - startedAt >= restartAfterMs) {
+      const ownerPid = adbServerPortOwner(options);
+      const owner = canonicalAdbServerOwner(ownerPid, adbPath, options);
+      if (owner.verified) {
+        const kill = commandResult(adbPath, ['kill-server'], options);
+        const start = commandResult(adbPath, ['start-server'], options);
+        restarted = !kill.error && kill.status === 0 && !start.error && start.status === 0;
+      }
+      // Unknown/foreign owners are never terminated. Continue bounded probes
+      // so a transient client handshake can recover without unsafe cleanup.
+    }
+    await new Promise((resolve) => setTimeout(resolve, Math.min(pollMs, Math.max(1, deadline - Date.now()))));
+  }
+  return { ok: false, recovered: restarted, attempts, devices: last?.devices || [], result: last?.result || null, ownerPid: adbServerPortOwner(options) };
 }
 
 function deviceState(adbPath, serial, options = {}) {
@@ -146,7 +219,9 @@ async function ensureAndroidEmulator(options = {}) {
   const adbPath = options.adbPath;
   if (!adbPath) throw new Error(`Cannot start ${options.product}/android: ADB executable is unavailable.`);
   const runOptions = { ...options, env, product: options.product };
-  const initial = listDevices(adbPath, runOptions);
+  const adbReady = await ensureAdbCommunication(adbPath, runOptions);
+  if (!adbReady.ok) throw new Error(`ADB communication unavailable after bounded recovery (executable: ${adbPath}; port 5037 owner PID: ${adbReady.ownerPid || 'none'}). No unknown process was terminated.`);
+  const initial = { result: adbReady.result, devices: adbReady.devices };
   const listed = initial.devices.find((item) => item.serial === device.serial);
   if (listed && listed.state === 'device' && bootComplete(adbPath, device.serial, runOptions)) {
     const actualAvd = runningAvdName(adbPath, device.serial, runOptions);
@@ -187,6 +262,11 @@ async function ensureAndroidEmulator(options = {}) {
     const exitInfo = launch.getExitInfo?.();
     if (exitInfo || launch.child?.exitCode != null) throw new Error(`FAILED Android emulator ${discovered.avdName}: process exited with code ${exitInfo?.code ?? launch.child?.exitCode ?? 'unknown'}${exitInfo?.error ? ` (${exitInfo.error})` : ''}. Log: ${launch.logPath}. ADB serial: ${device.serial}.`);
     const current = listDevices(adbPath, runOptions);
+    if (current.result?.error || current.result?.status !== 0) {
+      const recoveredAdb = await ensureAdbCommunication(adbPath, { ...runOptions, adbRecoveryTimeoutMs: Math.min(Number(options.adbRecoveryTimeoutMs || DEFAULT_ADB_RECOVERY_TIMEOUT_MS), Math.max(1, deadline - Date.now())) });
+      if (!recoveredAdb.ok) throw new Error(`ADB communication lost while waiting for ${device.serial}; canonical recovery failed. No unknown process was terminated.`);
+      current.devices = recoveredAdb.devices;
+    }
     const target = current.devices.find((item) => item.serial === device.serial);
     if (target?.state === 'device') {
       if (!bootMessageShown) { process.stdout.write(`Waiting for Android boot...\n`); bootMessageShown = true; }
@@ -204,11 +284,18 @@ async function ensureAndroidEmulator(options = {}) {
 module.exports = {
   DEFAULT_TIMEOUT_MS,
   DEFAULT_POLL_MS,
+  DEFAULT_ADB_RECOVERY_TIMEOUT_MS,
+  DEFAULT_ADB_RECOVERY_POLL_MS,
+  DEFAULT_ADB_RESTART_AFTER_MS,
   DEVICE_CONTRACTS,
   sdkRoots,
   resolveAndroidEmulator,
   parseAdbDevices,
   listDevices,
+  adbServerPortOwner,
+  adbServerProcessInfo,
+  canonicalAdbServerOwner,
+  ensureAdbCommunication,
   deviceState,
   bootComplete,
   configuredDevice,

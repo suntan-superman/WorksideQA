@@ -2,6 +2,8 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 const {
   ensureAndroidEmulator,
+  ensureAdbCommunication,
+  canonicalAdbServerOwner,
   parseAdbDevices,
   resolveAndroidEmulator,
 } = require('../src/android-emulator');
@@ -123,4 +125,90 @@ test('resolves emulator from the SDK fallback without PATH changes', () => {
     fs: { existsSync: (candidate) => candidate.toLowerCase() === 'c:\\qa\\appdata\\local\\android\\sdk\\emulator\\emulator.exe' },
   });
   assert.equal(resolved.toLowerCase(), 'c:\\qa\\appdata\\local\\android\\sdk\\emulator\\emulator.exe');
+});
+
+test('retries a transient canonical ADB client handshake without declaring the emulator offline', async () => {
+  let probes = 0;
+  const result = await ensureAdbCommunication('C:/Android/platform-tools/adb.exe', {
+    platform: 'win32', adbRecoveryTimeoutMs: 50, adbRecoveryPollMs: 1, adbRestartAfterMs: 100,
+    execute: (_command, args) => {
+      if (args[0] === 'devices') {
+        probes += 1;
+        return probes === 1 ? { status: 1, stdout: '', stderr: 'cannot connect to daemon' } : { status: 0, stdout: 'List of devices attached\n' };
+      }
+      return { status: 0, stdout: '' };
+    },
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.recovered, false);
+  assert.equal(result.attempts, 2);
+});
+
+test('restarts only a positively identified canonical ADB daemon and then recovers', async () => {
+  let probes = 0;
+  const calls = [];
+  const adbPath = 'C:/Android/platform-tools/adb.exe';
+  const result = await ensureAdbCommunication(adbPath, {
+    platform: 'win32', adbRecoveryTimeoutMs: 100, adbRecoveryPollMs: 1, adbRestartAfterMs: 0,
+    adbPortOwner: 44992,
+    adbProcessInfo: () => ({ ProcessId: 44992, ParentProcessId: null, ExecutablePath: adbPath, Name: 'adb.exe', CommandLine: `${adbPath} -L tcp:5037 fork-server server` }),
+    execute: (command, args) => {
+      calls.push({ command, args });
+      if (args[0] === 'devices') {
+        probes += 1;
+        return probes < 2 ? { status: 1, stdout: '', stderr: 'could not read ok from ADB Server' } : { status: 0, stdout: 'List of devices attached\n' };
+      }
+      return { status: 0, stdout: 'OK\n' };
+    },
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.recovered, true);
+  assert.ok(calls.some((call) => call.command === adbPath && call.args[0] === 'kill-server'));
+  assert.ok(calls.some((call) => call.command === adbPath && call.args[0] === 'start-server'));
+});
+
+test('does not kill an unknown ADB port owner and fails within the recovery budget', async () => {
+  const calls = [];
+  const result = await ensureAdbCommunication('C:/Android/platform-tools/adb.exe', {
+    platform: 'win32', adbRecoveryTimeoutMs: 10, adbRecoveryPollMs: 1, adbRestartAfterMs: 0,
+    adbPortOwner: 12345,
+    adbProcessInfo: () => ({ ProcessId: 12345, ExecutablePath: 'C:/Other/adb.exe', Name: 'adb.exe' }),
+    execute: (command, args) => { calls.push({ command, args }); return args[0] === 'devices' ? { status: 1, stderr: 'cannot connect to daemon' } : { status: 0, stdout: '' }; },
+  });
+  assert.equal(result.ok, false);
+  assert.equal(calls.some((call) => call.args[0] === 'kill-server'), false);
+});
+
+test('accepts a canonical orphaned ADB daemon after its launcher parent exits', () => {
+  const result = canonicalAdbServerOwner(44992, 'C:/Android/platform-tools/adb.exe', {
+    platform: 'win32', adbProcessInfo: () => ({ ProcessId: 44992, ParentProcessId: 34072, ExecutablePath: 'C:/Android/platform-tools/adb.exe', Name: 'adb.exe' }),
+  });
+  assert.equal(result.verified, true);
+});
+
+test('continues emulator startup after safely recovering a wedged canonical daemon', async () => {
+  let devicePolls = 0;
+  let adbProbes = 0;
+  const adbPath = 'C:/Android/platform-tools/adb.exe';
+  const result = await ensureAndroidEmulator({
+    platform: 'win32', product: 'merxus', env: baseEnv, adbPath,
+    emulatorPath: 'C:/Android/emulator/emulator.exe', timeoutMs: 100, pollIntervalMs: 1,
+    adbRecoveryTimeoutMs: 20, adbRecoveryPollMs: 1, adbRestartAfterMs: 0,
+    adbPortOwner: 44992,
+    adbProcessInfo: () => ({ ProcessId: 44992, ExecutablePath: adbPath, Name: 'adb.exe', CommandLine: `${adbPath} -L tcp:5037 fork-server server` }),
+    spawn: fakeSpawn,
+    fs: { existsSync: () => true, mkdirSync() {}, openSync: () => 1, closeSync() {} },
+    execute: (command, args) => {
+      if (args[0] === 'devices') {
+        adbProbes += 1;
+        if (adbProbes === 1) return { status: 1, stderr: 'cannot connect to daemon' };
+        devicePolls += 1;
+        return { status: 0, stdout: devicePolls > 1 ? 'List of devices attached\nemulator-5554 device\n' : 'List of devices attached\n' };
+      }
+      if (args.at(-1) === 'sys.boot_completed') return { status: 0, stdout: '1\n' };
+      return { status: 0, stdout: 'OK\n' };
+    },
+  });
+  assert.equal(result.ready, true);
+  assert.equal(result.started, true);
 });
