@@ -382,6 +382,15 @@
         "fixtureScenario": "phase2-settings-owner-b-isolation",
         "backendVerification": "phase2-settings-owner-b-isolation",
         "mutationExpected": true,
+        "iosIntegration": {
+          "account": "user-b",
+          "method": "PATCH",
+          "readPath": "/api/sms/settings",
+          "mutationPath": "/api/sms/settings",
+          "field": "notificationRetryMaxAttempts",
+          "before": 2,
+          "after": 3
+        },
         "iosPostReloadReanchor": {
           "targetId": "settings.sms.notification-retry-max-attempts",
           "direction": "DOWN",

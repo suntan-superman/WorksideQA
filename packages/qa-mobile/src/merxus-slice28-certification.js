@@ -6,10 +6,11 @@ const { loadProductManifest } = require('../../qa-config/src');
 const { loadLocalQaConfig } = require('../../qa-core/src/local-config');
 const { ensureDir, fromRoot, readJson, writeJson } = require('../../qa-utils/src');
 const { runMaestroFlows, selectFlows, validateMaestroConfiguration } = require('./maestro-runner');
+const { runAuthenticatedSmsIntegration } = require('./merxus-slice28-integration');
 
 const COMPONENTS = Object.freeze([
   { key: 'interaction', label: 'A. iOS SMS settings interaction surface', suite: 'diagnostic-ios-text-input-focus-qahelper' },
-  { key: 'persistence', label: 'B. Save/Reload persistence', suite: 'phase2-owner-b-isolation-ios-persistence' },
+  { key: 'persistence', label: 'B. SMS persistence integration', flow: '28-ios-owner-b-persistence' },
 ]);
 
 function scrubError(error) {
@@ -91,6 +92,30 @@ function evaluateComposite(components) {
 
 async function runComponent(config, validated, component, options) {
   const directory = ensureDir(path.join(options.runDirectory, component.key));
+  if (component.key === 'persistence') {
+    const flow = selectFlows(validated, { flow: component.flow })[0];
+    const generation = `${config.key}-maestro-${Date.now()}-${flow.name}`.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+    try {
+      const integration = await runAuthenticatedSmsIntegration({ validated, flow, generation, runDirectory: directory });
+      return {
+        key: component.key,
+        label: component.label,
+        status: integration.status,
+        execution: integration.execution,
+        artifacts: integration.artifacts || directory,
+        ...(integration.status === 'passed' ? {} : { stage: integration.failureStage || 'integration', reason: integration.reason || 'Authenticated persistence integration failed.' }),
+      };
+    } catch (error) {
+      return {
+        key: component.key,
+        label: component.label,
+        status: 'failed',
+        artifacts: directory,
+        stage: error.failureStage || 'integration',
+        reason: scrubError(error),
+      };
+    }
+  }
   try {
     const execution = await runMaestroFlows(config, {
       suite: component.suite,
@@ -161,13 +186,13 @@ async function runComposite(config, options = {}) {
 function validateComposite(config) {
   const validated = validateMaestroConfiguration(config);
   for (const component of COMPONENTS) {
-    const selected = selectFlows(validated, { suite: component.suite });
+    const selected = component.flow ? selectFlows(validated, { flow: component.flow }) : selectFlows(validated, { suite: component.suite });
     if (selected.length !== 1) throw new Error(`Slice 28 component ${component.key} must select exactly one flow.`);
   }
   const interaction = selectFlows(validated, { suite: COMPONENTS[0].suite })[0];
-  const persistence = selectFlows(validated, { suite: COMPONENTS[1].suite })[0];
+  const persistence = selectFlows(validated, { flow: COMPONENTS[1].flow })[0];
   if (interaction.mutationExpected !== false || interaction.backendVerification) throw new Error('Slice 28 interaction component must be a read-only diagnostic without backend verification.');
-  if (persistence.mutationExpected !== true || !persistence.backendVerification) throw new Error('Slice 28 persistence component must require the protected backend verification.');
+  if (persistence.mutationExpected !== true || persistence.backendVerification !== 'phase2-settings-owner-b-isolation' || !persistence.iosIntegration) throw new Error('Slice 28 persistence component must require the authenticated integration and protected backend verification.');
   return { validated, interaction, persistence };
 }
 

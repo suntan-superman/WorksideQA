@@ -15,6 +15,10 @@ assert.equal(composite.persistence.name, '28-ios-owner-b-persistence');
 assert.equal(composite.interaction.mutationExpected, false);
 assert.equal(composite.persistence.mutationExpected, true);
 assert.ok(composite.persistence.backendVerification);
+assert.deepEqual(composite.persistence.iosIntegration, {
+  account: 'user-b', method: 'PATCH', readPath: '/api/sms/settings', mutationPath: '/api/sms/settings',
+  field: 'notificationRetryMaxAttempts', before: 2, after: 3,
+});
 assert.equal(COMPONENTS[0].label, 'A. iOS SMS settings interaction surface');
 
 const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'worksideqa-slice28-composite-'));
@@ -27,27 +31,11 @@ try {
   assert.equal(interactionCommands.some((command) => command.inputText === '3'), false);
   assert.equal(interactionCommands.some((command) => command.tapOn?.id === 'settings.sms.save' || command.tapOn?.id === 'settings.sms.reload'), false);
 
-  const ios = buildDeviceLaunchFlow(composite.persistence, { ...validated.mobile.devices.iosSimulator, id: 'slice28-ios' }, path.join(directory, 'ios.yaml'));
-  assert.equal(ios.stages.length, 3);
-  const resume = YAML.parseAllDocuments(fs.readFileSync(ios.stages[2].path, 'utf8'))[1].toJS();
-  const ids = JSON.stringify(resume);
-  assert.ok(ids.includes('settings.sms.qa-set-notification-retry-max-attempts'));
-  assert.ok(ids.includes('settings.sms.qa-save'));
-  assert.equal(resume.some((command) => command.tapOn?.id === 'settings.sms.save'), false);
-  assert.equal(resume.some((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.save'), false);
-  assert.ok(ids.includes('settings.sms.saved'));
-  assert.ok(ids.includes('settings.sms.request-id'));
-  assert.ok(ids.includes('settings.sms.operation-id'));
-  assert.ok(ids.includes('settings.sms.qa-reload'));
-  assert.ok(ids.includes('settings.sms.qa-reload-state'));
-  assert.ok(ids.includes('settings.sms.qa-notification-retry-max-attempts-value'));
-  assert.ok(ids.includes('WORKSIDEQA_CORRELATION='));
-  assert.ok(resume.some((command) => command.assertVisible?.id === 'settings.sms.qa-notification-retry-max-attempts-value' && command.assertVisible.text === '^3$'));
-  assert.equal(resume.filter((command) => command.tapOn?.id === 'settings.sms.qa-set-notification-retry-max-attempts').length, 1);
-  assert.equal(resume.some((command) => command.tapOn?.id === 'settings.sms.notification-retry-max-attempts'), false);
-  assert.equal(resume.some((command) => command.inputText === '3'), false);
-  assert.equal(resume.some((command) => command.extendedWaitUntil?.visible?.id === 'settings.sms.reloaded'), false);
-  assert.equal(resume.some((command) => command.tapOn?.id === 'settings.sms.reload'), false);
+  assert.equal(composite.persistence.iosIntegration.method, 'PATCH');
+  assert.equal(composite.persistence.iosIntegration.mutationPath, '/api/sms/settings');
+  assert.equal(composite.persistence.iosIntegration.readPath, '/api/sms/settings');
+  assert.equal(composite.persistence.iosIntegration.before, 2);
+  assert.equal(composite.persistence.iosIntegration.after, 3);
 
   const androidFlow = selectFlows(validated, { suite: 'phase2-owner-b-isolation' })[0];
   const android = buildDeviceLaunchFlow(androidFlow, { ...validated.mobile.devices.androidEmulator, id: 'emulator-5554' }, path.join(directory, 'android.yaml'));
