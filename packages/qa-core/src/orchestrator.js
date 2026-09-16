@@ -205,6 +205,17 @@ function reconcileRecord(record, ownerResolver = portOwner, infoResolver = proce
   const portOwners = (record.ports || record.port ? (record.ports || [record.port]) : []).map((port) => ({ port, pid: ownerResolver(port) }));
   const known = new Map(currentTree.filter((item) => !item.mismatch).map((item) => [Number(item.pid), item]));
   const foreign = portOwners.find((item) => item.pid && !known.has(Number(item.pid)) && Number(item.pid) !== Number(record.pid));
+  // Persisted records can outlive their processes (for example after a
+  // reboot). When every expected port is free, an identity mismatch is
+  // stale metadata rather than a live collision. Reconcile it without
+  // adopting or terminating any process. A real listener remains a conflict.
+  if (mismatched && !portOwners.some((item) => item.pid)) {
+    return {
+      state: 'STALE', owned: false, recovered: false, stale: true, portOwners,
+      currentTree, mismatch: mismatched,
+      reason: `recorded PID ${mismatched.expected?.pid} identity is stale and expected ports are free`,
+    };
+  }
   if (foreign || mismatched) {
     return {
       state: 'CONFLICT', owned: false, recovered: false, portOwners, mismatch: mismatched || foreign,
@@ -680,6 +691,25 @@ async function startProduct(product) {
   const state = loadState();
   state.products[product] = state.products[product] || { services: [] };
   const records = state.products[product].services || [];
+  // Reconcile every recorded service before starting any dependency. This
+  // makes reboot-stale metadata and genuine port conflicts fail fast instead
+  // of waiting for an earlier service to become ready first.
+  for (const definition of definitions) {
+    const previous = records.find((record) => record.service === definition.service);
+    const ownership = reconcileRecord(previous);
+    if (ownership.state === 'STALE') {
+      const staleIndex = records.findIndex((item) => item.service === definition.service);
+      if (staleIndex >= 0) records.splice(staleIndex, 1);
+      process.stdout.write(`STALE STATE ${product}/${definition.service}: expected ports are free; reconciled persisted ownership\n`);
+      continue;
+    }
+    if (ownership.state === 'CONFLICT') {
+      const owner = ownership.portOwners.find((item) => item.pid && (!ownership.mismatch || Number(item.pid) === Number(ownership.mismatch?.pid)));
+      throw new Error(`Cannot start ${product}/${definition.service}: port ${owner?.port || definition.ports[0]} is owned by PID ${owner?.pid || 'unknown'} with an identity mismatch; manual review required.`);
+    }
+    assertPortsAvailable(definition, ownership.owned ? previous : null);
+  }
+  saveState(state);
   const started = [];
   let fixturesReady = false;
   let metroPrewarmResult = null;
@@ -711,8 +741,15 @@ async function startProduct(product) {
       await bootstrapFixtures(product, env, state);
       fixturesReady = true;
     }
-    const previous = records.find((record) => record.service === definition.service);
+    let previous = records.find((record) => record.service === definition.service);
     const ownership = reconcileRecord(previous);
+    if (ownership.state === 'STALE') {
+      const staleIndex = records.findIndex((item) => item.service === definition.service);
+      if (staleIndex >= 0) records.splice(staleIndex, 1);
+      previous = null;
+      saveState(state);
+      process.stdout.write(`STALE STATE ${product}/${definition.service}: expected ports are free; reconciled persisted ownership\n`);
+    }
     if (ownership.state === 'CONFLICT') {
       const owner = ownership.portOwners.find((item) => item.pid && (!ownership.mismatch || Number(item.pid) === Number(ownership.mismatch?.pid)));
       throw new Error(`Cannot start ${product}/${definition.service}: port ${owner?.port || definition.ports[0]} is owned by PID ${owner?.pid || 'unknown'} with an identity mismatch; manual review required.`);
@@ -816,10 +853,14 @@ function statusRows(product, env) {
     for (const definition of serviceDefinitions(key, env)) {
       const record = state.products[key]?.services?.find((item) => item.service === definition.service) || null;
       const ownership = reconcileRecord(record);
+      if (record && ownership.state === 'STALE') {
+        state.products[key].services = state.products[key].services.filter((item) => item !== record);
+        saveState(state);
+      }
       const owners = ownership.portOwners.length ? ownership.portOwners : definition.ports.map((port) => ({ port, pid: portOwner(port) }));
       const running = ownership.owned && owners.every((item) => !item.pid || processBelongsTo(record, item.pid) || (record?.processTreePids || []).map(Number).includes(Number(item.pid)));
       if (record && ownership.recovered) saveState(state);
-      rows.push({ product: key, service: definition.service, role: definition.role, running, state: ownership.state, reason: ownership.reason || null, pid: record?.pid || null, startTime: record?.startedAt || null, expectedPorts: definition.ports, actualPortOwners: owners, runtimeMode: key === 'merxus' ? 'maestro' : 'emulator', maestroState, owner: ownership.state === 'CONFLICT' ? 'conflict' : ownership.owned ? 'WorksideQA' : record ? 'unknown' : 'none' });
+      rows.push({ product: key, service: definition.service, role: definition.role, running, state: ownership.state, reason: ownership.reason || null, pid: record?.pid || null, startTime: record?.startedAt || null, expectedPorts: definition.ports, actualPortOwners: owners, runtimeMode: key === 'merxus' ? 'maestro' : 'emulator', maestroState, owner: ownership.state === 'CONFLICT' ? 'conflict' : ownership.state === 'STALE' ? 'stale' : ownership.owned ? 'WorksideQA' : record ? 'unknown' : 'none' });
     }
   }
   if (product === 'merxus' || !product) {
@@ -835,7 +876,7 @@ function statusRows(product, env) {
 
 function printStatus(rows) {
   for (const row of rows) {
-    const state = row.state === 'CONFLICT' ? 'CONFLICT' : row.state === 'RECOVERED' ? 'RECOVERED' : row.running ? 'RUNNING' : 'NOT RUNNING';
+    const state = row.state === 'CONFLICT' ? 'CONFLICT' : row.state === 'STALE' ? 'STALE STATE' : row.state === 'RECOVERED' ? 'RECOVERED' : row.running ? 'RUNNING' : 'NOT RUNNING';
     const ports = row.expectedPorts.length ? row.expectedPorts.join(',') : '-';
     const owners = row.actualPortOwners.length ? row.actualPortOwners.map((item) => `${item.port}:${item.pid || '-'}`).join(',') : '-';
     process.stdout.write(`${state.padEnd(12)} ${row.product.padEnd(8)} ${row.service.padEnd(16)} PID=${row.pid || '-'} start=${row.startTime || '-'} expected=${ports} owner=${owners} mode=${row.runtimeMode} maestro=${row.maestroState || '-'}${row.reason ? ` reason=${row.reason}` : ''}${row.emulatorState ? ` emulator=${row.emulatorState}` : ''}${row.appId ? ` appId=${row.appId}` : ''}${row.appInstalled != null ? ` app=${row.appInstalled ? 'installed' : 'missing'}` : ''}\n`);
@@ -856,6 +897,10 @@ async function stopProduct(product, options = {}) {
     const remainingRecords = [];
     for (const record of services) {
       const ownership = reconcile(record);
+      if (ownership.state === 'STALE') {
+        process.stdout.write(`STALE STATE ${key}/${record.service}: expected ports are free; reconciled persisted ownership\n`);
+        continue;
+      }
       if (ownership.state === 'CONFLICT') {
         failures.push({ key, record, outcome: { stopped: false, reason: ownership.reason, remainingPorts: ownership.portOwners.filter((item) => item.pid) } });
         remainingRecords.push(record);
@@ -888,14 +933,19 @@ async function restartProductService(product, service) {
   const record = state.products[product]?.services?.find((item) => item.service === service);
   if (record) {
     const ownership = reconcileRecord(record);
-    if (ownership.state === 'CONFLICT') {
+    if (ownership.state === 'STALE' || ownership.state === 'NOT RUNNING') {
+      state.products[product].services = state.products[product].services.filter((item) => item !== record);
+      saveState(state);
+      process.stdout.write(`Reconciled stale ${product}/${service} ownership before restart.\n`);
+    } else if (ownership.state === 'CONFLICT') {
       const owner = ownership.portOwners.find((item) => item.pid);
       throw new Error(`Refusing to restart ${product}/${service}: port ${owner?.port || service} is CONFLICT (PID ${owner?.pid || 'unknown'} identity mismatch).`);
+    } else {
+      const outcome = await terminateRecord(record, { ownership });
+      if (!outcome.stopped) throw new Error(`Refusing to restart ${product}/${service}: verified process tree could not be stopped (${outcome.reason || 'unknown termination failure'}). No unverified process was touched.`);
+      state.products[product].services = state.products[product].services.filter((item) => item !== record);
+      saveState(state);
     }
-    const outcome = await terminateRecord(record, { ownership });
-    if (!outcome.stopped) throw new Error(`Refusing to restart ${product}/${service}: verified process tree could not be stopped (${outcome.reason || 'unknown termination failure'}). No unverified process was touched.`);
-    state.products[product].services = state.products[product].services.filter((item) => item !== record);
-    saveState(state);
   }
   const final = await startProduct(product);
   return final;

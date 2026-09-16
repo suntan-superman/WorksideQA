@@ -98,6 +98,37 @@ test('stale runtime state with no live tree is not running', () => {
   assert.equal(result.state, 'NOT RUNNING');
 });
 
+test('reconciles a reused recorded PID as stale when all expected ports are free', () => {
+  const record = {
+    pid: 100, rootPid: 100, service: 'firebase', executable: 'firebase.cmd', args: ['emulators:start'], ports: [9099, 8080, 9199],
+    processTree: [{ pid: 100, executable: 'firebase.cmd', commandLine: 'firebase.cmd emulators:start', startedAt: 'old' }],
+  };
+  const result = reconcileRecord(
+    record,
+    () => null,
+    (pid) => pid === 100 ? { pid, Name: 'unrelated.exe', CommandLine: 'unrelated.exe --work', CreationDate: 'new' } : null,
+    (pid) => pid === 100,
+  );
+  assert.equal(result.state, 'STALE');
+  assert.equal(result.stale, true);
+  assert.deepEqual(result.portOwners, [{ port: 9099, pid: null }, { port: 8080, pid: null }, { port: 9199, pid: null }]);
+});
+
+test('a live listener keeps a reused recorded PID as a conflict', () => {
+  const record = {
+    pid: 100, rootPid: 100, service: 'firebase', executable: 'firebase.cmd', args: ['emulators:start'], ports: [9099],
+    processTree: [{ pid: 100, executable: 'firebase.cmd', commandLine: 'firebase.cmd emulators:start', startedAt: 'old' }],
+  };
+  const result = reconcileRecord(
+    record,
+    () => 100,
+    (pid) => pid === 100 ? { pid, Name: 'unrelated.exe', CommandLine: 'unrelated.exe --listen 9099', CreationDate: 'new' } : null,
+    (pid) => pid === 100,
+  );
+  assert.equal(result.state, 'CONFLICT');
+  assert.equal(result.portOwners[0].pid, 100);
+});
+
 test('readiness stops immediately when a child exits before ports are ready', async () => {
   const result = await waitForServiceReady({ record: { ports: [65530] }, getExitInfo: () => ({ code: 1, signal: null }) }, 5000);
   assert.equal(result.ready, false);
