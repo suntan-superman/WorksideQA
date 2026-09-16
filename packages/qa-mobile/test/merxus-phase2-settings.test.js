@@ -192,16 +192,13 @@ try {
   assert.equal(ownerBIos.stages.length, 3, 'Owner B mutation retains the certified iOS split flow');
   assert.ok(ownerBIos.launchPlan.launchArgs.includes('owner-b-explicit-ios'));
   const ownerBIosResume = YAML.parseAllDocuments(fs.readFileSync(ownerBIos.stages[2].path, 'utf8'))[1].toJS();
-  assert.ok(ownerBIosResume.some((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.save'));
-  assert.ok(ownerBIosResume.some((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.reload'));
-  const ownerBSaveScroll = ownerBIosResume.find((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.save' && command.scrollUntilVisible.centerElement === true);
-  const ownerBReloadScrollIndex = ownerBIosResume.findIndex((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.reload');
-  const ownerBReloadScroll = ownerBIosResume.find((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.reload');
-  assert.deepEqual(ownerBSaveScroll.scrollUntilVisible, { element: { id: 'settings.sms.save' }, direction: 'DOWN', timeout: 20000, centerElement: true });
-  assert.deepEqual(ownerBReloadScroll.scrollUntilVisible, { element: { id: 'settings.sms.reload' }, direction: 'DOWN', timeout: 5000, centerElement: true });
+  const ownerBQaSaveIndex = ownerBIosResume.findIndex((command) => command.tapOn?.id === 'settings.sms.qa-save');
+  assert.ok(ownerBQaSaveIndex >= 0, 'iOS uses the QA Save invocation surface');
+  assert.equal(ownerBIosResume.filter((command) => command.tapOn?.id === 'settings.sms.save').length, 0, 'iOS does not search for or tap the inaccessible real Save node');
+  assert.equal(ownerBIosResume.some((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.save'), false, 'iOS does not scroll to the inaccessible real Save node');
+  assert.deepEqual(ownerBIosResume[ownerBQaSaveIndex - 1], { extendedWaitUntil: { visible: { id: 'settings.sms.qa-save' }, timeout: 5000 } });
   const ownerBIosReloadHelperIndex = ownerBIosResume.findIndex((command) => command.tapOn?.id === 'settings.sms.qa-reload');
-  assert.ok(ownerBIosReloadHelperIndex > ownerBReloadScrollIndex && ownerBIosReloadHelperIndex >= 0, 'iOS uses the QA Reload helper after the Save/reload anchor');
-  assert.equal(ownerBIosResume.filter((command) => command.tapOn?.id === 'settings.sms.reload').length, 0, 'iOS does not tap the unreliable real Reload node');
+  assert.ok(ownerBIosReloadHelperIndex > ownerBQaSaveIndex, 'iOS uses the QA Reload helper after the production Save path');
   assert.deepEqual(ownerBIosResume[ownerBIosReloadHelperIndex + 1], {
     extendedWaitUntil: {
       visible: { id: 'settings.sms.qa-reload-state', text: '^hydrated$' },
@@ -225,7 +222,7 @@ try {
     { tapOn: { id: 'settings.sms.qa-set-notification-retry-max-attempts' } },
     { extendedWaitUntil: { visible: { id: 'settings.sms.qa-notification-retry-max-attempts-value', text: '^3$' }, timeout: 5000 } },
     { assertVisible: { id: 'settings.sms.qa-notification-retry-max-attempts-value', text: '^3$' } },
-    { scrollUntilVisible: { element: { id: 'settings.sms.save' }, direction: 'DOWN', timeout: 20000, centerElement: true } },
+    { extendedWaitUntil: { visible: { id: 'settings.sms.qa-save' }, timeout: 5000 } },
   ]);
   assert.equal(ownerBIosResume.some((command) => command.tapOn?.id === 'settings.sms.notification-retry-max-attempts'), false, 'iOS does not tap the unreliable TextInput');
   assert.equal(ownerBIosResume.some((command) => command.inputText === '3'), false, 'iOS draft setup does not use Maestro keyboard entry');

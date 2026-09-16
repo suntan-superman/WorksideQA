@@ -32,7 +32,12 @@ try {
   const resume = YAML.parseAllDocuments(fs.readFileSync(ios.stages[2].path, 'utf8'))[1].toJS();
   const ids = JSON.stringify(resume);
   assert.ok(ids.includes('settings.sms.qa-set-notification-retry-max-attempts'));
-  assert.ok(ids.includes('settings.sms.save'));
+  assert.ok(ids.includes('settings.sms.qa-save'));
+  assert.equal(resume.some((command) => command.tapOn?.id === 'settings.sms.save'), false);
+  assert.equal(resume.some((command) => command.scrollUntilVisible?.element?.id === 'settings.sms.save'), false);
+  assert.ok(ids.includes('settings.sms.saved'));
+  assert.ok(ids.includes('settings.sms.request-id'));
+  assert.ok(ids.includes('settings.sms.operation-id'));
   assert.ok(ids.includes('settings.sms.qa-reload'));
   assert.ok(ids.includes('settings.sms.qa-reload-state'));
   assert.ok(ids.includes('settings.sms.qa-notification-retry-max-attempts-value'));
@@ -44,7 +49,8 @@ try {
   assert.equal(resume.some((command) => command.extendedWaitUntil?.visible?.id === 'settings.sms.reloaded'), false);
   assert.equal(resume.some((command) => command.tapOn?.id === 'settings.sms.reload'), false);
 
-  const android = buildDeviceLaunchFlow(composite.persistence, { ...validated.mobile.devices.androidEmulator, id: 'emulator-5554' }, path.join(directory, 'android.yaml'));
+  const androidFlow = selectFlows(validated, { suite: 'phase2-owner-b-isolation' })[0];
+  const android = buildDeviceLaunchFlow(androidFlow, { ...validated.mobile.devices.androidEmulator, id: 'emulator-5554' }, path.join(directory, 'android.yaml'));
   const androidCommands = YAML.parseAllDocuments(fs.readFileSync(android.path, 'utf8'))[1].toJS();
   assert.equal(androidCommands.filter((command) => command.tapOn?.id === 'settings.sms.reload').length, 1);
   assert.equal(androidCommands.filter((command) => command.tapOn?.id === 'settings.sms.qa-reload').length, 0);

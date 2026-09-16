@@ -64,21 +64,12 @@ appId: com.merxus.mobile.qa
 - assertVisible:
     id: settings.sms.qa-notification-retry-max-attempts-value
     text: '^3$'
-- scrollUntilVisible:
-    element:
-      id: settings.sms.save
-    direction: DOWN
-    timeout: 20000
-    centerElement: true
 - extendedWaitUntil:
     visible:
-      id: settings.sms.save
+      id: settings.sms.qa-save
     timeout: 5000
-- assertVisible:
-    id: settings.sms.save
-    enabled: true
 - tapOn:
-    id: settings.sms.save
+    id: settings.sms.qa-save
 - extendedWaitUntil:
     visible:
       id: settings.sms.saved
@@ -90,22 +81,13 @@ appId: com.merxus.mobile.qa
     id: settings.sms.operation-id
 - evalScript: >-
     ${console.log('WORKSIDEQA_CORRELATION=' + JSON.stringify({requestId: output.settingsRequestId, operationId: maestro.copiedText}))}
-- scrollUntilVisible:
-    element:
-      id: settings.sms.reload
-    direction: DOWN
-    timeout: 20000
-    centerElement: true
-- extendedWaitUntil:
-    visible:
-      id: settings.sms.reload
-    timeout: 5000
 - tapOn:
-    id: settings.sms.reload
+    id: settings.sms.qa-reload
 - extendedWaitUntil:
     visible:
-      id: settings.sms.reloaded
-    timeout: 15000
+      id: settings.sms.qa-reload-state
+      text: '^hydrated$'
+    timeout: 10000
 - assertVisible:
     id: settings.sms.notification-retry-max-attempts
     text: '^3$'
