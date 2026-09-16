@@ -12,7 +12,7 @@ function safeJsonOutput(stdout) {
 
 function integrationConfig(flow) {
   const config = flow.iosIntegration;
-  if (!config || config.method !== 'PATCH' || config.readPath !== '/api/sms/settings' || config.mutationPath !== '/api/sms/settings') {
+  if (!config || config.account !== 'user-b' || config.method !== 'PATCH' || config.readPath !== '/api/sms/settings' || config.mutationPath !== '/api/sms/settings') {
     throw new Error('Slice 28 iOS integration contract is incomplete or unsafe.');
   }
   if (config.field !== 'notificationRetryMaxAttempts' || config.before !== 2 || config.after !== 3) {
