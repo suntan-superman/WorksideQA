@@ -40,6 +40,16 @@ cd /Users/stanleyroy/Desktop/Development/worksideQA
 
 Choose the same menu. The script delegates to `qa:start` and the product-scoped strict Doctor. Unsupported platform prerequisites are reported as NOT READY rather than silently substituted.
 
+macOS repository checkouts do not need to mirror the Windows monorepo. Set the
+machine-local `MERXUS_MOBILE_REPO` to the actual Mobile checkout (for example,
+a standalone `merxusmobile` directory), and set `MERXUS_BACKEND_REPO` and
+`MERXUS_WEB_REPO` only when those local checkouts are used by the configured
+Firebase/backend services. If the Mobile checkout contains the local
+`firebase.json`, the historical shared Merxus parent and web paths are not
+required. These values belong only in the ignored `.maestro.local.ps1`; do not
+commit user-specific `/Users/...` paths. The iOS path validates `xcrun` and the
+configured simulator and does not require Android `adb`.
+
 ## After reboot
 
 1. Start Firebase, backend, Metro, and the configured device only through the launcher.
@@ -55,7 +65,7 @@ Healthy WorksideQA-owned services are reused. `qa:start` starts only missing ser
 | --- | --- | --- |
 | Windows / Merxus | Firebase Auth/Firestore/Storage, QA backend, canonical Maestro Metro | Android AVD selected by `MERXUS_ANDROID_AVD_NAME` (or the single installed AVD), serial from `MERXUS_ANDROID_EMULATOR_ID`, `com.merxus.mobile.qa` |
 | Windows / SageSet | Firebase Auth/Firestore/Storage/Functions emulators, SageSet Maestro Metro (8081) | Android AVD selected by `SAGESET_ANDROID_AVD_NAME` (or the single installed AVD), serial from required `SAGESET_ANDROID_EMULATOR_ID`, QA app `com.workside.sageset`, actual `screen.auth.login` or `screen.today.ready` required |
-| macOS / Merxus | Same Firebase/backend/Metro contracts through `qa:start` | Configured iOS simulator for iOS flows |
+| macOS / Merxus | Same Firebase/backend/Metro contracts through `qa:start` (from the configured local checkouts) | Configured iOS simulator; `xcrun` required, Android `adb` not required |
 | macOS / SageSet | SageSet Firebase emulator contract and product services | Configured SageSet simulator/device |
 
 ## Ports

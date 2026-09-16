@@ -39,6 +39,19 @@ test('startup definitions use the resolver paths when supplied', () => {
   assert.equal(definitions[2].executable, 'C:\\Tools\\npm.cmd');
 });
 
+test('Merxus Firebase uses a configured web checkout, or Mobile when it owns firebase.json', () => {
+  const root = fs.mkdtempSync(path.join(require('node:os').tmpdir(), 'worksideqa-firebase-root-'));
+  const mobile = path.join(root, 'merxusmobile');
+  fs.mkdirSync(mobile, { recursive: true });
+  fs.writeFileSync(path.join(mobile, 'firebase.json'), '{}');
+  try {
+    const definitions = serviceDefinitions('merxus', { MERXUS_MOBILE_REPO: mobile, MERXUS_BACKEND_REPO: path.join(root, 'backend'), MERXUS_WEB_REPO: path.join(root, 'missing-web') });
+    assert.equal(definitions[0].cwd, mobile);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test('qa:start forces canonical Maestro Metro inputs over inherited production values', () => {
   const env = canonicalMerxusMetroEnvironment({
     EXPO_PUBLIC_ENVIRONMENT: 'production',

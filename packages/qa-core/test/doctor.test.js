@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const path = require('node:path');
-const { parseArgs, parsePowerShellConfig, mergedEnvironment, checkDevices, checkTools, runDoctor } = require('../src/doctor');
+const { parseArgs, parsePowerShellConfig, mergedEnvironment, checkDevices, checkTools, checkPaths, checkLocalContract, runDoctor } = require('../src/doctor');
 const { DEFAULT_LOCAL_CONFIG_PATH } = require('../src/local-config');
 
 function localConfigWithoutSageSet() {
@@ -130,4 +130,33 @@ test('post-start Doctor environment normalizes a missing-shell Firebase template
   assert.ok(path.isAbsolute(env.WORKSIDEQA_FIREBASE_BIN));
   assert.doesNotMatch(env.WORKSIDEQA_FIREBASE_BIN, /^[\\/]/);
   assert.match(env.WORKSIDEQA_FIREBASE_BIN, /firebase\.cmd$/i);
+});
+
+test('macOS Merxus contract uses the configured iOS simulator instead of requiring ADB', () => {
+  const localConfig = localConfigWithoutSageSet();
+  localConfig.MERXUS_IOS_SIMULATOR_ID = 'SIMULATOR-UDID';
+  const env = mergedEnvironment(localConfig);
+  const checks = checkLocalContract(env, localConfig, 'merxus', { platform: 'darwin' });
+  assert.equal(checks.some((check) => check.id === 'config.MERXUS_ANDROID_EMULATOR_ID'), false);
+  assert.equal(checks.find((check) => check.id === 'config.MERXUS_IOS_SIMULATOR_ID').status, 'passed');
+});
+
+test('macOS Merxus path checks allow a standalone Mobile checkout with local Firebase config', () => {
+  const fs = require('node:fs');
+  const os = require('node:os');
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'worksideqa-macos-layout-'));
+  const mobile = path.join(root, 'merxusmobile');
+  const backend = path.join(root, 'backend');
+  fs.mkdirSync(mobile, { recursive: true });
+  fs.mkdirSync(backend, { recursive: true });
+  fs.writeFileSync(path.join(mobile, 'firebase.json'), '{}');
+  try {
+    const checks = checkPaths({ MERXUS_ROOT_REPO: path.join(root, 'missing-parent'), MERXUS_MOBILE_REPO: mobile, MERXUS_BACKEND_REPO: backend, MERXUS_WEB_REPO: path.join(root, 'missing-web') }, 'merxus', { platform: 'darwin' });
+    assert.equal(checks.find((check) => check.id === 'path.merxus').status, 'skipped');
+    assert.equal(checks.find((check) => check.id === 'path.merxus.mobile').status, 'passed');
+    assert.equal(checks.find((check) => check.id === 'path.merxus.backend').status, 'passed');
+    assert.equal(checks.find((check) => check.id === 'path.merxus.web').status, 'skipped');
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
 });

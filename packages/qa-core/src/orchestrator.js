@@ -128,10 +128,13 @@ function serviceDefinitions(product, env, tools = null) {
   }
   const mobile = env.MERXUS_MOBILE_REPO || path.join(DEFAULTS.merxusRoot, 'mobile');
   const backend = env.MERXUS_BACKEND_REPO || path.join(DEFAULTS.merxusRoot, 'merxus-ai-backend');
-  const web = path.join(DEFAULTS.merxusRoot, 'web');
+  const web = env.MERXUS_WEB_REPO || path.join(DEFAULTS.merxusRoot, 'web');
+  const firebaseCwd = fs.existsSync(path.join(web, 'firebase.json'))
+    ? web
+    : (fs.existsSync(path.join(mobile, 'firebase.json')) ? mobile : web);
   return [
     {
-      service: 'firebase', role: 'firebase-emulators', cwd: web, executable: firebase,
+      service: 'firebase', role: 'firebase-emulators', cwd: firebaseCwd, executable: firebase,
       args: ['emulators:start', '--project', 'merxus-maestro-local', '--config', 'firebase.json', '--only', 'auth,firestore,storage'],
       ports: [9099, 8080, 9199], env,
     },
@@ -534,10 +537,10 @@ function shouldRestartStaleMetro(reason) {
   return ['METRO_BUNDLE_RESPONSE_INVALID', 'METRO_BUNDLE_PREWARM_FAILED'].includes(String(reason || ''));
 }
 
-function metroServedRuntimeReady(env, product = 'merxus') {
+function metroServedRuntimeReady(env, product = 'merxus', platform = (process.platform === 'darwin' ? 'ios' : 'android')) {
   if (product === 'sageset') return true;
   const tool = path.join(fromRoot(), 'packages', 'qa-mobile', 'src', 'merxus-mobile-runtime.js');
-  const result = spawnCommandSync(process.execPath, [tool, '--mobile-root', env.MERXUS_MOBILE_REPO, '--served-only'], {
+  const result = spawnCommandSync(process.execPath, [tool, '--mobile-root', env.MERXUS_MOBILE_REPO, '--platform', platform, '--served-only'], {
     cwd: fromRoot(), env, encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'],
   });
   return !result.error && result.status === 0;
@@ -905,7 +908,10 @@ async function startProduct(product) {
     printReport(configCheck);
     throw new Error(`${product} configuration is not ready; no service was started.`);
   }
-  const unresolved = Object.values(tools).filter((tool) => !tool.path);
+  const requiredToolNames = process.platform === 'darwin'
+    ? ['node', 'npm', 'firebase', 'maestro', 'java']
+    : Object.keys(tools);
+  const unresolved = requiredToolNames.map((name) => tools[name]).filter((tool) => tool && !tool.path);
   if (unresolved.length) throw new Error(`Required tool resolution failed: ${unresolved.map((tool) => tool.error || tool.name).join('; ')}`);
   const definitions = serviceDefinitions(product, env, tools);
   const state = loadState();
@@ -941,8 +947,8 @@ async function startProduct(product) {
     if (metroPrewarmResult) return metroPrewarmResult.ok
       ? { ready: true, bundlePrewarm: metroPrewarmResult }
       : { ready: false, fatal: true, reason: metroPrewarmResult.reason, detail: metroPrewarmResult.error, bundlePrewarm: metroPrewarmResult };
-    if (!metroServedRuntimeReady(env, product)) return { ready: false };
-    metroPrewarmResult = await prewarmCanonicalMetro(env, 'android', product);
+    if (!metroServedRuntimeReady(env, product, process.platform === 'darwin' ? 'ios' : 'android')) return { ready: false };
+    metroPrewarmResult = await prewarmCanonicalMetro(env, process.platform === 'darwin' ? 'ios' : 'android', product);
     return metroPrewarmResult.ok
       ? { ready: true, bundlePrewarm: metroPrewarmResult }
       : { ready: false, fatal: true, reason: metroPrewarmResult.reason, detail: metroPrewarmResult.error, bundlePrewarm: metroPrewarmResult };

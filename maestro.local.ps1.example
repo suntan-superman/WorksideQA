@@ -9,6 +9,11 @@ $env:WORKSIDEQA_FIREBASE_BIN = "%NVM_SYMLINK%\firebase.cmd"
 $env:WORKSIDEQA_JAVA_BIN = "<SET LOCALLY: JDK 21 bin\java.exe>"
 
 $env:MERXUS_BACKEND_REPO = "C:\Users\sjroy\Source\Merxus\merxus-ai-backend"
+# macOS checkouts may be separate from the WorksideQA directory. Set these in
+# the ignored local file when needed (do not commit user-specific paths):
+# $env:MERXUS_ROOT_REPO = "/Users/<user>/Desktop/Development/merxusmobile"
+# $env:MERXUS_MOBILE_REPO = "/Users/<user>/Desktop/Development/merxusmobile"
+# $env:MERXUS_WEB_REPO = "/Users/<user>/Desktop/Development/merxus-web"
 $env:MERXUS_MAESTRO_OWNER_A_EMAIL = "owner-a@merxus-maestro.test"
 $env:MERXUS_MAESTRO_OWNER_A_PASSWORD = "<SET LOCALLY: canonical QA password>"
 $env:MERXUS_MAESTRO_OWNER_B_EMAIL = "owner-b@merxus-maestro.test"

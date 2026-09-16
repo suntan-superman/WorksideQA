@@ -27,6 +27,19 @@ test('launcher resolves repository paths relative to WorksideQA on supported pla
   assert.equal(platformKey('darwin'), 'darwin');
 });
 
+test('launcher inventory honors machine-local Merxus checkout paths on macOS', () => {
+  const config = loadEnvironmentConfig();
+  const paths = resolveProductPaths(config.products.merxus, 'C:\\Users\\qa\\WorksideQA', 'darwin', {
+    MERXUS_ROOT_REPO: 'C:/Users/stanley/Desktop/Development/merxusmobile',
+    MERXUS_MOBILE_REPO: 'C:/Users/stanley/Desktop/Development/merxusmobile',
+    MERXUS_BACKEND_REPO: 'C:/Users/stanley/Desktop/Development/merxus-backend',
+    MERXUS_WEB_REPO: 'C:/Users/stanley/Desktop/Development/merxusmobile',
+  });
+  assert.equal(paths.mobile, 'C:\\Users\\stanley\\Desktop\\Development\\merxusmobile');
+  assert.equal(paths.backend, 'C:\\Users\\stanley\\Desktop\\Development\\merxus-backend');
+  assert.equal(paths.web, 'C:\\Users\\stanley\\Desktop\\Development\\merxusmobile');
+});
+
 test('Both mode refuses the shared emulator ports instead of colliding', () => {
   const config = loadEnvironmentConfig();
   const conflict = sharedPorts(config, ['merxus', 'sageset']);

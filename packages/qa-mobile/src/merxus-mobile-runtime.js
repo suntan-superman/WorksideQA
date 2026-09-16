@@ -65,11 +65,11 @@ function resolvedExpoConfig(mobileRoot, env = process.env) {
   try { return JSON.parse(outcome.stdout); } catch { throw new Error('Mobile Expo config did not return valid JSON.'); }
 }
 
-async function verifyServedRuntime(mobileRoot, fetchImpl = fetch) {
+async function verifyServedRuntime(mobileRoot, fetchImpl = fetch, platform = 'android') {
   let response;
   try {
     response = await fetchImpl('http://127.0.0.1:8081/', {
-      headers: { accept: 'application/expo+json', 'expo-platform': 'android' },
+      headers: { accept: 'application/expo+json', 'expo-platform': platform },
       redirect: 'error', signal: AbortSignal.timeout(10000),
     });
   } catch { throw new Error('Mobile runtime preflight FAILED: T3 Metro is unreachable on 127.0.0.1:8081.'); }
@@ -77,18 +77,23 @@ async function verifyServedRuntime(mobileRoot, fetchImpl = fetch) {
   let manifest;
   try { manifest = await response.json(); } catch { throw new Error('Mobile runtime preflight FAILED: Metro did not return an Expo manifest.'); }
   if (!manifest?.extra?.expoClient) throw new Error('Mobile runtime preflight FAILED: Metro manifest has no expoClient configuration.');
-  return verifyExpoConfig(manifest.extra.expoClient, mobileRoot, 'served Metro Android manifest', 'android');
+  return verifyExpoConfig(manifest.extra.expoClient, mobileRoot, `served Metro ${platform === 'ios' ? 'iOS' : 'Android'} manifest`, platform);
 }
 
 async function main(argv = process.argv.slice(2)) {
   loadLocalQaConfig({ required: true });
-  const allowed = new Set(['--print-env', '--config-only', '--served-only', '--mobile-root']);
+  const allowed = new Set(['--print-env', '--config-only', '--served-only', '--mobile-root', '--platform']);
   let mobileRoot = process.env.MERXUS_MOBILE_REPO || path.resolve(__dirname, '../../../../Merxus/mobile');
+  let platform = 'android';
   for (let i = 0; i < argv.length; i++) {
     if (!allowed.has(argv[i])) throw new Error('Unknown Mobile runtime preflight option.');
     if (argv[i] === '--mobile-root') {
       if (!argv[i + 1] || argv[i + 1].startsWith('--')) throw new Error('--mobile-root requires a directory.');
       mobileRoot = path.resolve(argv[++i]);
+    }
+    if (argv[i] === '--platform') {
+      if (!['android', 'ios'].includes(argv[i + 1])) throw new Error('--platform must be android or ios.');
+      platform = argv[++i];
     }
   }
   if (argv.includes('--print-env')) {
@@ -96,9 +101,9 @@ async function main(argv = process.argv.slice(2)) {
     return;
   }
   if (!argv.includes('--served-only')) {
-    console.log(JSON.stringify(await verifyExpoConfig(resolvedExpoConfig(mobileRoot), mobileRoot, 'current shell Expo config')));
+    console.log(JSON.stringify(await verifyExpoConfig(resolvedExpoConfig(mobileRoot), mobileRoot, 'current shell Expo config', platform)));
   }
-  if (!argv.includes('--config-only')) console.log(JSON.stringify(await verifyServedRuntime(mobileRoot)));
+  if (!argv.includes('--config-only')) console.log(JSON.stringify(await verifyServedRuntime(mobileRoot, fetch, platform)));
 }
 
 module.exports = { canonicalMobileEnvironment, resolvedExpoConfig, verifyExpoConfig, verifyServedRuntime };

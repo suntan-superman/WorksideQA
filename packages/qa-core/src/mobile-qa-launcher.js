@@ -39,9 +39,21 @@ function platformKey(platform = process.platform) {
   return platform === 'win32' ? 'windows' : platform === 'darwin' ? 'darwin' : 'linux';
 }
 
-function resolveProductPaths(productConfig, root = fromRoot(), platform = process.platform) {
+function resolveProductPaths(productConfig, root = fromRoot(), platform = process.platform, environment = process.env) {
   const paths = productConfig.repositories[platformKey(platform)] || productConfig.repositories.windows;
-  return Object.fromEntries(Object.entries(paths).map(([key, value]) => [key, path.resolve(root, value)]));
+  const isMerxus = productConfig.manifest === 'products/merxus/product.manifest.json';
+  const overrides = isMerxus ? {
+    root: environment.MERXUS_ROOT_REPO,
+    mobile: environment.MERXUS_MOBILE_REPO,
+    backend: environment.MERXUS_BACKEND_REPO,
+    web: environment.MERXUS_WEB_REPO,
+  } : {
+    root: environment.SAGESET_ROOT_REPO,
+    mobile: environment.SAGESET_MOBILE_REPO,
+    backend: environment.SAGESET_BACKEND_REPO,
+    web: environment.SAGESET_WEB_REPO,
+  };
+  return Object.fromEntries(Object.entries(paths).map(([key, value]) => [key, overrides[key] ? path.resolve(overrides[key]) : path.resolve(root, value)]));
 }
 
 function commandFor(command, platform = process.platform) {
@@ -89,9 +101,9 @@ function selectedProducts(config, product) {
   return products;
 }
 
-function printInventory(config, product, platform = process.platform) {
+function printInventory(config, product, platform = process.platform, environment = process.env) {
   const item = config.products[product];
-  const paths = resolveProductPaths(item, fromRoot(), platform);
+  const paths = resolveProductPaths(item, fromRoot(), platform, environment);
   process.stdout.write(`\n${item.displayName} QA (${platformKey(platform)})\n`);
   process.stdout.write(`  paths: ${JSON.stringify(paths)}\n`);
   process.stdout.write(`  runtime: ${item.runtime.environment}${item.runtime.firebaseProjectId ? ` / ${item.runtime.firebaseProjectId}` : ''}\n`);
@@ -104,7 +116,7 @@ function runDoctor(product) {
 
 function startProduct(config, product, runner = runCommand, environment = process.env) {
   const item = config.products[product];
-  printInventory(config, product);
+  printInventory(config, product, process.platform, environment);
   process.stdout.write(`\nStarting ${item.displayName}; healthy WorksideQA-owned services are reused by qa:start.\n`);
   // qa:start owns the complete dependency/readiness contract and already
   // runs the product-scoped strict Doctor before returning READY. Running a

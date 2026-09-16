@@ -69,7 +69,13 @@ function result(status, id, message, detail = {}) {
 
 function mergedEnvironment(localConfig) {
   const env = { ...process.env, ...localConfig };
+  // Repository locations are machine-local.  The checked-in Windows layout is
+  // only a fallback; macOS runners may keep Mobile, backend, and Firebase in
+  // separate checkouts (for example a standalone merxusmobile repository).
+  env.MERXUS_ROOT_REPO = env.MERXUS_ROOT_REPO || DEFAULTS.merxusRoot;
   env.MERXUS_MOBILE_REPO = env.MERXUS_MOBILE_REPO || path.join(DEFAULTS.merxusRoot, 'mobile');
+  env.MERXUS_BACKEND_REPO = env.MERXUS_BACKEND_REPO || path.join(DEFAULTS.merxusRoot, 'merxus-ai-backend');
+  env.MERXUS_WEB_REPO = env.MERXUS_WEB_REPO || path.join(DEFAULTS.merxusRoot, 'web');
   env.SAGESET_MOBILE_REPO = env.SAGESET_MOBILE_REPO || path.join(DEFAULTS.sagesetRoot, 'mobile');
   env.MERXUS_MOBILE_ENVIRONMENT = env.MERXUS_MOBILE_ENVIRONMENT || 'maestro';
   env.MERXUS_QA_ENVIRONMENT = env.MERXUS_QA_ENVIRONMENT || 'maestro';
@@ -132,7 +138,8 @@ function safeCredentialStatus(env, key) {
   return !String(env[key] || '').trim() ? 'missing' : 'set';
 }
 
-function checkLocalContract(env, localConfig, product = 'all') {
+function checkLocalContract(env, localConfig, product = 'all', options = {}) {
+  const platform = options.platform || process.platform;
   const checks = [];
   if (product === 'sageset') {
     const required = [
@@ -170,7 +177,9 @@ function checkLocalContract(env, localConfig, product = 'all') {
     ['MERXUS_MAESTRO_OWNER_A_PASSWORD', 'Merxus Owner A password'],
     ['MERXUS_MAESTRO_OWNER_B_EMAIL', 'Merxus Owner B email'],
     ['MERXUS_MAESTRO_OWNER_B_PASSWORD', 'Merxus Owner B password'],
-    ['MERXUS_ANDROID_EMULATOR_ID', 'Android emulator ID'],
+    ...(platform === 'darwin'
+      ? [['MERXUS_IOS_SIMULATOR_ID', 'iOS simulator ID']]
+      : [['MERXUS_ANDROID_EMULATOR_ID', 'Android emulator ID']]),
   ];
   for (const [key, label] of required) {
     checks.push(String(env[key] || '').trim()
@@ -199,19 +208,35 @@ function optionsStrict(localConfig) {
   return Boolean(localConfig.__doctorStrict);
 }
 
-function checkPaths(env, product = 'all') {
+function checkPaths(env, product = 'all', options = {}) {
+  const platform = options.platform || process.platform;
+  const root = env.MERXUS_ROOT_REPO || DEFAULTS.merxusRoot;
+  const mobile = env.MERXUS_MOBILE_REPO || path.join(root, 'mobile');
+  const backend = env.MERXUS_BACKEND_REPO || path.join(root, 'merxus-ai-backend');
+  const web = env.MERXUS_WEB_REPO || path.join(root, 'web');
+  const mobileHasFirebase = fs.existsSync(path.join(mobile, 'firebase.json'));
   const paths = [
     ['path.worksideqa', WORKSIDEQA_ROOT],
-    ['path.merxus', DEFAULTS.merxusRoot],
-    ['path.merxus.mobile', env.MERXUS_MOBILE_REPO],
-    ['path.merxus.backend', env.MERXUS_BACKEND_REPO || path.join(DEFAULTS.merxusRoot, 'merxus-ai-backend')],
-    ['path.merxus.web', path.join(DEFAULTS.merxusRoot, 'web')],
+    ['path.merxus', root],
+    ['path.merxus.mobile', mobile],
+    ['path.merxus.backend', backend],
+    ['path.merxus.web', web],
     ['path.sageset', DEFAULTS.sagesetRoot],
     ['path.sageset.mobile', env.SAGESET_MOBILE_REPO],
-  ];
-  return paths.filter(([id]) => product === 'all' || (product === 'merxus' ? !id.includes('sageset') : id.includes('sageset'))).map(([id, value]) => fs.existsSync(value)
-    ? result('passed', id, 'Path exists.', { path: value })
-    : result('failed', id, `Path does not exist: ${value}`, { path: value }));
+  ].filter(([id]) => product === 'all' || (product === 'merxus' ? !id.includes('sageset') : id.includes('sageset')));
+  return paths.map(([id, value]) => {
+    if (fs.existsSync(value)) return result('passed', id, 'Path exists.', { path: value });
+    // A standalone macOS Mobile checkout can carry the Firebase project
+    // itself.  In that layout the historical shared Merxus root/web path is
+    // not a required checkout; serviceDefinitions will use Mobile's config.
+    if (platform === 'darwin' && id === 'path.merxus' && fs.existsSync(mobile)) {
+      return result('skipped', id, 'Shared Merxus parent checkout is not required on macOS; Mobile path is authoritative.', { path: value });
+    }
+    if (platform === 'darwin' && id === 'path.merxus.web' && mobileHasFirebase) {
+      return result('skipped', id, 'Merxus web checkout is not required; Mobile contains the local Firebase project.', { path: value });
+    }
+    return result('failed', id, `Path does not exist: ${value}`, { path: value });
+  });
 }
 
 function checkManifests(product = 'all') {
@@ -258,15 +283,23 @@ function checkTools(env, options = {}) {
   // Firebase shim) during post-start validation.
   const tools = options.tools || resolveTools(env);
   const versions = {};
-  for (const name of ['node', 'npm', 'firebase', 'adb', 'maestro', 'java']) {
+  const platform = options.platform || process.platform;
+  const names = platform === 'darwin' ? ['node', 'npm', 'firebase', 'maestro', 'java'] : ['node', 'npm', 'firebase', 'adb', 'maestro', 'java'];
+  for (const name of names) {
     const resolved = tools[name];
     versions[name] = resolved.path ? toolVersion(resolved.path, env) : null;
     checks.push(resolved.path
       ? result('passed', `tool.${name}`, `${resolved.path} (${versions[name] || name})`, { command: resolved.path, source: resolved.source, version: versions[name] })
       : result('failed', `tool.${name}`, resolved.error || `${name} is unavailable.`));
   }
+  if (platform === 'darwin') {
+    const xcrun = resolveTool('xcrun', env);
+    checks.push(xcrun.path
+      ? result('passed', 'tool.xcrun', `${xcrun.path} (Xcode command-line tools)`, { command: xcrun.path, source: xcrun.source })
+      : result('failed', 'tool.xcrun', 'xcrun is unavailable; install Xcode command-line tools for iOS simulator QA.'));
+  }
   const validateToolchain = options.validateToolchain === true;
-  if (process.platform === 'win32' && (!options.offline || validateToolchain)) {
+  if (platform === 'win32' && (!options.offline || validateToolchain)) {
     const firebaseOverride = String(env.WORKSIDEQA_FIREBASE_BIN || '').trim();
     checks.push(firebaseOverride && tools.firebase?.source === 'local-config'
       ? result('passed', 'tool.firebase-contract', `Firebase resolution is pinned to ${tools.firebase.path}.`, { command: tools.firebase.path, version: versions.firebase })
@@ -407,7 +440,10 @@ async function checkMobileRuntime(env, options) {
   const tool = path.join(WORKSIDEQA_ROOT, 'packages', 'qa-mobile', 'src', 'merxus-mobile-runtime.js');
   const checks = [];
   if (!fs.existsSync(tool)) return [result('failed', 'mobile.runtime-tool', 'Canonical Mobile runtime verifier is missing.')];
-  const config = spawnCommandSync(process.execPath, [tool, '--mobile-root', env.MERXUS_MOBILE_REPO, '--config-only'], {
+  const platform = options.platform || process.platform;
+  // On macOS the same Mobile runtime verifier is used with the simulator
+  // contract.  This keeps the served check truthful without requiring ADB.
+  const config = spawnCommandSync(process.execPath, [tool, '--mobile-root', env.MERXUS_MOBILE_REPO, '--platform', platform === 'darwin' ? 'ios' : 'android', '--config-only'], {
     cwd: WORKSIDEQA_ROOT, env, encoding: 'utf8', timeout: 60000, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'],
   });
   let configSummary = null;
@@ -422,14 +458,16 @@ async function checkMobileRuntime(env, options) {
     : result('failed', 'mobile.runtime-config', 'Merxus Mobile does not resolve a valid Maestro runtime contract.'));
   if (options.offline) checks.push(result('skipped', 'mobile.runtime-served', 'Served Metro check skipped (--offline).'));
   else {
-    const served = spawnCommandSync(process.execPath, [tool, '--mobile-root', env.MERXUS_MOBILE_REPO, '--served-only'], {
+    const served = spawnCommandSync(process.execPath, [tool, '--mobile-root', env.MERXUS_MOBILE_REPO, '--platform', platform === 'darwin' ? 'ios' : 'android', '--served-only'], {
       cwd: WORKSIDEQA_ROOT, env, encoding: 'utf8', timeout: 30000, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'],
     });
     checks.push(!served.error && served.status === 0
-      ? result('passed', 'mobile.runtime-served', 'Running Metro serves the validated Maestro Android manifest.')
+      ? result('passed', 'mobile.runtime-served', `Running Metro serves the validated Maestro ${platform === 'darwin' ? 'iOS' : 'Android'} manifest.`)
       : result('failed', 'mobile.runtime-served', 'Running Metro is absent, stale, or serving a non-Maestro runtime.'));
   }
-  if (options.offline) {
+  if (platform === 'darwin') {
+    checks.push(result('skipped', 'mobile.runtime-rendered', 'iOS rendered app check is owned by the Mac Maestro certification path; Android observer is not used.'));
+  } else if (options.offline) {
     checks.push(result('skipped', 'mobile.runtime-rendered', 'Rendered app check skipped (--offline).'));
   } else if (checks.some((check) => check.id === 'mobile.runtime-served' && check.status === 'failed')) {
     checks.push(result('failed', 'mobile.runtime-rendered', 'Rendered app check was not attempted because served Metro is not ready.'));
@@ -472,6 +510,19 @@ async function checkMobileRuntime(env, options) {
 
 async function checkDevices(env, options) {
   if (options.offline) return [result('skipped', 'device.android', 'Device probes skipped (--offline).')];
+  const platform = options.platform || process.platform;
+  if (platform === 'darwin') {
+    const simulatorId = String(env.MERXUS_IOS_SIMULATOR_ID || '').trim();
+    if (!simulatorId) return [result('failed', 'device.ios', 'Configured iOS simulator identity is missing.')];
+    const xcrun = resolveTool('xcrun', env).path;
+    if (!xcrun) return [result('failed', 'device.ios', 'xcrun is unavailable; cannot validate the configured iOS simulator.')];
+    const execute = options.execute || spawnCommandSync;
+    const outcome = execute(xcrun, ['simctl', 'list', 'devices', 'available'], { env, encoding: 'utf8', timeout: 10000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
+    const listed = !outcome.error && outcome.status === 0 && String(outcome.stdout || '').includes(simulatorId);
+    return [listed
+      ? result('passed', 'device.ios', `Configured iOS simulator ${simulatorId} is available.`)
+      : result('failed', 'device.ios', `Configured iOS simulator ${simulatorId} is not available.`)];
+  }
   const checks = [];
   const execute = options.execute || spawnCommandSync;
   const adb = options.adb || resolveCommand('adb', env);
@@ -502,8 +553,8 @@ async function runDoctor(options = {}) {
   if (options.strict) localConfig.__doctorStrict = true;
   const env = options.environment || mergedEnvironment(localConfig);
   const checks = [
-    ...checkLocalContract(env, localConfig, options.product),
-    ...checkPaths(env, options.product),
+    ...checkLocalContract(env, localConfig, options.product, options),
+    ...checkPaths(env, options.product, options),
     ...checkManifests(options.product),
     ...checkTools(env, options),
   ];
@@ -555,6 +606,8 @@ module.exports = {
   parsePowerShellConfig,
   mergedEnvironment,
   resolveCommand,
+  checkPaths,
+  checkLocalContract,
   probePort,
   checkDevices,
   checkTools,
