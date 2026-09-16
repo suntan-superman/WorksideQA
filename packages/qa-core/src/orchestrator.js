@@ -17,6 +17,7 @@ const LOG_DIRECTORY = path.join(STATE_DIRECTORY, 'logs');
 const POLL_MS = 500;
 const READY_TIMEOUT_MS = 120000;
 const TERMINATION_TIMEOUT_MS = 10000;
+const PROCESS_INFO_RETRY_ATTEMPTS = 3;
 
 function parseArgs(argv) {
   const options = { action: 'status', product: null, service: null, json: false };
@@ -142,7 +143,24 @@ function processInfo(pid) {
   if (process.platform !== 'win32') return { pid: Number(pid) };
   const outcome = spawnCommandSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', `Get-CimInstance Win32_Process -Filter "ProcessId=${Number(pid)}" | Select-Object ProcessId,ParentProcessId,Name,CommandLine,CreationDate | ConvertTo-Json -Compress`], { encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
   if (outcome.error || outcome.status !== 0) return { pid: Number(pid) };
-  try { return JSON.parse(String(outcome.stdout || '{}')); } catch { return { pid: Number(pid) }; }
+  try {
+    const parsed = JSON.parse(String(outcome.stdout || '{}'));
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
+  } catch { return { pid: Number(pid) }; }
+}
+
+// A process can pass the lightweight liveness check and disappear before the
+// CIM query observes it. This is common while cmd/npm wrappers hand off to
+// Firebase's Node/Java children. Retry a small, bounded number of times; if
+// metadata remains unavailable, callers must treat the process as unverified.
+function processInfoWithRetry(pid, infoResolver = processInfo, attempts = PROCESS_INFO_RETRY_ATTEMPTS) {
+  const maxAttempts = Math.max(1, Number(attempts) || PROCESS_INFO_RETRY_ATTEMPTS);
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    let info = null;
+    try { info = infoResolver(pid); } catch { info = null; }
+    if (info && typeof info === 'object' && !Array.isArray(info)) return info;
+  }
+  return null;
 }
 
 function processTreePids(rootPid) {
@@ -157,6 +175,7 @@ function processTreePids(rootPid) {
   while (changed) {
     changed = false;
     for (const row of rows) {
+      if (!row || typeof row !== 'object') continue;
       const pid = Number(row.ProcessId || 0);
       const parent = Number(row.ParentProcessId || 0);
       if (pid && descendants.has(parent) && !descendants.has(pid)) { descendants.add(pid); changed = true; }
@@ -167,17 +186,19 @@ function processTreePids(rootPid) {
 
 function processTreeMetadata(rootPid, infoResolver = processInfo, treeResolver = processTreePids) {
   return treeResolver(rootPid).map((pid) => {
-    return normalizeProcessInfo(pid, infoResolver(pid));
-  }).filter((item) => item.pid > 0);
+    const info = processInfoWithRetry(pid, infoResolver);
+    return info ? normalizeProcessInfo(pid, info) : null;
+  }).filter((item) => item && item.pid > 0);
 }
 
-function normalizeProcessInfo(pid, info = {}) {
+function normalizeProcessInfo(pid, info) {
+  const safeInfo = info && typeof info === 'object' && !Array.isArray(info) ? info : {};
   return {
     pid: Number(pid),
-    parentPid: Number(info.ParentProcessId || info.parentProcessId || 0) || null,
-    executable: String(info.Name || info.name || info.executable || ''),
-    commandLine: String(info.CommandLine || info.commandLine || info.commandline || ''),
-    startedAt: info.CreationDate || info.creationDate || info.startedAt || null,
+    parentPid: Number(safeInfo.ParentProcessId || safeInfo.parentProcessId || 0) || null,
+    executable: String(safeInfo.Name || safeInfo.name || safeInfo.executable || ''),
+    commandLine: String(safeInfo.CommandLine || safeInfo.commandLine || safeInfo.commandline || ''),
+    startedAt: safeInfo.CreationDate || safeInfo.creationDate || safeInfo.startedAt || null,
   };
 }
 
@@ -205,14 +226,30 @@ function concretePid(value) {
   return Number.isInteger(pid) && pid > 0 ? pid : null;
 }
 
-function reconcileRecord(record, ownerResolver = portOwner, infoResolver = processInfo, aliveResolver = pidAlive) {
+function reconcileRecord(record, ownerResolver = portOwner, infoResolver = processInfo, aliveResolver = pidAlive, treeResolver = processTreePids) {
   if (!record) return { state: 'NOT RUNNING', owned: false, recovered: false, portOwners: [] };
-  const storedTree = Array.isArray(record.processTree) ? record.processTree :
+  let storedTree = Array.isArray(record.processTree) ? record.processTree :
     (Array.isArray(record.processTreePids) ? record.processTreePids.map((pid) => ({ pid })) : []);
+  let reconstructed = false;
+  // A launcher can crash after readiness but before persisting process-tree
+  // metadata. If the recorded root is still alive and positively matches the
+  // service command, reconstruct its live descendants from the OS tree. This
+  // is safe because the root identity is verified first; a reused/foreign PID
+  // cannot bootstrap ownership merely by sharing a port.
+  const rootPid = Number(record.rootPid || record.pid);
+  const rootInfo = aliveResolver(rootPid) ? processInfoWithRetry(rootPid, infoResolver) : null;
+  const rootVerified = aliveResolver(rootPid) && commandMatches(record, rootInfo);
+  if (!storedTree.length && rootVerified) {
+    const discovered = processTreeMetadata(rootPid, infoResolver, treeResolver);
+    if (discovered.length) {
+      storedTree = discovered;
+      reconstructed = true;
+    }
+  }
   const currentTree = storedTree.map((expected) => {
     const pid = Number(expected.pid);
     if (!aliveResolver(pid)) return null;
-    const actual = normalizeProcessInfo(pid, infoResolver(pid));
+    const actual = normalizeProcessInfo(pid, processInfoWithRetry(pid, infoResolver));
     return processIdentityMatches(expected, actual) ? { ...expected, ...actual, pid } : { mismatch: true, expected, actual };
   }).filter(Boolean);
   const mismatched = currentTree.find((item) => item.mismatch);
@@ -238,8 +275,8 @@ function reconcileRecord(record, ownerResolver = portOwner, infoResolver = proce
       reason: foreign ? `port ${foreign.port} owner PID ${foreign.pid} is not in the recorded tree` : `recorded PID ${mismatched.expected?.pid} identity changed`,
     };
   }
-  const rootAlive = aliveResolver(record.rootPid || record.pid);
-  const rootOwned = rootAlive && commandMatches(record, infoResolver(record.rootPid || record.pid));
+  const rootAlive = aliveResolver(rootPid);
+  const rootOwned = rootAlive && commandMatches(record, rootInfo || processInfoWithRetry(rootPid, infoResolver));
   const descendantPort = portOwners.some((item) => item.pid && Number(item.pid) !== Number(record.pid) && known.has(Number(item.pid)));
   if (!rootAlive && !currentTree.some((item) => !item.mismatch) && !portOwners.some((item) => item.pid)) {
     return {
@@ -248,7 +285,20 @@ function reconcileRecord(record, ownerResolver = portOwner, infoResolver = proce
     };
   }
   const recovered = !rootOwned && (currentTree.some((item) => Number(item.pid) !== Number(record.pid)) || descendantPort);
-  if (rootOwned) return { state: 'RUNNING', owned: true, recovered: false, portOwners, currentTree };
+  if (rootOwned) {
+    if (reconstructed) {
+      record.processTree = currentTree.filter((item) => !item.mismatch).map((item) => ({
+        pid: Number(item.pid), parentPid: Number(item.ParentProcessId || item.parentPid || 0) || null,
+        executable: String(item.Name || item.executable || ''), commandLine: String(item.CommandLine || item.commandLine || ''),
+        startedAt: item.CreationDate || item.startedAt || null,
+      }));
+      record.processTreePids = record.processTree.map((item) => item.pid);
+      record.processStartTimes = Object.fromEntries(record.processTree.map((item) => [String(item.pid), item.startedAt]));
+      record.reconciledAt = new Date().toISOString();
+      return { state: 'RECOVERED', owned: true, recovered: true, portOwners, currentTree, reason: 'reconstructed verified descendant tree' };
+    }
+    return { state: 'RUNNING', owned: true, recovered: false, portOwners, currentTree };
+  }
   if (recovered) {
     record.rootPid = Number(record.rootPid || record.pid);
     record.startupGeneration = record.startupGeneration || `${record.startedAt || 'legacy'}-${record.runtimeHash || 'unknown'}`;
@@ -532,7 +582,7 @@ async function bootstrapFixtures(product, env, state) {
 
 function ownedRecord(record) {
   if (!record || !pidAlive(record.pid)) return false;
-  const info = processInfo(record.pid);
+  const info = processInfoWithRetry(record.pid);
   const rootEntry = Array.isArray(record.processTree) && record.processTree.find((item) => Number(item.pid) === Number(record.rootPid || record.pid));
   if (rootEntry && processIdentityMatches(rootEntry, normalizeProcessInfo(record.pid, info))) return true;
   return commandMatches(record, info);
@@ -550,7 +600,7 @@ function processBelongsTo(record, pid) {
   let current = Number(pid);
   while (current > 0 && !seen.has(current)) {
     seen.add(current);
-    const info = processInfo(current);
+    const info = processInfoWithRetry(current);
     const parent = Number(info?.ParentProcessId || info?.parentProcessId || 0);
     if (!parent) return false;
     if (parent === Number(record.pid)) return true;
@@ -565,7 +615,7 @@ function verifiedProcessTreePids(record) {
   return tree.map((expected) => {
     const pid = Number(expected.pid);
     if (!pidAlive(pid)) return null;
-    const actual = processInfo(pid);
+    const actual = processInfoWithRetry(pid);
     return processIdentityMatches(expected, { ...actual, pid }) ? pid : null;
   }).filter(Boolean);
 }
@@ -580,7 +630,7 @@ function terminationTree(record, ownership, options = {}) {
   return tree.map((expected) => {
     const pid = Number(expected?.pid);
     if (!pid || !aliveResolver(pid)) return null;
-    const actual = normalizeProcessInfo(pid, infoResolver(pid));
+    const actual = normalizeProcessInfo(pid, processInfoWithRetry(pid, infoResolver));
     // Termination is deliberately stricter than status reconciliation. A
     // process with missing or changed identity is never a kill target.
     const hasMetadata = Boolean(expected?.executable || expected?.commandLine || expected?.startedAt);
@@ -607,7 +657,7 @@ async function waitForTermination(record, pids, options = {}) {
   const isStillVerified = (pid) => {
     if (!aliveResolver(pid)) return false;
     const expected = (record.processTree || []).find((item) => Number(item.pid) === Number(pid));
-    const actual = normalizeProcessInfo(pid, infoResolver(pid));
+    const actual = normalizeProcessInfo(pid, processInfoWithRetry(pid, infoResolver));
     if (expected && (expected.executable || expected.commandLine || expected.startedAt)) {
       return Boolean(actual.executable && actual.commandLine && processIdentityMatches(expected, actual));
     }
@@ -1013,8 +1063,10 @@ module.exports = {
   saveState,
   serviceDefinitions,
   processInfo,
+  processInfoWithRetry,
   processTreePids,
   processTreeMetadata,
+  normalizeProcessInfo,
   processIdentityMatches,
   reconcileRecord,
   commandMatches,
