@@ -940,7 +940,11 @@ function statusRows(product, env) {
   }
   for (const deviceProduct of (product ? [product] : ['merxus', 'sageset'])) {
     const device = deviceProduct === 'sageset' ? env.SAGESET_ANDROID_EMULATOR_ID : env.MERXUS_ANDROID_EMULATOR_ID;
-    if (!device) continue;
+    // SageSet's Android device is part of its readiness contract. Keep a
+    // visible NOT RUNNING row even when local configuration is missing so
+    // status cannot imply Firebase-only readiness. Merxus retains its
+    // historical omission when no device is configured.
+    if (!device && deviceProduct !== 'sageset') continue;
     const adb = resolveCommand('adb', env) || (process.platform === 'win32' ? 'adb.exe' : 'adb');
     const deviceState = device ? spawnCommandSync(adb, ['-s', device, 'get-state'], { encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] }) : null;
     const appId = deviceProduct === 'sageset' ? (env.SAGESET_MAESTRO_ANDROID_APP_ID || 'com.workside.sageset') : (env.MERXUS_MAESTRO_ANDROID_APP_ID || 'com.merxus.mobile.qa');
@@ -1050,7 +1054,7 @@ async function main(argv = process.argv.slice(2)) {
   const rows = statusRows(options.product, env);
   if (options.json) process.stdout.write(`${JSON.stringify(rows, null, 2)}\n`);
   else printStatus(rows);
-  if (rows.some((row) => row.service === 'android-device' ? !row.running : !row.running)) process.exitCode = 1;
+  if (rows.some((row) => !row.running || (row.service === 'android-device' && row.appInstalled === false))) process.exitCode = 1;
 }
 
 if (require.main === module) main().catch((error) => { process.stderr.write(`${error.message}\n`); process.exitCode = 1; });

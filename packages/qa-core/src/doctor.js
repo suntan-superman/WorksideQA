@@ -137,6 +137,8 @@ function checkLocalContract(env, localConfig, product = 'all') {
       ['SAGESET_MAESTRO_USER_B_EMAIL', 'SageSet User B email'],
       ['SAGESET_MAESTRO_USER_B_PASSWORD', 'SageSet User B password'],
       ['SAGESET_MAESTRO_QA_EMAIL_ALLOWLIST', 'SageSet QA email allowlist'],
+      ['SAGESET_ANDROID_EMULATOR_ID', 'SageSet Android emulator ID'],
+      ['SAGESET_MAESTRO_ANDROID_APP_ID', 'SageSet Maestro Android application ID'],
     ];
     for (const [key, label] of required) {
       checks.push(String(env[key] || '').trim()
@@ -226,6 +228,15 @@ function checkManifests(product = 'all') {
         if (!String(mobileEnvironment.firebaseProjectId || '').endsWith('-maestro-local')) {
           checks.push(result('failed', `manifest.${key}.firebase-project`, 'Mobile Maestro Firebase project must be a local emulator project.'));
         }
+      }
+      if (key === 'sageset') {
+        const androidDevice = manifest.mobile?.devices?.androidEmulator;
+        checks.push(androidDevice?.required === true
+          ? result('passed', 'manifest.sageset.android-device', 'SageSet requires its configured Android QA emulator.')
+          : result('failed', 'manifest.sageset.android-device', 'SageSet manifest must require an Android QA emulator.'));
+        checks.push(androidDevice?.appId === manifest.mobile?.appId
+          ? result('passed', 'manifest.sageset.android-app', 'SageSet Android QA app ID matches the Maestro mobile contract.')
+          : result('failed', 'manifest.sageset.android-app', 'SageSet Android QA app ID must match mobile.appId.'));
       }
     } catch (error) {
       checks.push(result('failed', `manifest.${key}`, error.message));
@@ -381,19 +392,24 @@ async function checkMobileRuntime(env, options) {
 async function checkDevices(env, options) {
   if (options.offline) return [result('skipped', 'device.android', 'Device probes skipped (--offline).')];
   const checks = [];
-  const adb = resolveCommand('adb', env);
+  const execute = options.execute || spawnCommandSync;
+  const adb = options.adb || resolveCommand('adb', env);
   if (!adb) return [result('failed', 'device.android', 'ADB is unavailable; cannot validate the configured emulator.')];
   const contract = configuredDevice(options.product, env);
   const id = String(contract?.serial || '').trim();
-  if (!id) return [result('skipped', 'device.android', `${options.product === 'sageset' ? 'SageSet' : 'Merxus'} Android emulator identity is not configured.`)];
-  const state = spawnCommandSync(adb, ['-s', id, 'get-state'], { env, encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
+  if (!id) {
+    const label = options.product === 'sageset' ? 'SageSet' : 'Merxus';
+    const status = options.product === 'sageset' ? 'failed' : 'skipped';
+    return [result(status, 'device.android', `${label} Android emulator identity is not configured; mobile readiness cannot be certified.`)];
+  }
+  const state = execute(adb, ['-s', id, 'get-state'], { env, encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
   const label = options.product === 'sageset' ? 'SageSet' : 'Merxus';
   checks.push(!state.error && state.status === 0 && String(state.stdout).trim() === 'device'
     ? result('passed', 'device.android', `Configured ${label} Android emulator ${id} is online.`)
     : result('failed', 'device.android', `Configured ${label} Android emulator ${id} is not online.`));
   if (!id) return checks;
   const appId = options.product === 'sageset' ? (env.SAGESET_MAESTRO_ANDROID_APP_ID || 'com.workside.sageset') : (env.MERXUS_MAESTRO_ANDROID_APP_ID || 'com.merxus.mobile.qa');
-  const app = spawnCommandSync(adb, ['-s', id, 'shell', 'pm', 'path', appId], { env, encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
+  const app = execute(adb, ['-s', id, 'shell', 'pm', 'path', appId], { env, encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
   checks.push(!app.error && app.status === 0 && String(app.stdout).includes('package:')
     ? result('passed', 'device.android.app', `${label} QA application is installed.`)
     : result('failed', 'device.android.app', `${label} QA application is not installed on the configured emulator.`));
@@ -459,5 +475,6 @@ module.exports = {
   mergedEnvironment,
   resolveCommand,
   probePort,
+  checkDevices,
   runDoctor,
 };

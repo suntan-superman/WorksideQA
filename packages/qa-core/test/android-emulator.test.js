@@ -68,6 +68,25 @@ test('starts the configured AVD, waits for ADB, then waits for boot completion',
   assert.equal(result.pid, 9001);
 });
 
+test('reuses the shared configured AVD for SageSet without product-specific launcher logic', async () => {
+  const env = {
+    SAGESET_ANDROID_EMULATOR_ID: 'emulator-5554',
+    SAGESET_ANDROID_AVD_NAME: 'Merxus_Maestro_35',
+  };
+  const result = await ensureAndroidEmulator({
+    platform: 'win32', product: 'sageset', env, adbPath: 'adb.exe',
+    execute: (_command, args) => {
+      if (args[0] === 'devices') return { status: 0, stdout: 'List of devices attached\nemulator-5554 device\n' };
+      if (args.at(-1) === 'sys.boot_completed') return { status: 0, stdout: '1\n' };
+      if (args.includes('emu')) return { status: 0, stdout: 'Merxus_Maestro_35\nOK\n' };
+      return { status: 0, stdout: 'device\n' };
+    },
+  });
+  assert.equal(result.ready, true);
+  assert.equal(result.reused, true);
+  assert.equal(result.avdName, 'Merxus_Maestro_35');
+});
+
 test('fails with AVD and ADB diagnostics when boot times out', async () => {
   await assert.rejects(() => ensureAndroidEmulator({
     platform: 'win32', product: 'merxus', env: baseEnv, adbPath: 'adb.exe', emulatorPath: 'C:/Android/emulator/emulator.exe',

@@ -1,6 +1,19 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { parseArgs, parsePowerShellConfig, mergedEnvironment, runDoctor } = require('../src/doctor');
+const { parseArgs, parsePowerShellConfig, mergedEnvironment, checkDevices, runDoctor } = require('../src/doctor');
+const { DEFAULT_LOCAL_CONFIG_PATH } = require('../src/local-config');
+
+function localConfigWithoutSageSet() {
+  const config = parsePowerShellConfig(DEFAULT_LOCAL_CONFIG_PATH);
+  for (const key of Object.keys(config)) if (key.startsWith('SAGESET_')) delete config[key];
+  // Keep these contract tests independent of the developer's ignored config.
+  config.MERXUS_MAESTRO_OWNER_A_EMAIL = config.MERXUS_MAESTRO_OWNER_A_EMAIL || 'owner-a@example.test';
+  config.MERXUS_MAESTRO_OWNER_A_PASSWORD = config.MERXUS_MAESTRO_OWNER_A_PASSWORD || 'test-password';
+  config.MERXUS_MAESTRO_OWNER_B_EMAIL = config.MERXUS_MAESTRO_OWNER_B_EMAIL || 'owner-b@example.test';
+  config.MERXUS_MAESTRO_OWNER_B_PASSWORD = config.MERXUS_MAESTRO_OWNER_B_PASSWORD || 'test-password';
+  config.MERXUS_ANDROID_EMULATOR_ID = config.MERXUS_ANDROID_EMULATOR_ID || 'emulator-5554';
+  return config;
+}
 
 test('doctor parses only canonical PowerShell environment assignments', () => {
   const fs = require('node:fs');
@@ -36,21 +49,48 @@ test('doctor supplies safe canonical defaults without exposing credentials', () 
 });
 
 test('product-scoped strict Doctor ignores the other product credentials', async () => {
-  const merxus = await runDoctor({ product: 'merxus', strict: true, offline: true, skipAuth: true });
+  const localConfig = localConfigWithoutSageSet();
+  const merxus = await runDoctor({ product: 'merxus', strict: true, offline: true, skipAuth: true, localConfig });
   assert.equal(merxus.status, 'PASS');
   assert.equal(merxus.checks.some((check) => check.id === 'config.sageset-identity'), false);
 
-  const sageset = await runDoctor({ product: 'sageset', strict: true, offline: true, skipAuth: true });
+  const sageset = await runDoctor({ product: 'sageset', strict: true, offline: true, skipAuth: true, localConfig });
   assert.equal(sageset.status, 'FAIL');
   assert.ok(sageset.checks.some((check) => check.id === 'config.SAGESET_MAESTRO_USER_A_EMAIL' && check.status === 'failed'));
   assert.equal(sageset.checks.some((check) => check.id.startsWith('config.MERXUS_')), false);
 });
 
 test('global Doctor retains warning versus strict all-products semantics', async () => {
-  const overview = await runDoctor({ offline: true, skipAuth: true });
+  const localConfig = localConfigWithoutSageSet();
+  const overview = await runDoctor({ offline: true, skipAuth: true, localConfig });
   assert.equal(overview.status, 'WARN');
   assert.ok(overview.checks.some((check) => check.id === 'config.sageset-identity' && check.status === 'warning'));
-  const strict = await runDoctor({ strict: true, offline: true, skipAuth: true });
+  const strict = await runDoctor({ strict: true, offline: true, skipAuth: true, localConfig });
   assert.equal(strict.status, 'FAIL');
   assert.ok(strict.checks.some((check) => check.id === 'config.sageset-identity' && check.status === 'failed'));
+});
+
+test('SageSet mobile readiness fails without a configured Android identity', async () => {
+  const checks = await checkDevices({}, { product: 'sageset' });
+  assert.equal(checks.length, 1);
+  assert.equal(checks[0].status, 'failed');
+  assert.match(checks[0].message, /cannot be certified/i);
+});
+
+test('SageSet mobile readiness requires both online device and QA app', async () => {
+  const env = {
+    SAGESET_ANDROID_EMULATOR_ID: 'emulator-5554',
+    SAGESET_MAESTRO_ANDROID_APP_ID: 'com.workside.sageset',
+  };
+  const execute = (_adb, args) => args.includes('get-state')
+    ? { status: 0, stdout: 'device\n' }
+    : { status: 0, stdout: '' };
+  const missingApp = await checkDevices(env, { product: 'sageset', adb: 'adb.exe', execute });
+  assert.equal(missingApp.at(-1).status, 'failed');
+  const ready = await checkDevices(env, {
+    product: 'sageset', adb: 'adb.exe', execute: (_adb, args) => args.includes('get-state')
+      ? { status: 0, stdout: 'device\n' }
+      : { status: 0, stdout: 'package:/data/app/com.workside.sageset/base.apk\n' },
+  });
+  assert.deepEqual(ready.map((check) => check.status), ['passed', 'passed']);
 });

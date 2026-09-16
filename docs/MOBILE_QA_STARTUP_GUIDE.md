@@ -37,7 +37,7 @@ Healthy WorksideQA-owned services are reused. `qa:start` starts only missing ser
 | Environment | Required services | Device/runtime |
 | --- | --- | --- |
 | Windows / Merxus | Firebase Auth/Firestore/Storage, QA backend, canonical Maestro Metro | Android AVD selected by `MERXUS_ANDROID_AVD_NAME` (or the single installed AVD), serial from `MERXUS_ANDROID_EMULATOR_ID`, `com.merxus.mobile.qa` |
-| Windows / SageSet | Firebase Auth/Firestore/Storage/Functions emulators | Android AVD selected by `SAGESET_ANDROID_AVD_NAME` (or the single installed AVD), serial from `SAGESET_ANDROID_EMULATOR_ID` when configured |
+| Windows / SageSet | Firebase Auth/Firestore/Storage/Functions emulators | Android AVD selected by `SAGESET_ANDROID_AVD_NAME` (or the single installed AVD), serial from required `SAGESET_ANDROID_EMULATOR_ID`, QA app `com.workside.sageset` |
 | macOS / Merxus | Same Firebase/backend/Metro contracts through `qa:start` | Configured iOS simulator for iOS flows |
 | macOS / SageSet | SageSet Firebase emulator contract and product services | Configured SageSet simulator/device |
 
@@ -72,7 +72,10 @@ This starts nothing, resets no fixtures, and reports PASS/FAIL for tools, paths,
 * **Firebase wrong project:** restart the recorded service; the canonical project is `merxus-maestro-local` or `sageset-maestro-local`.
 * **Simulator/emulator not booted:** `qa:start` automatically starts the configured Windows AVD and waits for ADB/boot completion. Set `MERXUS_ANDROID_AVD_NAME` or `SAGESET_ANDROID_AVD_NAME` in the ignored `.maestro.local.ps1` when multiple AVDs are installed. No arbitrary device is selected. If boot times out, inspect the reported AVD log, SDK/emulator path, serial, and ADB state.
 * **Incompatible Android device:** an unexpected device is never killed or adopted. Remove the conflict manually, or correct the configured serial/AVD values, then rerun the launcher.
-* **App not installed:** install the QA app matching the manifest app ID.
+* **App not installed:** SageSet requires the QA build `com.workside.sageset` on
+  the configured emulator. WorksideQA fails closed when it is absent and never
+  substitutes the production `com.sageset.fitness` package; install/build the
+  SageSet Maestro app using the SageSet Mobile QA workflow, then rerun Doctor.
 * **Backend unavailable:** check the product backend path and health output.
 * **Maestro/Java unavailable:** run Doctor; its central resolver reports the exact missing tool and supported fallback.
 

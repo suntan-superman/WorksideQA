@@ -117,6 +117,16 @@
         "storage": 9199
       }
     },
+    "devices": {
+      "androidEmulator": {
+        "platform": "android",
+        "kind": "emulator",
+        "required": true,
+        "idEnvKey": "SAGESET_ANDROID_EMULATOR_ID",
+        "avdNameEnvKey": "SAGESET_ANDROID_AVD_NAME",
+        "appId": "com.workside.sageset"
+      }
+    },
     "fixtures": {
       "owner": "sageset",
       "command": "npm",
