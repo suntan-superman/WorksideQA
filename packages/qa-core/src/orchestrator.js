@@ -96,10 +96,13 @@ function serviceDefinitions(product, env, tools = null) {
   const npm = resolved.npm?.path || (process.platform === 'win32' ? 'npm.cmd' : 'npm');
   const firebase = resolved.firebase?.path || (process.platform === 'win32' ? 'firebase.cmd' : 'firebase');
   if (product === 'sageset') {
-    const root = path.resolve(env.SAGESET_MOBILE_REPO || DEFAULTS.sagesetRoot);
+    // SageSet's Firebase project root is the configured Mobile repository. Its
+    // firebase.json, rules, and Functions source are all relative to that
+    // directory; the parent SageSet workspace is not a Firebase project.
+    const root = path.resolve(env.SAGESET_MOBILE_REPO || path.join(DEFAULTS.sagesetRoot, 'mobile'));
     return [{
-      service: 'firebase', role: 'firebase-emulators', cwd: path.dirname(root), executable: firebase,
-      args: ['emulators:start', '--project', 'sageset-maestro-local', '--only', 'auth,firestore,storage,functions'],
+      service: 'firebase', role: 'firebase-emulators', cwd: root, executable: firebase,
+      args: ['emulators:start', '--project', 'sageset-maestro-local', '--config', 'firebase.json', '--only', 'auth,firestore,storage,functions'],
       ports: [9099, 8080, 9199, 5001],
       env: { ...env, FIREBASE_AUTH_EMULATOR_HOST: '127.0.0.1:9099', FIRESTORE_EMULATOR_HOST: '127.0.0.1:8080' },
     }];
@@ -435,7 +438,7 @@ function reportServiceFailure(record, readiness) {
 function runFixtureCommand(product, env, args) {
   const cwd = product === 'merxus'
     ? (env.MERXUS_BACKEND_REPO || path.join(DEFAULTS.merxusRoot, 'merxus-ai-backend'))
-    : path.dirname(env.SAGESET_MOBILE_REPO || DEFAULTS.sagesetRoot);
+    : path.resolve(env.SAGESET_MOBILE_REPO || path.join(DEFAULTS.sagesetRoot, 'mobile'));
   const executable = resolveCommand('npm', env) || (process.platform === 'win32' ? 'npm.cmd' : 'npm');
   return spawnCommandSync(executable, args, {
     cwd, env: { ...env, NO_UPDATE_NOTIFIER: '1' }, encoding: 'utf8', timeout: 120000,

@@ -291,7 +291,7 @@ async function checkServices(env, options) {
 function runAuthVerify(env, options) {
   if (options.offline || options.skipAuth) return result('skipped', 'auth.verify', 'Auth identity command skipped.');
   if (options.product === 'sageset') {
-    const root = env.SAGESET_MOBILE_REPO ? path.dirname(env.SAGESET_MOBILE_REPO) : DEFAULTS.sagesetRoot;
+    const root = path.resolve(env.SAGESET_MOBILE_REPO || path.join(DEFAULTS.sagesetRoot, 'mobile'));
     const npm = resolveCommand('npm', env);
     if (!npm) return result('failed', 'auth.verify.sageset', 'npm is unavailable; cannot verify SageSet fixtures.');
     const outcome = spawnCommandSync(npm, ['--prefix', 'functions', 'run', 'verify:maestro-fixtures'], {

@@ -53,7 +53,9 @@ test('qa:start forces canonical Maestro Metro inputs over inherited production v
 test('SageSet startup definition uses emulator-only services and functions readiness', () => {
   const definitions = serviceDefinitions('sageset', { SAGESET_MOBILE_REPO: 'C:\\SageSet\\mobile' });
   assert.deepEqual(definitions.map((item) => item.service), ['firebase']);
+  assert.equal(definitions[0].cwd, 'C:\\SageSet\\mobile');
   assert.deepEqual(definitions[0].ports, [9099, 8080, 9199, 5001]);
+  assert.deepEqual(definitions[0].args.slice(0, 5), ['emulators:start', '--project', 'sageset-maestro-local', '--config', 'firebase.json']);
   assert.ok(definitions[0].args.some((arg) => String(arg).includes('functions')));
 });
 
