@@ -92,10 +92,11 @@ test('foreign process on an expected port remains a conflict', () => {
   assert.equal(result.state, 'CONFLICT');
 });
 
-test('stale runtime state with no live tree is not running', () => {
+test('stale runtime state with no live tree and free ports is reconciled', () => {
   const record = { pid: 100, rootPid: 100, ports: [8081], processTree: [{ pid: 100, startedAt: 'old' }] };
   const result = reconcileRecord(record, () => null, () => null, () => false);
-  assert.equal(result.state, 'NOT RUNNING');
+  assert.equal(result.state, 'STALE');
+  assert.equal(result.stale, true);
 });
 
 test('reconciles a reused recorded PID as stale when all expected ports are free', () => {

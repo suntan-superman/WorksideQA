@@ -225,6 +225,12 @@ function reconcileRecord(record, ownerResolver = portOwner, infoResolver = proce
   const rootAlive = aliveResolver(record.rootPid || record.pid);
   const rootOwned = rootAlive && commandMatches(record, infoResolver(record.rootPid || record.pid));
   const descendantPort = portOwners.some((item) => item.pid && Number(item.pid) !== Number(record.pid) && known.has(Number(item.pid)));
+  if (!rootAlive && !currentTree.some((item) => !item.mismatch) && !portOwners.some((item) => item.pid)) {
+    return {
+      state: 'STALE', owned: false, recovered: false, stale: true, portOwners,
+      currentTree, reason: 'recorded service tree is gone and expected ports are free',
+    };
+  }
   const recovered = !rootOwned && (currentTree.some((item) => Number(item.pid) !== Number(record.pid)) || descendantPort);
   if (rootOwned) return { state: 'RUNNING', owned: true, recovered: false, portOwners, currentTree };
   if (recovered) {
