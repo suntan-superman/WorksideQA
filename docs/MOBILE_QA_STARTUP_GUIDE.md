@@ -82,6 +82,20 @@ npm run qa:doctor -- --product merxus --strict
 
 This starts nothing, resets no fixtures, and reports PASS/FAIL for tools, paths, runtime configuration, services, identities, and device readiness.
 
+## Certification status semantics
+
+Reports distinguish the reason a check did not complete:
+
+* **PRODUCT FAILURE** — the product, fixture, backend, or authoritative
+  contract is incorrect.
+* **QA INFRASTRUCTURE FAILURE** — tooling, emulator, ADB, Metro, Firebase, or
+  Maestro cannot provide the required evidence.
+* **MANUAL ACCEPTANCE REQUIRED** — the interaction belongs to the manual Tier 3
+  policy even though the product is healthy.
+
+An `OBSERVER_BUSY` result is always **QA INFRASTRUCTURE FAILURE**. It is never a
+passing rendered-runtime result and never authorizes a certification claim.
+
 ## Troubleshooting
 
 * **Port already occupied:** run `npm run qa:status`; inspect the PID and resolve a foreign process manually.
@@ -97,6 +111,14 @@ This starts nothing, resets no fixtures, and reports PASS/FAIL for tools, paths,
   production `com.sageset.fitness` package.
 * **Backend unavailable:** check the product backend path and health output.
 * **Maestro/Java unavailable:** run Doctor; its central resolver reports the exact missing tool and supported fallback.
+* **`OBSERVER_BUSY`:** do not modify application code. Follow this recovery:
+  1. Stop the QA environment cleanly.
+  2. Restart the canonical ADB daemon if necessary.
+  3. Restart the emulator if ADB remains unhealthy.
+  4. Run health/start again.
+  5. If the actual application is required for release acceptance, perform the
+     documented manual smoke check.
+  6. Do not disable the observer or reinterpret `OBSERVER_BUSY` as readiness.
 
 ## Manual fallback commands
 
@@ -113,3 +135,21 @@ Merxus service definitions live in `packages/qa-core/src/orchestrator.js` and us
 ## Logs and ownership
 
 Runtime state and service logs are local and ignored under `.worksideqa/`. `runtime-state.json` records product, service, process identity, ports, working directory, generation, and runtime hash. `qa:stop` terminates only verified recorded trees and preserves ownership metadata when cleanup is incomplete.
+
+## Known-good Windows prerequisites and commands
+
+Use the canonical local configuration loader; do not export values manually.
+Windows QA requires Firebase CLI `15.23.0`, Eclipse Temurin JDK 21, the
+configured Android SDK/ADB, the pinned Maestro CLI, and product-specific
+`.maestro.local.ps1` values. WorksideQA resolves Firebase deterministically and
+uses the same executable for Doctor and service startup.
+
+```powershell
+Set-Location C:\Users\sjroy\Source\WorksideQA
+npm run qa:start -- --product merxus
+npm run qa:doctor -- --product merxus --strict
+npm run qa:status -- --product merxus
+```
+
+Use `sageset` in place of `merxus` for SageSet. These commands do not claim
+SageSet rendered-observer certification when `OBSERVER_BUSY` is reported.

@@ -5,6 +5,50 @@
 This policy governs WorksideQA mobile automation for Merxus AI and SageSet.
 Operational startup is maintained in [MOBILE_QA_STARTUP_GUIDE.md](./MOBILE_QA_STARTUP_GUIDE.md).
 
+## Certification tiers
+
+### Tier 1 — Automated and authoritative
+
+These contracts are authoritative: Firebase/emulator isolation, fixture setup,
+authentication identities, API/backend behavior, persistence, tenant isolation,
+revision/audit/receipt contracts, provider-zero contracts, and deterministic
+runtime configuration.
+
+### Tier 2 — Maestro stable smoke coverage
+
+Maestro covers app launch, navigation, major screen availability, stable
+semantic controls, and selected high-value workflows. An observer failure is
+infrastructure evidence, never a product pass.
+
+### Tier 3 — Manual mobile acceptance
+
+Manual acceptance covers fragile text-entry/focus behavior, OS overlays, visual
+correctness, and workflows affected by Maestro or ADB instrumentation
+instability.
+
+We will not spend engineering time attempting to make every mobile interaction
+deterministic under Maestro. Move automation-limited assertions to the
+appropriate tier instead of redesigning the product.
+
+## Windows implementation status (2026-09-16)
+
+Windows Merxus automated environment startup is operational. Windows SageSet
+automated startup is operational through Firebase, fixtures, Metro, emulator,
+QA application installation/reuse, and application launch. SageSet's actual
+login screen has also been manually observed; WorksideQA reported
+`appState=actual-sageset-application` and `READY` in that run.
+
+The Windows toolchain is pinned to Firebase CLI `15.23.0` and Eclipse Temurin
+JDK 21. Firebase executable resolution is deterministic. Service logs are
+product-specific, and stale process ownership reconciliation, Metro process
+handoff validation, and bounded canonical ADB recovery are implemented.
+
+Known limitation: intermittent Maestro rendered-observer `OBSERVER_BUSY` has
+coincided with periods of unresponsive ADB; causal direction has not been
+proven. `OBSERVER_BUSY` remains fail-closed and must never be treated as
+certification success. SageSet is not described as fully automated
+rendered-observer certified while this condition remains intermittent.
+
 ## Purpose
 
 Maestro is for externally observable journeys: launch, login/logout, onboarding, navigation, major actions, permissions, system overlays, background/resume, major user-visible outcomes, and short stable cross-screen workflows. It is not intended to prove every React Native implementation detail, internal state transition, or difficult TextInput gesture.

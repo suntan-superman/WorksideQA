@@ -4,6 +4,26 @@ Updated 2026-09-16 from the authoritative Mac certification result and current
 WorksideQA validation runs. Generation/export results are not treated as live
 platform certification.
 
+## Windows environment closeout
+
+Windows Merxus automated environment startup is operational. Windows SageSet
+automated startup is operational through Firebase, fixtures, Metro, emulator,
+QA application installation/reuse, and application launch. A prior focused
+run manually observed SageSet's real login screen with
+`appState=actual-sageset-application` and `READY`.
+
+Windows uses Firebase CLI `15.23.0` with Eclipse Temurin JDK 21 and a
+deterministically resolved Firebase executable. Product-specific service logs,
+stale process ownership reconciliation, Metro handoff validation, and bounded
+canonical ADB recovery are implemented.
+
+The remaining known limitation is intermittent Maestro rendered-observer
+`OBSERVER_BUSY` during periods of unresponsive ADB; causal direction is not
+proven. This is a QA infrastructure failure, not certification success. It is
+fail-closed, and SageSet is not represented as fully automated rendered-observer
+certified while it remains intermittent. Use Tier 3 manual acceptance when the
+actual mobile interaction must be certified.
+
 | Slice | Scenario | Android | iOS | Backend | Status | Blocker | Next action |
 |------:|----------|---------|-----|---------|--------|---------|-------------|
 | 21 | Tenant settings update (Owner A) | PASS | NOT RUN | PASS | BLOCKED | iOS requires the Mac simulator | Run the iOS slice on the configured simulator |
