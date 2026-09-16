@@ -861,7 +861,7 @@ async function startProduct(product) {
   const initialEnv = mergedEnvironment(local);
   const tools = resolveTools(initialEnv);
   const env = withToolPaths(initialEnv, Object.values(tools));
-  const configCheck = await runDoctor({ product, offline: true, skipAuth: true, strict: false, environment: env, localConfig: local });
+  const configCheck = await runDoctor({ product, offline: true, validateToolchain: true, skipAuth: true, strict: false, environment: env, localConfig: local });
   if (configCheck.checks.some((check) => check.status === 'failed')) {
     printReport(configCheck);
     throw new Error(`${product} configuration is not ready; no service was started.`);

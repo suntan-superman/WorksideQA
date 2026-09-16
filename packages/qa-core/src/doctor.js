@@ -256,7 +256,8 @@ function checkTools(env, options = {}) {
       ? result('passed', `tool.${name}`, `${resolved.path} (${versions[name] || name})`, { command: resolved.path, source: resolved.source, version: versions[name] })
       : result('failed', `tool.${name}`, resolved.error || `${name} is unavailable.`));
   }
-  if (process.platform === 'win32' && !options.offline) {
+  const validateToolchain = options.validateToolchain === true;
+  if (process.platform === 'win32' && (!options.offline || validateToolchain)) {
     const firebaseOverride = String(env.WORKSIDEQA_FIREBASE_BIN || '').trim();
     checks.push(firebaseOverride && tools.firebase?.source === 'local-config'
       ? result('passed', 'tool.firebase-contract', `Firebase resolution is pinned to ${tools.firebase.path}.`, { command: tools.firebase.path, version: versions.firebase })
@@ -264,7 +265,7 @@ function checkTools(env, options = {}) {
   }
   const firebaseMajor = Number((String(versions.firebase || '').match(/(\d+)\./) || [])[1] || 0);
   const javaMajor = Number((String(versions.java || '').match(/(?:version\s*["']?)?(\d+)(?:\.|["'])/) || [])[1] || 0);
-  if (!options.offline && firebaseMajor >= 15) {
+  if ((!options.offline || validateToolchain) && firebaseMajor >= 15) {
     checks.push(javaMajor >= 21
       ? result('passed', 'tool.firebase-java-compat', `Firebase CLI ${versions.firebase || 'unknown'} is paired with Java ${versions.java || 'unknown'}.`, { firebaseVersion: versions.firebase, javaVersion: versions.java })
       : result('failed', 'tool.firebase-java-compat', `Firebase CLI ${versions.firebase || 'unknown'} requires Java 21+; resolved Java is ${versions.java || 'unavailable'}. Set WORKSIDEQA_JAVA_BIN/JAVA_HOME to a JDK 21 installation.`));
