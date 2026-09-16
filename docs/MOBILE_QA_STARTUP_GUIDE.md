@@ -30,14 +30,14 @@ Choose the same menu. The script delegates to `qa:start` and the product-scoped 
 3. Inspect ownership with `npm run qa:status -- --product merxus` (or `sageset`).
 4. Run the displayed certification command.
 
-Healthy WorksideQA-owned services are reused. `qa:start` starts only missing services in dependency order, waits on readiness probes, configures Android reverse for Merxus, prewarms canonical Metro, and runs strict product Doctor. It does not launch a feature flow.
+Healthy WorksideQA-owned services are reused. `qa:start` starts only missing services in dependency order, waits on readiness probes, prewarms canonical Metro, starts the configured Windows Android AVD when it is offline, waits for ADB and `sys.boot_completed=1`, configures Android reverse for Merxus, and runs strict product Doctor. It does not launch a feature flow or start Android Studio.
 
 ## Environment inventory
 
 | Environment | Required services | Device/runtime |
 | --- | --- | --- |
-| Windows / Merxus | Firebase Auth/Firestore/Storage, QA backend, canonical Maestro Metro | Android emulator from `MERXUS_ANDROID_EMULATOR_ID`, `com.merxus.mobile.qa` |
-| Windows / SageSet | Firebase Auth/Firestore/Storage/Functions emulators | Device requirements are checked by the selected flow |
+| Windows / Merxus | Firebase Auth/Firestore/Storage, QA backend, canonical Maestro Metro | Android AVD selected by `MERXUS_ANDROID_AVD_NAME` (or the single installed AVD), serial from `MERXUS_ANDROID_EMULATOR_ID`, `com.merxus.mobile.qa` |
+| Windows / SageSet | Firebase Auth/Firestore/Storage/Functions emulators | Android AVD selected by `SAGESET_ANDROID_AVD_NAME` (or the single installed AVD), serial from `SAGESET_ANDROID_EMULATOR_ID` when configured |
 | macOS / Merxus | Same Firebase/backend/Metro contracts through `qa:start` | Configured iOS simulator for iOS flows |
 | macOS / SageSet | SageSet Firebase emulator contract and product services | Configured SageSet simulator/device |
 
@@ -70,7 +70,8 @@ This starts nothing, resets no fixtures, and reports PASS/FAIL for tools, paths,
 * **Port already occupied:** run `npm run qa:status`; inspect the PID and resolve a foreign process manually.
 * **Metro wrong product:** stop only the recorded owner with `qa:stop`, then start the requested product. The runtime manifest is verified before READY.
 * **Firebase wrong project:** restart the recorded service; the canonical project is `merxus-maestro-local` or `sageset-maestro-local`.
-* **Simulator/emulator not booted:** boot the configured device and rerun the health check; no arbitrary device is selected.
+* **Simulator/emulator not booted:** `qa:start` automatically starts the configured Windows AVD and waits for ADB/boot completion. Set `MERXUS_ANDROID_AVD_NAME` or `SAGESET_ANDROID_AVD_NAME` in the ignored `.maestro.local.ps1` when multiple AVDs are installed. No arbitrary device is selected. If boot times out, inspect the reported AVD log, SDK/emulator path, serial, and ADB state.
+* **Incompatible Android device:** an unexpected device is never killed or adopted. Remove the conflict manually, or correct the configured serial/AVD values, then rerun the launcher.
 * **App not installed:** install the QA app matching the manifest app ID.
 * **Backend unavailable:** check the product backend path and health output.
 * **Maestro/Java unavailable:** run Doctor; its central resolver reports the exact missing tool and supported fallback.

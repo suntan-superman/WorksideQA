@@ -17,6 +17,7 @@ const { loadProductManifest, validateManifest } = require('../../qa-config/src')
 const { resolveTool, resolveTools } = require('./tool-resolver');
 const { DEFAULT_LOCAL_CONFIG_PATH, parsePowerShellConfig } = require('./local-config');
 const { waitForRenderedRuntime, DEFAULT_TIMEOUT_MS } = require('./rendered-runtime');
+const { configuredDevice } = require('./android-emulator');
 
 const WORKSIDEQA_ROOT = fromRoot();
 const DEFAULTS = {
@@ -378,21 +379,24 @@ async function checkMobileRuntime(env, options) {
 }
 
 async function checkDevices(env, options) {
-  if (options.product === 'sageset') return [result('skipped', 'device', 'SageSet device identity is selected by the invoked flow.')];
   if (options.offline) return [result('skipped', 'device.android', 'Device probes skipped (--offline).')];
   const checks = [];
   const adb = resolveCommand('adb', env);
   if (!adb) return [result('failed', 'device.android', 'ADB is unavailable; cannot validate the configured emulator.')];
-  const id = String(env.MERXUS_ANDROID_EMULATOR_ID || '').trim();
+  const contract = configuredDevice(options.product, env);
+  const id = String(contract?.serial || '').trim();
+  if (!id) return [result('skipped', 'device.android', `${options.product === 'sageset' ? 'SageSet' : 'Merxus'} Android emulator identity is not configured.`)];
   const state = spawnCommandSync(adb, ['-s', id, 'get-state'], { env, encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
+  const label = options.product === 'sageset' ? 'SageSet' : 'Merxus';
   checks.push(!state.error && state.status === 0 && String(state.stdout).trim() === 'device'
-    ? result('passed', 'device.android', `Configured Android emulator ${id} is online.`)
-    : result('failed', 'device.android', `Configured Android emulator ${id || '(missing)'} is not online.`));
+    ? result('passed', 'device.android', `Configured ${label} Android emulator ${id} is online.`)
+    : result('failed', 'device.android', `Configured ${label} Android emulator ${id} is not online.`));
   if (!id) return checks;
-  const app = spawnCommandSync(adb, ['-s', id, 'shell', 'pm', 'path', 'com.merxus.mobile.qa'], { env, encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
+  const appId = options.product === 'sageset' ? (env.SAGESET_MAESTRO_ANDROID_APP_ID || 'com.workside.sageset') : (env.MERXUS_MAESTRO_ANDROID_APP_ID || 'com.merxus.mobile.qa');
+  const app = spawnCommandSync(adb, ['-s', id, 'shell', 'pm', 'path', appId], { env, encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
   checks.push(!app.error && app.status === 0 && String(app.stdout).includes('package:')
-    ? result('passed', 'device.android.app', 'Merxus QA application is installed.')
-    : result('failed', 'device.android.app', 'Merxus QA application is not installed on the configured emulator.'));
+    ? result('passed', 'device.android.app', `${label} QA application is installed.`)
+    : result('failed', 'device.android.app', `${label} QA application is not installed on the configured emulator.`));
   return checks;
 }
 

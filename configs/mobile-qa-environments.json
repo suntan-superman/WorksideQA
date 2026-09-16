@@ -23,7 +23,7 @@
         { "name": "backend", "ports": [8787], "role": "QA backend" },
         { "name": "metro", "ports": [8081], "role": "canonical Maestro Metro" }
       ],
-      "device": { "envKey": "MERXUS_ANDROID_EMULATOR_ID", "appIdEnvKey": "MERXUS_MAESTRO_ANDROID_APP_ID" },
+      "device": { "envKey": "MERXUS_ANDROID_EMULATOR_ID", "avdNameEnvKey": "MERXUS_ANDROID_AVD_NAME", "appIdEnvKey": "MERXUS_MAESTRO_ANDROID_APP_ID" },
       "runtime": { "environment": "maestro", "firebaseProjectId": "merxus-maestro-local", "backendUrl": "http://127.0.0.1:8787" },
       "startCommand": ["npm", "run", "qa:start", "--", "--product", "merxus"],
       "doctorCommand": ["npm", "run", "qa:doctor", "--", "--product", "merxus", "--strict"],
@@ -49,7 +49,7 @@
       "services": [
         { "name": "firebase", "ports": [9099, 8080, 9199, 5001], "role": "Firebase Auth/Firestore/Storage/Functions emulators" }
       ],
-      "device": { "envKey": "SAGESET_ANDROID_EMULATOR_ID", "appIdEnvKey": "SAGESET_MAESTRO_ANDROID_APP_ID" },
+      "device": { "envKey": "SAGESET_ANDROID_EMULATOR_ID", "avdNameEnvKey": "SAGESET_ANDROID_AVD_NAME", "appIdEnvKey": "SAGESET_MAESTRO_ANDROID_APP_ID" },
       "runtime": { "environment": "emulator", "firebaseProjectId": "sageset-maestro-local" },
       "startCommand": ["npm", "run", "qa:start", "--", "--product", "sageset"],
       "doctorCommand": ["npm", "run", "qa:doctor", "--", "--product", "sageset", "--strict"],

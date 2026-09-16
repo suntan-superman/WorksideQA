@@ -9,6 +9,7 @@ const { fromRoot } = require('../../qa-utils/src');
 const { parsePowerShellConfig, mergedEnvironment, runDoctor, DEFAULTS, resolveCommand } = require('./doctor');
 const { resolveTools, withToolPaths } = require('./tool-resolver');
 const { prewarmMetroBundle, DEFAULT_PREWARM_TIMEOUT_MS } = require('./metro-bundle');
+const { ensureAndroidEmulator } = require('./android-emulator');
 
 const STATE_DIRECTORY = fromRoot('.worksideqa');
 const STATE_PATH = path.join(STATE_DIRECTORY, 'runtime-state.json');
@@ -820,12 +821,15 @@ async function startProduct(product) {
     fixturesReady = true;
   }
 
-  if (product === 'merxus') {
+  // Android is a dependency of the Windows launcher, not a manually managed
+  // prerequisite. The helper reuses a healthy configured device or starts
+  // exactly the configured AVD, then waits for both ADB and boot completion.
+  // It is a no-op on macOS/Linux so iOS and other platform flows retain their
+  // existing startup behavior.
+  const android = await ensureAndroidEmulator({ product, env, adbPath: tools.adb.path });
+  if (product === 'merxus' && !android.skipped) {
     const device = String(env.MERXUS_ANDROID_EMULATOR_ID || '').trim();
-    if (!device) throw new Error('MERXUS_ANDROID_EMULATOR_ID is required for Merxus startup.');
     const adb = tools.adb.path;
-    const stateResult = spawnCommandSync(adb, ['-s', device, 'get-state'], { encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
-    if (stateResult.error || stateResult.status !== 0 || String(stateResult.stdout).trim() !== 'device') throw new Error(`Android emulator ${device} is not online; start the configured emulator and rerun qa:start.`);
     const reverse = spawnCommandSync(adb, ['-s', device, 'reverse', 'tcp:8081', 'tcp:8081'], { encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
     if (reverse.error || reverse.status !== 0) throw new Error(`ADB reverse setup failed for ${device}.`);
     process.stdout.write(`Ready merxus/android-reverse tcp:8081 -> tcp:8081 (${device})\n`);
@@ -869,13 +873,14 @@ function statusRows(product, env) {
       rows.push({ product: key, service: definition.service, role: definition.role, running, state: ownership.state, reason: ownership.reason || null, pid: record?.pid || null, startTime: record?.startedAt || null, expectedPorts: definition.ports, actualPortOwners: owners, runtimeMode: key === 'merxus' ? 'maestro' : 'emulator', maestroState, owner: ownership.state === 'CONFLICT' ? 'conflict' : ownership.state === 'STALE' ? 'stale' : ownership.owned ? 'WorksideQA' : record ? 'unknown' : 'none' });
     }
   }
-  if (product === 'merxus' || !product) {
-    const device = env.MERXUS_ANDROID_EMULATOR_ID;
+  for (const deviceProduct of (product ? [product] : ['merxus', 'sageset'])) {
+    const device = deviceProduct === 'sageset' ? env.SAGESET_ANDROID_EMULATOR_ID : env.MERXUS_ANDROID_EMULATOR_ID;
+    if (!device) continue;
     const adb = resolveCommand('adb', env) || (process.platform === 'win32' ? 'adb.exe' : 'adb');
     const deviceState = device ? spawnCommandSync(adb, ['-s', device, 'get-state'], { encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] }) : null;
-    const appId = env.MERXUS_MAESTRO_ANDROID_APP_ID || 'com.merxus.mobile.qa';
+    const appId = deviceProduct === 'sageset' ? (env.SAGESET_MAESTRO_ANDROID_APP_ID || 'com.workside.sageset') : (env.MERXUS_MAESTRO_ANDROID_APP_ID || 'com.merxus.mobile.qa');
     const installed = device && deviceState?.status === 0 ? spawnCommandSync(adb, ['-s', device, 'shell', 'pm', 'path', appId], { encoding: 'utf8', timeout: 5000, windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] }) : null;
-    rows.push({ product: 'merxus', service: 'android-device', role: 'qa-device', running: deviceState?.status === 0 && String(deviceState.stdout).trim() === 'device', pid: null, startTime: null, expectedPorts: [], actualPortOwners: [], runtimeMode: 'maestro', maestroState, emulatorState: String(deviceState?.stdout || '').trim() || 'offline', appId, appInstalled: installed?.status === 0 && String(installed.stdout).includes('package:'), owner: 'WorksideQA' });
+    rows.push({ product: deviceProduct, service: 'android-device', role: 'qa-device', running: deviceState?.status === 0 && String(deviceState.stdout).trim() === 'device', pid: null, startTime: null, expectedPorts: [], actualPortOwners: [], runtimeMode: deviceProduct === 'merxus' ? 'maestro' : 'emulator', maestroState, emulatorState: String(deviceState?.stdout || '').trim() || 'offline', appId, appInstalled: installed?.status === 0 && String(installed.stdout).includes('package:'), owner: 'WorksideQA' });
   }
   return rows;
 }
@@ -1011,4 +1016,5 @@ module.exports = {
   stopProduct,
   terminateRecord,
   verifiedProcessTreePids,
+  ensureAndroidEmulator,
 };
