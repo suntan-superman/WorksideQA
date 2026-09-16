@@ -164,6 +164,7 @@ test('restarts only a positively identified canonical ADB daemon and then recove
   assert.equal(result.ok, true);
   assert.equal(result.recovered, true);
   assert.ok(calls.some((call) => call.command === adbPath && call.args[0] === 'kill-server'));
+  assert.ok(calls.some((call) => call.command === 'taskkill.exe' && call.args.includes('44992')));
   assert.ok(calls.some((call) => call.command === adbPath && call.args[0] === 'start-server'));
 });
 

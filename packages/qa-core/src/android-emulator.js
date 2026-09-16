@@ -127,6 +127,14 @@ async function ensureAdbCommunication(adbPath, options = {}) {
       const owner = canonicalAdbServerOwner(ownerPid, adbPath, options);
       if (owner.verified) {
         const kill = commandResult(adbPath, ['kill-server'], options);
+        // A wedged Windows fork-server can keep 5037 bound even after
+        // kill-server reports success.  Only after the executable/path check
+        // above positively identifies that exact canonical daemon may the
+        // owning PID be force-terminated; unknown listeners are untouched.
+        const stillOwner = adbServerPortOwner(options);
+        if (stillOwner && Number(stillOwner) === Number(ownerPid) && (options.platform || process.platform) === 'win32') {
+          commandResult('taskkill.exe', ['/PID', String(ownerPid), '/F'], options);
+        }
         const start = commandResult(adbPath, ['start-server'], options);
         restarted = !kill.error && kill.status === 0 && !start.error && start.status === 0;
       }
