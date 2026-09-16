@@ -381,8 +381,14 @@ async function waitForPorts(ports, timeoutMs = READY_TIMEOUT_MS) {
 }
 
 function spawnService(definition, product) {
-  fs.mkdirSync(LOG_DIRECTORY, { recursive: true });
-  const logPath = path.join(LOG_DIRECTORY, `${definition.service}.log`);
+  // Keep every product/service launch in its own run-specific file.  A single
+  // shared `logs/firebase.log` allowed a later SageSet failure to display
+  // stale Merxus output (and vice versa), which made early-exit diagnosis
+  // untrustworthy after a reboot or an interrupted run.
+  const serviceLogDirectory = path.join(LOG_DIRECTORY, String(product || 'qa'), String(definition.service || 'service'));
+  fs.mkdirSync(serviceLogDirectory, { recursive: true });
+  const logRunId = `${Date.now()}-${process.pid}-${crypto.randomBytes(4).toString('hex')}`;
+  const logPath = path.join(serviceLogDirectory, `${logRunId}.log`);
   // Give the long-running child its own log file descriptors. Keeping a
   // parent-owned stdout/stderr relay open would leave active pipe handles in
   // the qa:start process after readiness, preventing the CLI from returning
@@ -512,6 +518,8 @@ function reportServiceFailure(record, readiness) {
   }
   if (readiness.detail) process.stderr.write(`Detail: ${readiness.detail}\n`);
   if (readiness.probe?.bundlePrewarmElapsedMs != null) process.stderr.write(`Bundle prewarm elapsed: ${readiness.probe.bundlePrewarmElapsedMs}ms\n`);
+  process.stderr.write(`Command: ${record.executable} ${record.args.join(' ')}\n`);
+  process.stderr.write(`Working directory: ${record.cwd}\n`);
   process.stderr.write(`Log: ${record.logPath}\n`);
   process.stderr.write(`Last error:\n${tailLog(record.logPath)}\n`);
   process.stderr.write('Startup aborted.\n');

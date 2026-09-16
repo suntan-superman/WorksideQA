@@ -308,7 +308,6 @@ test('fixture bootstrap reuses product-owned reset and verification commands', (
 
 test('long-running service logging does not retain parent stdout/stderr pipes', async () => {
   const serviceName = `orchestrator-test-${process.pid}-${Date.now()}`;
-  const logPath = path.join(process.cwd(), '.worksideqa', 'logs', `${serviceName}.log`);
   const service = spawnService({
     service: serviceName,
     role: 'test-service',
@@ -321,11 +320,42 @@ test('long-running service logging does not retain parent stdout/stderr pipes', 
     assert.equal(service.child.stdout, null);
     assert.equal(service.child.stderr, null);
     await new Promise((resolve) => setTimeout(resolve, 100));
-    assert.match(fs.readFileSync(logPath, 'utf8'), /service-ready/);
+    assert.match(fs.readFileSync(service.record.logPath, 'utf8'), /service-ready/);
+    assert.match(service.record.logPath, new RegExp(`\\.worksideqa[\\\\/]logs[\\\\/]test[\\\\/]${serviceName}[\\\\/]`));
   } finally {
     service.child.kill();
     await new Promise((resolve) => setTimeout(resolve, 50));
-    try { fs.unlinkSync(logPath); } catch {}
+    try { fs.unlinkSync(service.record.logPath); } catch {}
+  }
+});
+
+test('Firebase service logs are isolated by product and cannot cross-contaminate', async () => {
+  const marker = `firebase-log-${process.pid}-${Date.now()}`;
+  const definitions = [
+    { product: 'merxus', marker: `${marker}-merxus` },
+    { product: 'sageset', marker: `${marker}-sageset` },
+  ].map(({ product, marker: value }) => spawnService({
+    service: 'firebase', role: 'firebase-emulators', cwd: process.cwd(),
+    executable: process.execPath,
+    args: ['-e', `process.stdout.write(process.env.QA_LOG_MARKER + '\\n'); setTimeout(() => {}, 30000)`],
+    env: { QA_LOG_MARKER: value }, ports: [],
+  }, product));
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const [merxus, sageset] = definitions;
+    assert.notEqual(merxus.record.logPath, sageset.record.logPath);
+    assert.match(merxus.record.logPath, /logs[\\/]merxus[\\/]firebase[\\/]/);
+    assert.match(sageset.record.logPath, /logs[\\/]sageset[\\/]firebase[\\/]/);
+    assert.match(fs.readFileSync(merxus.record.logPath, 'utf8'), new RegExp(`${marker}-merxus`));
+    assert.doesNotMatch(fs.readFileSync(merxus.record.logPath, 'utf8'), new RegExp(`${marker}-sageset`));
+    assert.match(fs.readFileSync(sageset.record.logPath, 'utf8'), new RegExp(`${marker}-sageset`));
+    assert.doesNotMatch(fs.readFileSync(sageset.record.logPath, 'utf8'), new RegExp(`${marker}-merxus`));
+  } finally {
+    for (const service of definitions) {
+      service.child.kill();
+      await new Promise((resolve) => setTimeout(resolve, 30));
+      try { fs.unlinkSync(service.record.logPath); } catch {}
+    }
   }
 });
 
