@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { loadEnvironmentConfig, parseArgs, platformKey, resolveProductPaths, sharedPorts, selectedProducts } = require('../src/mobile-qa-launcher');
+const { loadEnvironmentConfig, parseArgs, platformKey, resolveProductPaths, sharedPorts, selectedProducts, startProduct } = require('../src/mobile-qa-launcher');
 
 test('mobile QA launcher loads both product inventories without secrets', () => {
   const config = loadEnvironmentConfig();
@@ -35,4 +35,23 @@ test('single product selection remains valid', () => {
   const config = loadEnvironmentConfig();
   assert.deepEqual(selectedProducts(config, 'merxus'), ['merxus']);
   assert.deepEqual(selectedProducts(config, 'sageset'), ['sageset']);
+});
+
+test('launcher returns after qa:start readiness without running a duplicate Doctor', () => {
+  const config = loadEnvironmentConfig();
+  const calls = [];
+  const result = startProduct(config, 'merxus', (args, options) => {
+    calls.push({ args, options });
+    return { status: 0, signal: null, error: null };
+  });
+  assert.equal(result, 0);
+  assert.equal(calls.length, 1);
+  assert.deepEqual(calls[0].args, config.products.merxus.startCommand);
+  assert.equal(calls[0].options.timeoutMs > 0, true);
+});
+
+test('launcher reports a bounded startup timeout instead of waiting indefinitely', () => {
+  const config = loadEnvironmentConfig();
+  const result = startProduct(config, 'sageset', () => ({ status: null, signal: 'SIGTERM', error: { code: 'ETIMEDOUT' } }));
+  assert.equal(result, 1);
 });

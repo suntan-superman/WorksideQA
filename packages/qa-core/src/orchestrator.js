@@ -686,7 +686,7 @@ function assertPortsAvailable(definition, existingRecord, ownerResolver = portOw
       ? existingRecord.processTree.find((item) => Number(item.pid) === Number(owner)) : null;
     const known = existingRecord && Number(owner) > 0 && (
       (Number(existingRecord.pid) === Number(owner) && commandMatches(existingRecord, ownerInfo)) ||
-      (treeEntry && processIdentityMatches(treeEntry, { ...ownerInfo, pid: owner }) && commandMatches(existingRecord, ownerInfo))
+      (treeEntry && processIdentityMatches(treeEntry, normalizeProcessInfo(owner, ownerInfo || {})) && commandMatches(existingRecord, ownerInfo))
     );
     if (owner && !known) {
       throw new Error(`Cannot start ${definition.service}: port ${port} is owned by PID ${owner}, not a WorksideQA-recorded process.`);

@@ -13,6 +13,7 @@ const { fromRoot } = require('../../qa-utils/src');
 const { loadLocalQaConfig } = require('./local-config');
 
 const CONFIG_PATH = fromRoot('configs', 'mobile-qa-environments.json');
+const LAUNCH_COMMAND_TIMEOUT_MS = 10 * 60 * 1000;
 
 function loadEnvironmentConfig(filePath = CONFIG_PATH) {
   const config = JSON.parse(fs.readFileSync(filePath, 'utf8'));
@@ -55,6 +56,8 @@ function runCommand(args, options = {}) {
     env: options.env || process.env,
     encoding: 'utf8',
     stdio: options.stdio || 'inherit',
+    timeout: Number(options.timeoutMs || LAUNCH_COMMAND_TIMEOUT_MS),
+    killSignal: 'SIGTERM',
     windowsHide: true,
     // Windows cannot spawn a .cmd shim directly with the native process API
     // in every Node invocation (EINVAL). Let cmd.exe execute npm.cmd while
@@ -95,18 +98,26 @@ function printInventory(config, product, platform = process.platform) {
 }
 
 function runDoctor(product) {
-  return runCommand(['npm', 'run', 'qa:doctor', '--', '--product', product, '--strict']);
+  return runCommand(['npm', 'run', 'qa:doctor', '--', '--product', product, '--strict'], { timeoutMs: LAUNCH_COMMAND_TIMEOUT_MS });
 }
 
-function startProduct(config, product) {
+function startProduct(config, product, runner = runCommand) {
   const item = config.products[product];
   printInventory(config, product);
   process.stdout.write(`\nStarting ${item.displayName}; healthy WorksideQA-owned services are reused by qa:start.\n`);
-  const started = runCommand(item.startCommand);
+  // qa:start owns the complete dependency/readiness contract and already
+  // runs the product-scoped strict Doctor before returning READY. Running a
+  // second Doctor here would create a second rendered-app/UiAutomation probe,
+  // needlessly duplicate the cold-start wait, and can leave the launcher
+  // appearing hung while the environment is already healthy.
+  const started = runner(item.startCommand, { timeoutMs: LAUNCH_COMMAND_TIMEOUT_MS });
+  if (started.error?.code === 'ETIMEDOUT' || started.signal) {
+    process.stderr.write(`\n${item.displayName} startup command timed out before returning (timeout=${LAUNCH_COMMAND_TIMEOUT_MS}ms).\n`);
+    return 1;
+  }
   if (started.status !== 0) return started.status || 1;
-  const checked = runDoctor(product);
-  if (checked.status !== 0) return checked.status || 1;
   process.stdout.write(`\n==================================================\n${item.displayName.toUpperCase()} QA READY\n==================================================\n`);
+  process.stdout.write(`${item.displayName.toUpperCase()} QA ENVIRONMENT READY\n`);
   process.stdout.write(`Certification: ${item.certificationCommand}\n`);
   process.stdout.write('Mobile regression: npm run test:mobile\n');
   return 0;
@@ -156,4 +167,4 @@ async function main(argv = process.argv.slice(2)) {
 
 if (require.main === module) main().then((code) => { process.exitCode = code; }).catch((error) => { process.stderr.write(`${error.message}\n`); process.exitCode = 1; });
 
-module.exports = { CONFIG_PATH, loadEnvironmentConfig, parseArgs, platformKey, resolveProductPaths, sharedPorts, selectedProducts, runCommand };
+module.exports = { CONFIG_PATH, LAUNCH_COMMAND_TIMEOUT_MS, loadEnvironmentConfig, parseArgs, platformKey, resolveProductPaths, sharedPorts, selectedProducts, runCommand, startProduct };
